@@ -372,6 +372,143 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Deliverable: Schema compatibility report path and provider health status surfaced in logs/settings.
 - Definition of Done: Incompatible payloads are rejected safely, app remains stable, and operator-visible diagnostics are emitted.
 
+## Milestone 8: Nationwide Platform Foundation (Phase 1)
+
+## Task T-036 — Add active dataset source badge to Map and Insights
+- Status: Not Started
+- Priority: P0
+- Dependency: None
+- Complexity: Small
+- Description: Surface currently selected dataset source with a compact, reusable badge on primary product surfaces.
+- Deliverable: Dataset source badge component integrated in Map and Insights tabs.
+- Definition of Done: Active source is visible without opening Settings.
+
+## Task T-037 — Extend `FlowDatasetSource` with `koreaNational` placeholder
+- Status: Not Started
+- Priority: P0
+- Dependency: None
+- Complexity: Small
+- Description: Add `koreaNational` source case and user-facing label while preserving compatibility with existing source values.
+- Deliverable: Updated source enum and labels.
+- Definition of Done: Source picker can represent national placeholder source with no runtime regressions.
+
+## Task T-038 — Harden source persistence fallback in `AppStore`
+- Status: Not Started
+- Priority: P0
+- Dependency: T-037
+- Complexity: Small
+- Description: Ensure persisted source restore supports new enum case and safely falls back on unknown values.
+- Deliverable: Store migration-safe source restore behavior.
+- Definition of Done: Invalid persisted value never crashes and defaults predictably.
+
+## Task T-039 — Introduce `MobilityDatasetDescriptor` model
+- Status: Not Started
+- Priority: P0
+- Dependency: None
+- Complexity: Medium
+- Description: Add canonical descriptor model for provider/version/coverage/precision/reliability metadata.
+- Deliverable: Domain descriptor model with Codable support.
+- Definition of Done: Current sample and Seoul entries can be represented without changing existing `FlowDataset`.
+
+## Task T-040 — Introduce dataset catalog container model
+- Status: Not Started
+- Priority: P0
+- Dependency: T-039
+- Complexity: Small
+- Description: Add catalog-level model for list of available datasets and defaults.
+- Deliverable: Domain catalog model.
+- Definition of Done: Model can represent multi-source catalog including placeholder national entry.
+
+## Task T-041 — Add bundled dataset catalog resource + DTO/mapper
+- Status: Not Started
+- Priority: P0
+- Dependency: T-040
+- Complexity: Medium
+- Description: Add local `dataset_catalog.json` and parse/mapping pipeline for bootstrap catalog loading.
+- Deliverable: Resource + DTO + mapper path.
+- Definition of Done: Catalog loads from bundle and includes sample + Seoul + koreaNational.
+
+## Task T-042 — Implement `MobilityCatalogRepository` (local)
+- Status: Not Started
+- Priority: P0
+- Dependency: T-041
+- Complexity: Medium
+- Description: Add repository abstraction and local implementation for dataset catalog reads.
+- Deliverable: `MobilityCatalogRepository` contract and local-backed implementation.
+- Definition of Done: Features/services can fetch catalog entries through repository abstraction.
+
+## Task T-043 — Add `DatasetSchemaValidator` skeleton
+- Status: Not Started
+- Priority: P1
+- Dependency: None
+- Complexity: Medium
+- Description: Introduce schema validator abstraction for dataset manifests/payload compatibility checks.
+- Deliverable: Validator type + result model.
+- Definition of Done: Existing sample/Seoul manifests pass through validator path.
+
+## Task T-044 — Add `DatasetCompatibilityChecker` skeleton
+- Status: Not Started
+- Priority: P1
+- Dependency: T-043
+- Complexity: Medium
+- Description: Add compatibility checker abstraction for version/required-field activation checks.
+- Deliverable: Checker API and baseline implementation.
+- Definition of Done: Checker returns structured compatibility result for current datasets.
+
+## Task T-045 — Add `RequiredFieldPolicy` foundation
+- Status: Not Started
+- Priority: P1
+- Dependency: T-044
+- Complexity: Small
+- Description: Define required-field policy object used by compatibility checks.
+- Deliverable: Policy model + default policy profile.
+- Definition of Done: Compatibility checker consumes policy object, not hardcoded field logic.
+
+## Task T-046 — Introduce `MobilityQuery` model foundation
+- Status: Not Started
+- Priority: P0
+- Dependency: None
+- Complexity: Medium
+- Description: Add unified query model with source selection, temporal scope, transport modes, spatial level, and aggregation intent.
+- Deliverable: Domain query model.
+- Definition of Done: Query can be built from current `AppState` values.
+
+## Task T-047 — Introduce `MobilityQueryResult` model foundation
+- Status: Not Started
+- Priority: P0
+- Dependency: T-046
+- Complexity: Small
+- Description: Add unified query result model wrapping flows/nodes and source metadata.
+- Deliverable: Domain query result model.
+- Definition of Done: Existing single-source repository outputs can be represented in `MobilityQueryResult`.
+
+## Task T-048 — Add `MobilityQuerying` protocol + adapter skeleton
+- Status: Not Started
+- Priority: P1
+- Dependency: T-042, T-047
+- Complexity: Medium
+- Description: Add query protocol and thin adapter that routes to existing repository factory for selected source.
+- Deliverable: Query abstraction and default adapter.
+- Definition of Done: Adapter returns `MobilityQueryResult` without changing existing feature behavior.
+
+## Task T-049 — Add national baseline placeholder source/repository contracts
+- Status: Not Started
+- Priority: P0
+- Dependency: T-037, T-042
+- Complexity: Medium
+- Description: Add compile-safe national data source/repository placeholders and factory routing.
+- Deliverable: Placeholder national source path with explicit non-fatal “not configured” behavior.
+- Definition of Done: Selecting `koreaNational` does not crash and returns controlled fallback state.
+
+## Task T-050 — Add Phase 1 primitive tests and status sync
+- Status: Not Started
+- Priority: P0
+- Dependency: T-038, T-042, T-045, T-048, T-049
+- Complexity: Medium
+- Description: Add tests for source persistence compatibility, catalog loading, compatibility checker baseline, query adapter, and national placeholder behavior.
+- Deliverable: Passing Phase 1 architecture primitive tests.
+- Definition of Done: Tests pass locally and task status/docs are synchronized with `Phase1Tasks.md`.
+
 ## 4. Sequencing (Execution Order)
 
 1. T-001 → T-004 (skeleton and app state foundation)
@@ -383,6 +520,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 7. T-027 → T-031 (cache, pre-aggregation, diff updates, animation, perf validation)
 8. T-032 (QA and cleanup)
 9. T-033 → T-035 (external provider integration and live refresh hardening)
+10. T-036 → T-050 (nationwide platform foundation phase 1)
 
 Blocking dependencies:
 - Renderer work requires data/repository core (T-005/T-009).
@@ -397,6 +535,7 @@ Blocking dependencies:
 - Track D (feature UI): T-018 and T-021 can proceed in parallel once their engines exist.
 - Track E (post-core features): T-024, T-025, T-026 can run in parallel after T-023.
 - Track F (performance): T-027 can start before insights/settings are complete; T-028/T-029 follow.
+- Track G (phase 1 foundation): T-039~T-042 (catalog) and T-043~T-045 (validation skeleton) can progress in parallel after T-037/T-038 are started.
 
 ## 6. Risk Flags
 
@@ -407,6 +546,8 @@ High-risk tasks (technical uncertainty or performance sensitivity):
 - T-029: Diff-based overlay updates under frequent state changes.
 - T-030: Animated flow overlays on MapKit with acceptable performance.
 - T-031: Meeting strict latency/frame budgets on realistic datasets.
+- T-049: Placeholder national source handling may accidentally break source switching if factory fallback is incomplete.
+- T-050: Primitive-layer tests may expose hidden coupling in current repositories/store persistence.
 
 Risk mitigation rules:
 - Ship static rendering before animation.
