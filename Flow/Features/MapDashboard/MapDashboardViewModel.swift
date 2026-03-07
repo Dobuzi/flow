@@ -3,11 +3,37 @@ import Combine
 
 @MainActor
 final class MapDashboardViewModel: ObservableObject {
+    struct LegendUnitStatus: Equatable {
+        let dominantUnit: FlowRecord.UnitType?
+        let isMixed: Bool
+
+        var warningText: String? {
+            guard isMixed, let dominantUnit else { return nil }
+            return "Mixed units: showing \(dominantUnit.rawValue)"
+        }
+    }
+
+    struct FlowSelectionDetail: Equatable {
+        let flowID: String
+        let originName: String
+        let destinationName: String
+        let mode: TransportMode
+        let volume: Double
+        let unitType: FlowRecord.UnitType
+        let timeBucketID: String
+        let corridorName: String?
+        let regionType: String?
+        let confidenceScore: Double?
+        let dataSourceTag: String?
+    }
+
     @Published private(set) var dataset: FlowDataset?
     @Published private(set) var flowCount: Int = 0
     @Published private(set) var nodeCount: Int = 0
     @Published private(set) var renderableSegments: [RenderableFlowSegment] = []
-    @Published private(set) var loadError: String?
+    @Published private(set) var selectedFlowDetail: FlowSelectionDetail?
+    @Published private(set) var legendUnitStatus = LegendUnitStatus(dominantUnit: nil, isMixed: false)
+    @Published private(set) var loadError: FlowNonFatalError?
 
     private let flowRepository: FlowRepository
     private let locationRepository: LocationRepository
@@ -28,7 +54,7 @@ final class MapDashboardViewModel: ObservableObject {
         mapRenderer: FlowMapRenderer = FlowMapRenderer(),
         timeSeriesEngine: TimeSeriesEngine = TimeSeriesEngine(),
         filteringEngine: FilteringEngine = FilteringEngine(),
-        cacheDataSource: CacheDataSource = CacheDataSource(),
+        cacheDataSource: CacheDataSource = CacheDataSource.shared,
         performanceMonitor: PerformanceMonitor = PerformanceMonitor()
     ) {
         self.flowRepository = flowRepository
@@ -64,9 +90,12 @@ final class MapDashboardViewModel: ObservableObject {
             performanceMonitor.record("initial_load_ms", milliseconds: loadElapsed)
             FlowLogger.info("Loaded sample dataset with \(flowCount) flows and \(nodeCount) nodes")
         } catch {
-            loadError = String(describing: error)
+            loadError = FlowLogger.nonFatalError(
+                scope: .dataLoad,
+                userMessage: "Failed to load flow dataset. Map may be incomplete.",
+                underlying: error
+            )
             renderableSegments = []
-            FlowLogger.error("Failed to load sample dataset: \(error)")
         }
     }
 
@@ -83,6 +112,7 @@ final class MapDashboardViewModel: ObservableObject {
 
         let modeSet = state.selectedModes
         let spatialLevel = state.spatialLevel
+        let selectedFlowID = state.selectedFlowID
         let datasetVersion = dataset?.version ?? "unknown"
 
         renderTask?.cancel()
@@ -105,6 +135,12 @@ final class MapDashboardViewModel: ObservableObject {
 
             guard !Task.isCancelled else { return }
             renderableSegments = segments
+            legendUnitStatus = buildLegendUnitStatus(scopedFlows: scopedFlows)
+            selectedFlowDetail = buildFlowSelectionDetail(
+                selectedFlowID: selectedFlowID,
+                scopedFlows: scopedFlows,
+                activeBucketID: bucketID
+            )
             let selectionElapsed = (CFAbsoluteTimeGetCurrent() - selectionStart) * 1000.0
             performanceMonitor.record("selection_to_render_ms", milliseconds: selectionElapsed)
             if let p95 = performanceMonitor.p95("render_segment_build_ms") {
@@ -184,6 +220,45 @@ final class MapDashboardViewModel: ObservableObject {
 
         let grouped = Dictionary(grouping: preAggregated, by: \.unitType)
         return grouped.max { $0.value.count < $1.value.count }?.key.rawValue
+    }
+
+    private func buildLegendUnitStatus(scopedFlows: [FlowRecord]) -> LegendUnitStatus {
+        let grouped = Dictionary(grouping: scopedFlows, by: \.unitType)
+        guard !grouped.isEmpty else {
+            return LegendUnitStatus(dominantUnit: nil, isMixed: false)
+        }
+        let dominant = grouped.max { $0.value.count < $1.value.count }?.key
+        return LegendUnitStatus(
+            dominantUnit: dominant,
+            isMixed: grouped.count > 1
+        )
+    }
+
+    private func buildFlowSelectionDetail(
+        selectedFlowID: String?,
+        scopedFlows: [FlowRecord],
+        activeBucketID: String
+    ) -> FlowSelectionDetail? {
+        guard let selectedFlowID else { return nil }
+        guard let flow = scopedFlows.first(where: { $0.id == selectedFlowID }) else { return nil }
+
+        let nodesByID = Dictionary(uniqueKeysWithValues: allNodes.map { ($0.id, $0) })
+        let originName = nodesByID[flow.originNodeID]?.nameEn ?? nodesByID[flow.originNodeID]?.nameKo ?? flow.originNodeID
+        let destinationName = nodesByID[flow.destinationNodeID]?.nameEn ?? nodesByID[flow.destinationNodeID]?.nameKo ?? flow.destinationNodeID
+
+        return FlowSelectionDetail(
+            flowID: flow.id,
+            originName: originName,
+            destinationName: destinationName,
+            mode: flow.transportMode,
+            volume: flow.volume,
+            unitType: flow.unitType,
+            timeBucketID: activeBucketID,
+            corridorName: flow.metadata?.corridorName,
+            regionType: flow.metadata?.regionType,
+            confidenceScore: flow.metadata?.confidenceScore,
+            dataSourceTag: flow.metadata?.dataSourceTag
+        )
     }
 
     private func resolveBucketID(year: Int, month: Int, hour: Int) -> String? {

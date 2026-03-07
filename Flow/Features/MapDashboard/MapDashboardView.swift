@@ -52,25 +52,23 @@ struct MapDashboardView: View {
                         .background(.ultraThinMaterial)
                         .clipShape(Capsule())
                 }
-                FlowLegendView(selectedModes: store.state.selectedModes)
+                FlowLegendView(
+                    selectedModes: store.state.selectedModes,
+                    unitWarningText: viewModel.legendUnitStatus.warningText
+                )
 
                 if let error = viewModel.loadError {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .padding(8)
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    NonBlockingErrorBanner(error: error)
                 }
             }
             .padding(.top, 8)
             .padding(.horizontal, 12)
 
-            if let selectedFlowID = store.state.selectedFlowID {
+            if let detail = viewModel.selectedFlowDetail {
                 VStack {
                     Spacer()
                     FlowDetailCard(
-                        selectedFlowID: selectedFlowID,
+                        detail: detail,
                         onClear: { store.send(.setSelectedFlowID(nil)) }
                     )
                     .padding(.horizontal, 12)
@@ -137,6 +135,9 @@ struct MapDashboardView: View {
             syncSelection()
         }
         .onChange(of: store.state.spatialLevel) { _, _ in
+            syncSelection()
+        }
+        .onChange(of: store.state.selectedFlowID) { _, _ in
             syncSelection()
         }
         .onDisappear {

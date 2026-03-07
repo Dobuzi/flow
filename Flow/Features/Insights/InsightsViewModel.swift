@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class InsightsViewModel: ObservableObject {
     @Published private(set) var summary: InsightsSummary?
-    @Published private(set) var loadError: String?
+    @Published private(set) var loadError: FlowNonFatalError?
     @Published private(set) var isLoading: Bool = false
 
     private let flowRepository: FlowRepository
@@ -46,9 +46,12 @@ final class InsightsViewModel: ObservableObject {
             loadError = nil
             recompute(state: state)
         } catch {
-            loadError = String(describing: error)
+            loadError = FlowLogger.nonFatalError(
+                scope: .insights,
+                userMessage: "Failed to compute insights for the current scope.",
+                underlying: error
+            )
             summary = nil
-            FlowLogger.error("Failed to build insights: \(error)")
         }
         isLoading = false
     }

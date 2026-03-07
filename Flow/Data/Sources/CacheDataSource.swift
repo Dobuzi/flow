@@ -14,6 +14,17 @@ struct FlowCacheKey: Hashable {
 }
 
 actor CacheDataSource {
+    struct CacheStats: Equatable {
+        let memoryEntries: Int
+        let memoryUsageBytes: Int
+        let memoryBudgetBytes: Int
+        let diskFiles: Int
+        let diskUsageBytes: Int
+        let diskBudgetBytes: Int
+    }
+
+    static let shared = CacheDataSource()
+
     private struct Entry {
         var flows: [FlowRecord]
         var cost: Int
@@ -73,6 +84,32 @@ actor CacheDataSource {
         enforceDiskBudget()
     }
 
+    func clearAll() {
+        memoryStore.removeAll()
+        currentMemoryCost = 0
+
+        guard let urls = try? fileManager.contentsOfDirectory(
+            at: cacheDirectory,
+            includingPropertiesForKeys: nil
+        ) else { return }
+
+        for url in urls {
+            try? fileManager.removeItem(at: url)
+        }
+    }
+
+    func cacheStats() -> CacheStats {
+        let diskFilesAndUsage = diskStats()
+        return CacheStats(
+            memoryEntries: memoryStore.count,
+            memoryUsageBytes: currentMemoryCost,
+            memoryBudgetBytes: memoryBudgetBytes,
+            diskFiles: diskFilesAndUsage.files,
+            diskUsageBytes: diskFilesAndUsage.bytes,
+            diskBudgetBytes: diskBudgetBytes
+        )
+    }
+
     private func enforceMemoryBudget() {
         guard currentMemoryCost > memoryBudgetBytes else { return }
         let sorted = memoryStore.sorted { $0.value.lastAccess < $1.value.lastAccess }
@@ -115,5 +152,21 @@ actor CacheDataSource {
 
     private func estimatedCost(for flows: [FlowRecord]) -> Int {
         max(flows.count * 256, 1)
+    }
+
+    private func diskStats() -> (files: Int, bytes: Int) {
+        guard let urls = try? fileManager.contentsOfDirectory(
+            at: cacheDirectory,
+            includingPropertiesForKeys: [.fileSizeKey]
+        ) else {
+            return (files: 0, bytes: 0)
+        }
+
+        var bytes = 0
+        for url in urls {
+            let values = try? url.resourceValues(forKeys: [.fileSizeKey])
+            bytes += values?.fileSize ?? 0
+        }
+        return (files: urls.count, bytes: bytes)
     }
 }

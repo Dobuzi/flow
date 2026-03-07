@@ -50,12 +50,14 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: State updates propagate to subscribed view models via deterministic action flow.
 
 ## Task T-004 — Add baseline logging and error surface strategy
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-003
 - Complexity: Small
 - Description: Add lightweight logging utilities and error reporting contract for data-load/filter/render failures.
 - Deliverable: Logging helper and consistent non-fatal error presentation pattern.
 - Definition of Done: Core layers can emit structured logs and UI can display a non-blocking error state.
+- Notes: Added structured logger levels/metadata in `FlowLogger`, standardized `FlowNonFatalError` contract by scope, and introduced shared `NonBlockingErrorBanner` used across Map/Insights/Settings for non-fatal UI error surfacing.
 
 ## Milestone 2: Data Layer
 
@@ -165,12 +167,14 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Notes: Added map tap hit-testing against rendered polylines, deterministic tie-break order (`volume desc`, `distance asc`, `id asc`), invalid-selection clearing on segment set updates, and basic `FlowDetailCard` trigger/clear wiring via `AppStore.selectedFlowID`.
 
 ## Task T-016 — Add map rendering integration tests
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-014, T-015
 - Complexity: Medium
 - Description: Validate map render contract (segment limits, style mapping, threshold behavior, selection behavior).
 - Deliverable: Integration test suite for map rendering and interaction.
 - Definition of Done: Tests verify renderer output consistency for fixed fixtures.
+- Notes: Added `FlowTests/MapRenderingIntegrationTests.swift` (Swift Testing) covering threshold + top-150 override, spatial-level segment caps with top-volume retention, and selection detail invalidation after mode filtering; verified via `xcodebuild ... -only-testing:FlowTests test` on simulator.
 
 ## Milestone 4: Time Filtering
 
@@ -227,12 +231,14 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Notes: Added `ModeFilterSheet` and `ModeFilterViewModel`; map dashboard now presents the filter sheet and dispatches `setModes` updates to `AppStore`.
 
 ## Task T-022 — Implement legend component with unit warning state
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-021, T-014
 - Complexity: Small
 - Description: Show mode styles and display mixed-unit badge when applicable.
 - Deliverable: `FlowLegendView` with accessibility-compliant labels and visuals.
 - Definition of Done: Legend reflects active mode styles and displays mixed-unit warning correctly.
+- Notes: Upgraded `FlowLegendView` to include mode-specific non-color style swatches and accessibility labels; added mixed-unit warning badge (`Mixed units: showing <unitType>`) sourced from `MapDashboardViewModel` scoped-flow unit analysis.
 
 ## Task T-023 — Integrate mode filtering into render and selection lifecycle
 - Status: Completed (2026-03-07)
@@ -247,28 +253,34 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 ## Milestone 6: UI/UX Polishing and Performance
 
 ## Task T-024 — Implement FlowDetailCard content and live update behavior
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-015, T-019, T-023
 - Complexity: Medium
 - Description: Show origin/destination, mode, volume, selected bucket, metadata, and playback-driven updates.
 - Deliverable: Fully functional detail card with clear action.
 - Definition of Done: Detail card opens, updates, and dismisses according to design behavior.
+- Notes: Flow detail card now renders origin/destination, mode, volume + unit, active bucket, and optional metadata fields; detail state is derived from scoped flows in `MapDashboardViewModel` and updates on time/mode/spatial/selection changes.
 
 ## Task T-025 — Implement Insights use case and InsightsView
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-020, T-017, T-023
 - Complexity: Large
 - Description: Build top corridors, mode share, and time distribution outputs scoped by current filters/time.
 - Deliverable: Insights tab with aggregate views and charts.
 - Definition of Done: Insights values match repository-derived aggregates for current app state.
+- Notes: Implemented `ComputeInsightsUseCase`, `InsightsViewModel`, and a non-placeholder `InsightsView` with scope summary, key metrics, mode share bars, top corridors, and time distribution; view recomputes on year/month/hour/mode changes from `AppStore` state.
 
 ## Task T-026 — Implement SettingsView and dataset/cache controls
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-009
 - Complexity: Medium
 - Description: Add dataset version display/selection hooks and cache management controls.
 - Deliverable: Settings tab with data and visualization settings.
 - Definition of Done: Settings actions persist and reload correctly.
+- Notes: Replaced placeholder `SettingsView` with dataset/cache/visualization sections; added `SettingsViewModel` with persisted dataset source and preferred spatial level (`UserDefaults`), dataset manifest display, cache stats refresh, and cache clear action wired to shared `CacheDataSource`.
 
 ## Task T-027 — Implement in-memory and disk cache with limits
 - Status: Completed (2026-03-07)
@@ -321,12 +333,14 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Notes: Added `PerformanceMonitor` metric recording/reporting; instrumented load, filter, selection-to-render, playback tick, and overlay diff update timings; added budget status report and logging hook from map dashboard.
 
 ## Task T-032 — Final QA pass, accessibility checks, and cleanup
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-024, T-025, T-026, T-031
 - Complexity: Medium
 - Description: Execute regression, accessibility checks (legend non-color cues, contrast), and remove known polish defects.
 - Deliverable: Release-candidate baseline build.
 - Definition of Done: No critical regressions; accessibility and core flow acceptance checks pass.
+- Notes: Completed end-to-end QA with simulator build/run and automated test pass (`FlowTests` + `FlowUITests` via `xcodebuild test`); verified map/insights/settings launch path stability, legend non-color cues + mixed-unit warning rendering, and no critical runtime regressions.
 
 ## 4. Sequencing (Execution Order)
 

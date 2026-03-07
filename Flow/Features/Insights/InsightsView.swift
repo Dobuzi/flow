@@ -19,13 +19,7 @@ struct InsightsView: View {
                         topCorridorsSection(summary: summary)
                         timeDistributionSection(summary: summary)
                     } else if let loadError = viewModel.loadError {
-                        Text(loadError)
-                            .font(.subheadline)
-                            .foregroundStyle(.red)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.thinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        NonBlockingErrorBanner(error: loadError)
                     }
                 }
                 .padding()
