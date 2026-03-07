@@ -7,6 +7,8 @@ enum MobilityRepositoryFactory {
             return LocalFlowRepository()
         case .seoulCapitalSnapshot:
             return SeoulCapitalMobilityFlowRepository()
+        case .koreaNational:
+            return LocalFlowRepository()
         }
     }
 
@@ -16,6 +18,8 @@ enum MobilityRepositoryFactory {
             return LocalLocationRepository()
         case .seoulCapitalSnapshot:
             return SeoulCapitalMobilityLocationRepository()
+        case .koreaNational:
+            return LocalLocationRepository()
         }
     }
 }
