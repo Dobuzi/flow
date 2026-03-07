@@ -259,6 +259,59 @@ FlowApp
 
 ---
 
+## 12. Real-Data Provider Addendum (Seoul Capital Snapshot v1)
+
+This addendum removes ambiguity for external dataset onboarding while preserving the existing nationwide architecture.
+
+### 12.1 Provider Contract
+- External providers must normalize into existing domain entities (`FlowDataset`, `LocationNode`, `FlowRecord`) before UI/view models consume data.
+- Provider-specific parsing is isolated in `Data/DTOs`, `Data/Mappers`, and `Data/Sources`.
+- Repositories exposed to features remain provider-agnostic (`FlowRepository`, `LocationRepository`).
+
+### 12.2 First Real Source
+- Source: Seoul/Capital-region mobility snapshot for 수도권 생활이동 OD data.
+- Initial integration mode: bundled snapshot files (production-style ingestion path, no direct API dependency in app runtime yet).
+- Snapshot resource contract:
+  - `seoul_capital_manifest.json`
+  - `seoul_capital_nodes.json`
+  - `seoul_capital_flows.jsonl`
+
+### 12.3 Transport Mode Normalization Rules
+
+| External Mode Keywords | Internal Mode |
+|---|---|
+| `rail`, `train`, `subway`, `철도`, `기차`, `지하철` | `rail` |
+| `air`, `항공` | `air` |
+| `maritime`, `ship`, `ferry`, `선박`, `해운`, `여객선` | `maritime` |
+| `vehicle`, `bus`, `express bus`, `metropolitan bus`, `local bus`, `walking`, `other`, unknown | `road` (fallback) |
+
+Notes:
+- This fallback policy is intentional for v1 to keep rendering/filter compatibility.
+- Maritime may be absent in this dataset; zero-record mode states must remain valid.
+
+### 12.4 Time Bucket Normalization
+- External daily/hourly fields are normalized to canonical app buckets:
+  - hourly: `H:YYYY-MM|HH`
+- App timezone for bucket interpretation is local (`Asia/Seoul`) unless an explicit dataset timezone field is added later.
+
+### 12.5 Source Switching
+- App state includes selected dataset source (`bundledSample`, `seoulCapitalSnapshot`).
+- Map and Insights must reload when source changes.
+- Settings must expose source selection without changing feature-level architecture.
+
+### 12.6 Validation and Compatibility Requirements
+- Schema version validation is mandatory before ingestion.
+- Invalid flow rules from data layer still apply (missing nodes, negative volume, self-loop OD drops).
+- Existing features must work unchanged across both sources:
+  - map overlays
+  - time controls
+  - mode filters
+  - insights summaries
+
+### 12.7 Change Control
+- New providers must be added via the same DTO -> Mapper -> DataSource -> Repository path.
+- Any deviation from this path requires a Design.md update before implementation.
+
 ## Suggested Non-Functional Defaults
 - Architecture baseline: MVVM + repository + map renderer abstraction
 - Data contract first: stable schemas for `FlowRecord` and `TimeBucket`

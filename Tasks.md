@@ -342,6 +342,36 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: No critical regressions; accessibility and core flow acceptance checks pass.
 - Notes: Completed end-to-end QA with simulator build/run and automated test pass (`FlowTests` + `FlowUITests` via `xcodebuild test`); verified map/insights/settings launch path stability, legend non-color cues + mixed-unit warning rendering, and no critical runtime regressions.
 
+## Milestone 7: External Data Providers (Real Dataset)
+
+## Task T-033 — Integrate Seoul/Capital real-data snapshot provider
+- Status: Completed (2026-03-07)
+- Priority: P0
+- Dependency: T-009, T-017, T-020, T-025, T-026
+- Complexity: Large
+- Description: Add first production-style external provider path for 수도권 생활이동 OD dataset with DTO/mapping/data-source/repository normalization into existing domain models.
+- Deliverable: Selectable real dataset source that coexists with sample data and works with map/time/mode/insights.
+- Definition of Done: App can switch to Seoul snapshot data source and render/filter/analyze without architecture changes or crashes.
+- Notes: Added `FlowDatasetSource`, Seoul DTO/mapper/data source/repositories, `MobilityRepositoryFactory`, bundled snapshot resources, and source-switch wiring in Settings/AppState/Map/Insights. Added integration tests for mode mapping, snapshot loading, and selected-source view model loading.
+
+## Task T-034 — Implement live API refresh pipeline for Seoul source
+- Status: Not Started
+- Priority: P1
+- Dependency: T-033
+- Complexity: Large
+- Description: Add API client + fetch orchestration for periodic snapshot refresh (without breaking bundled fallback).
+- Deliverable: Background-refreshable Seoul provider with local persisted snapshot handoff.
+- Definition of Done: App can refresh Seoul data from API and continue operating offline with last valid snapshot.
+
+## Task T-035 — Add schema drift guardrails and source health checks
+- Status: Not Started
+- Priority: P1
+- Dependency: T-034
+- Complexity: Medium
+- Description: Detect upstream schema/field drift and enforce safe fallback with explicit diagnostics.
+- Deliverable: Schema compatibility report path and provider health status surfaced in logs/settings.
+- Definition of Done: Incompatible payloads are rejected safely, app remains stable, and operator-visible diagnostics are emitted.
+
 ## 4. Sequencing (Execution Order)
 
 1. T-001 → T-004 (skeleton and app state foundation)
@@ -352,6 +382,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 6. T-024 → T-026 (detail, insights, settings UX)
 7. T-027 → T-031 (cache, pre-aggregation, diff updates, animation, perf validation)
 8. T-032 (QA and cleanup)
+9. T-033 → T-035 (external provider integration and live refresh hardening)
 
 Blocking dependencies:
 - Renderer work requires data/repository core (T-005/T-009).

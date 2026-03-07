@@ -256,3 +256,26 @@ Flow/
 - `ImplementationPlan.md` accepted as build roadmap.
 - Clarification items from Section 1 resolved (in `Design.md` addendum or explicit decision log) before heavy implementation milestones.
 - Team agrees on milestone exit criteria and performance budgets.
+
+## 9. Real-Data Integration Update (2026-03-07)
+
+### 9.1 Clarification Status
+The ambiguity items in Section 1 are now resolved for first production-style external ingestion through `Design.md` Section 12 addendum:
+- dataset source contract and snapshot packaging
+- mode normalization policy to app categories
+- canonical hourly bucket format and timezone policy
+- source-switching behavior in app state
+- compatibility requirements across map/filter/time/insights
+
+### 9.2 Completed Scope
+- Added Seoul/Capital snapshot provider path (`DTO -> Mapper -> DataSource -> Repository`).
+- Added source-agnostic repository factory and runtime source switching (`bundledSample` vs `seoulCapitalSnapshot`).
+- Wired Map and Insights reload behavior on source changes.
+- Added tests for mode mapping, snapshot loading, and source-switch load path.
+
+### 9.3 Next Roadmap Item
+Add a new milestone after current hardening work:
+- **Milestone 7: Live External Refresh**
+  - API client and sync orchestration for Seoul source
+  - schema drift detection and fallback policy
+  - snapshot refresh workflow and integrity checks
