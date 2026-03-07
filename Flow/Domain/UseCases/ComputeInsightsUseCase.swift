@@ -25,9 +25,13 @@ struct InsightsSummary: Equatable {
     }
 
     let datasetVersion: String?
+    let source: FlowDatasetSource
+    let spatialLevel: SpatialLevel
     let totalFlowCount: Int
     let totalNodeCount: Int
     let scopedFlowCount: Int
+    let renderableFlowCount: Int
+    let renderGuardrailTruncatedCount: Int
     let scopedVolume: Double
     let activeTimeLabel: String
     let activeModes: [TransportMode]
@@ -39,17 +43,24 @@ struct InsightsSummary: Equatable {
 struct ComputeInsightsUseCase {
     private let filteringEngine: FilteringEngine
     private let timeSeriesEngine: TimeSeriesEngine
+    private let spatialAggregationEngine: SpatialAggregationEngine
+    private let nationalRenderGuardrailPolicy: NationalRenderGuardrailPolicy
 
     init(
         filteringEngine: FilteringEngine = FilteringEngine(),
-        timeSeriesEngine: TimeSeriesEngine = TimeSeriesEngine()
+        timeSeriesEngine: TimeSeriesEngine = TimeSeriesEngine(),
+        spatialAggregationEngine: SpatialAggregationEngine = SpatialAggregationEngine(),
+        nationalRenderGuardrailPolicy: NationalRenderGuardrailPolicy = NationalRenderGuardrailPolicy()
     ) {
         self.filteringEngine = filteringEngine
         self.timeSeriesEngine = timeSeriesEngine
+        self.spatialAggregationEngine = spatialAggregationEngine
+        self.nationalRenderGuardrailPolicy = nationalRenderGuardrailPolicy
     }
 
     func execute(
         datasetVersion: String?,
+        source: FlowDatasetSource,
         flows: [FlowRecord],
         nodes: [LocationNode],
         state: AppState
@@ -75,6 +86,19 @@ struct ComputeInsightsUseCase {
             )
         )
 
+        let spatiallyShapedFlows = spatialAggregationEngine.aggregateForRendering(
+            flows: scopedFlows,
+            nodes: nodes,
+            source: source,
+            requestedSpatialLevel: state.spatialLevel
+        )
+        let renderGuardrail = nationalRenderGuardrailPolicy.applyToFlows(
+            source: source,
+            spatialLevel: state.spatialLevel,
+            flows: spatiallyShapedFlows,
+            selectedFlowID: nil
+        )
+
         let modeScopedAllFlows = filteringEngine.filter(
             flows: flows,
             nodes: nodes,
@@ -85,16 +109,20 @@ struct ComputeInsightsUseCase {
             )
         )
 
-        let scopedVolume = scopedFlows.reduce(0) { $0 + $1.volume }
-        let modeShare = buildModeShare(scopedFlows: scopedFlows, totalVolume: scopedVolume)
-        let topCorridors = buildTopCorridors(scopedFlows: scopedFlows, nodes: nodes)
+        let scopedVolume = spatiallyShapedFlows.reduce(0) { $0 + $1.volume }
+        let modeShare = buildModeShare(scopedFlows: spatiallyShapedFlows, totalVolume: scopedVolume)
+        let topCorridors = buildTopCorridors(scopedFlows: spatiallyShapedFlows, nodes: nodes)
         let timeDistribution = buildTimeDistribution(flows: modeScopedAllFlows)
 
         return InsightsSummary(
             datasetVersion: datasetVersion,
+            source: source,
+            spatialLevel: state.spatialLevel,
             totalFlowCount: flows.count,
             totalNodeCount: nodes.count,
-            scopedFlowCount: scopedFlows.count,
+            scopedFlowCount: spatiallyShapedFlows.count,
+            renderableFlowCount: renderGuardrail.flows.count,
+            renderGuardrailTruncatedCount: renderGuardrail.truncatedCount,
             scopedVolume: scopedVolume,
             activeTimeLabel: String(format: "%04d-%02d %02d:00", state.selectedYear, state.selectedMonth, state.selectedHour),
             activeModes: state.selectedModes.sorted { $0.rawValue < $1.rawValue },

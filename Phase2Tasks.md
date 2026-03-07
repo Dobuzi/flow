@@ -168,6 +168,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Validate and adjust insights calculations so national dataset produces meaningful summaries without source-specific branching leaks.
 - Deliverable: Insights compatibility updates for national source.
 - Definition of Done: Insights tab displays non-placeholder, coherent summaries for `koreaNational`.
+- Status: Completed (2026-03-07)
+- Notes: Extended `InsightsSummary` and `ComputeInsightsUseCase` with source/spatial context plus national render-guardrail-aware metrics (`renderableFlowCount`, `renderGuardrailTruncatedCount`). National insights now compute on spatially shaped flows while surfacing map guardrail truncation metadata. Updated `InsightsView` scope/metrics cards and added `ComputeInsightsUseCaseTests` covering national compatibility and non-national regression behavior.
 
 ## P2-013 — Add source-switching UX safety for national load states
 - Priority: P1

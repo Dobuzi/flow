@@ -51,13 +51,22 @@ struct InsightsView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Current Scope")
                 .font(.headline)
+            Text("Source: \(summary.source.title)")
+                .font(.subheadline)
             Text("Time: \(summary.activeTimeLabel)")
+                .font(.subheadline)
+            Text("Spatial: \(summary.spatialLevel.rawValue.capitalized)")
                 .font(.subheadline)
             Text("Modes: \(summary.activeModes.map { $0.rawValue.capitalized }.joined(separator: ", "))")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             if let version = summary.datasetVersion {
                 Text("Dataset: \(version)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            if summary.renderGuardrailTruncatedCount > 0 {
+                Text("Render guardrail active: top \(summary.renderableFlowCount.formatted()) of \(summary.scopedFlowCount.formatted()) scoped flows are shown on map.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -73,6 +82,7 @@ struct InsightsView: View {
             ("Total Flows", summary.totalFlowCount.formatted()),
             ("Total Nodes", summary.totalNodeCount.formatted()),
             ("Scoped Flows", summary.scopedFlowCount.formatted()),
+            ("Renderable Flows", summary.renderableFlowCount.formatted()),
             ("Scoped Volume", formatVolume(summary.scopedVolume))
         ]
 

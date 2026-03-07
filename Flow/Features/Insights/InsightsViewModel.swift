@@ -83,6 +83,7 @@ final class InsightsViewModel: ObservableObject {
         guard hasLoaded, activeSource == state.selectedDatasetSource else { return }
         summary = useCase.execute(
             datasetVersion: dataset?.version,
+            source: state.selectedDatasetSource,
             flows: allFlows,
             nodes: allNodes,
             state: state
