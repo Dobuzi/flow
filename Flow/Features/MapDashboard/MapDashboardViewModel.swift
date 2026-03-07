@@ -34,6 +34,7 @@ final class MapDashboardViewModel: ObservableObject {
     @Published private(set) var selectedFlowDetail: FlowSelectionDetail?
     @Published private(set) var legendUnitStatus = LegendUnitStatus(dominantUnit: nil, isMixed: false)
     @Published private(set) var loadError: FlowNonFatalError?
+    @Published private(set) var sourceStatus: DatasetSourceStatus?
 
     private let flowRepositoryBuilder: (FlowDatasetSource) -> FlowRepository
     private let locationRepositoryBuilder: (FlowDatasetSource) -> LocationRepository
@@ -51,6 +52,7 @@ final class MapDashboardViewModel: ObservableObject {
     private var allNodes: [LocationNode] = []
     private var preAggregationIndex: PreAggregationIndex?
     private var renderTask: Task<Void, Never>?
+    private var isNationalQueryDegraded = false
 
     init(
         flowRepositoryBuilder: @escaping (FlowDatasetSource) -> FlowRepository = { source in
@@ -87,6 +89,12 @@ final class MapDashboardViewModel: ObservableObject {
     func load(initialState: AppState) async {
         let loadStart = CFAbsoluteTimeGetCurrent()
         let source = initialState.selectedDatasetSource
+        isNationalQueryDegraded = false
+        sourceStatus = DatasetSourceStatus(
+            source: source,
+            state: .loading,
+            message: "Loading \(source.title)..."
+        )
         do {
             let flowRepository = flowRepositoryBuilder(source)
             let locationRepository = locationRepositoryBuilder(source)
@@ -103,6 +111,11 @@ final class MapDashboardViewModel: ObservableObject {
             preAggregationIndex = PreAggregationIndex(flows: resolvedFlows)
             activeSource = source
             loadError = nil
+            sourceStatus = DatasetSourceStatus(
+                source: source,
+                state: .ready,
+                message: "\(source.title) is ready."
+            )
             applySelection(from: initialState)
             let loadElapsed = (CFAbsoluteTimeGetCurrent() - loadStart) * 1000.0
             performanceMonitor.record("initial_load_ms", milliseconds: loadElapsed)
@@ -112,6 +125,11 @@ final class MapDashboardViewModel: ObservableObject {
                 scope: .dataLoad,
                 userMessage: "Failed to load flow dataset. Map may be incomplete.",
                 underlying: error
+            )
+            sourceStatus = DatasetSourceStatus(
+                source: source,
+                state: .unavailable,
+                message: "Unable to load \(source.title)."
             )
             renderableSegments = []
         }
@@ -168,6 +186,29 @@ final class MapDashboardViewModel: ObservableObject {
                     milliseconds: Double(guardrailResult.truncatedCount)
                 )
                 FlowLogger.info("National render guardrail truncated \(guardrailResult.truncatedCount) segments")
+                sourceStatus = DatasetSourceStatus(
+                    source: .koreaNational,
+                    state: .limited,
+                    message: "National view is limited to top \(segments.count.formatted()) flows for map stability."
+                )
+            } else if activeSource == .koreaNational, isNationalQueryDegraded {
+                sourceStatus = DatasetSourceStatus(
+                    source: .koreaNational,
+                    state: .limited,
+                    message: "National query degraded. Showing baseline fallback."
+                )
+            } else if activeSource == .koreaNational {
+                sourceStatus = DatasetSourceStatus(
+                    source: .koreaNational,
+                    state: .ready,
+                    message: "Korea National baseline is active."
+                )
+            } else if let activeSource {
+                sourceStatus = DatasetSourceStatus(
+                    source: activeSource,
+                    state: .ready,
+                    message: "\(activeSource.title) is active."
+                )
             }
 
             guard !Task.isCancelled else { return }
@@ -244,6 +285,7 @@ final class MapDashboardViewModel: ObservableObject {
 
             do {
                 let queryResult = try await mobilityQuerying.execute(query)
+                isNationalQueryDegraded = false
                 await cacheDataSource.setFlows(queryResult.flows, for: cacheKey)
                 return queryResult.flows
             } catch {
@@ -252,7 +294,15 @@ final class MapDashboardViewModel: ObservableObject {
                     userMessage: "National query path failed. Falling back to baseline flow pipeline.",
                     underlying: error
                 )
+                isNationalQueryDegraded = true
+                sourceStatus = DatasetSourceStatus(
+                    source: .koreaNational,
+                    state: .limited,
+                    message: "National query degraded. Showing baseline fallback."
+                )
             }
+        } else {
+            isNationalQueryDegraded = false
         }
 
         let preAggregated = preAggregationIndex?.flows(

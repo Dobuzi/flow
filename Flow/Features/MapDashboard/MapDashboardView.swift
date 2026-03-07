@@ -58,6 +58,11 @@ struct MapDashboardView: View {
                     unitWarningText: viewModel.legendUnitStatus.warningText
                 )
 
+                if let status = viewModel.sourceStatus,
+                   status.source == store.state.selectedDatasetSource {
+                    SourceStatusBanner(status: status)
+                }
+
                 if let error = viewModel.loadError {
                     NonBlockingErrorBanner(error: error)
                 }

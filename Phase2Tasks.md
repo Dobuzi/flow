@@ -178,6 +178,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Ensure source switching between sample/Seoul/national preserves app stability and clear error messaging when national data path degrades.
 - Deliverable: Source-switch resilience updates.
 - Definition of Done: Switching across all three sources produces deterministic load behavior and recoverable errors.
+- Status: Completed (2026-03-07)
+- Notes: Added source-state UX model (`DatasetSourceStatus`) and map-level status banner (`SourceStatusBanner`) to surface loading/ready/limited/unavailable states during dataset switching. `MapDashboardViewModel` now publishes truthful source status for national guardrail limits, query fallback degradation, and load failures. Added `MapDashboardSourceStatusTests` to verify switching behavior across bundled sample, Seoul snapshot, and national paths with non-fatal degradation semantics.
 
 ## P2-014 — Add nationwide ingestion and rendering regression tests
 - Priority: P0
