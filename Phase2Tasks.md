@@ -130,6 +130,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Add first aggregation path suitable for national-scale rendering (province-level at low zoom, city-level at higher zoom where available).
 - Deliverable: Spatial aggregation engine/policy extension for national source.
 - Definition of Done: National flows are aggregated deterministically by spatial level and usable by existing renderer.
+- Status: Completed (2026-03-07)
+- Notes: Added `SpatialAggregationEngine` and integrated it into `MapDashboardViewModel` before renderable-segment generation. National source now applies deterministic aggregation (national/province -> province baseline, city -> city baseline), preserves mode/time/unit boundaries, and applies top-volume caps for render safety. Added dedicated aggregation tests plus national/sample/Seoul regression coverage.
 
 ## P2-009 — Add national query path integration using existing query primitives
 - Priority: P0

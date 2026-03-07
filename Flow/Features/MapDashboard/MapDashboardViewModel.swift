@@ -40,6 +40,7 @@ final class MapDashboardViewModel: ObservableObject {
     private let mapRenderer: FlowMapRenderer
     private let timeSeriesEngine: TimeSeriesEngine
     private let filteringEngine: FilteringEngine
+    private let spatialAggregationEngine: SpatialAggregationEngine
     private let cacheDataSource: CacheDataSource
     private let performanceMonitor: PerformanceMonitor
 
@@ -59,6 +60,7 @@ final class MapDashboardViewModel: ObservableObject {
         mapRenderer: FlowMapRenderer = FlowMapRenderer(),
         timeSeriesEngine: TimeSeriesEngine = TimeSeriesEngine(),
         filteringEngine: FilteringEngine = FilteringEngine(),
+        spatialAggregationEngine: SpatialAggregationEngine = SpatialAggregationEngine(),
         cacheDataSource: CacheDataSource = CacheDataSource.shared,
         performanceMonitor: PerformanceMonitor = PerformanceMonitor()
     ) {
@@ -67,6 +69,7 @@ final class MapDashboardViewModel: ObservableObject {
         self.mapRenderer = mapRenderer
         self.timeSeriesEngine = timeSeriesEngine
         self.filteringEngine = filteringEngine
+        self.spatialAggregationEngine = spatialAggregationEngine
         self.cacheDataSource = cacheDataSource
         self.performanceMonitor = performanceMonitor
     }
@@ -217,8 +220,15 @@ final class MapDashboardViewModel: ObservableObject {
             )
         }
 
-        await cacheDataSource.setFlows(filtered, for: cacheKey)
-        return filtered
+        let shaped = spatialAggregationEngine.aggregateForRendering(
+            flows: filtered,
+            nodes: allNodes,
+            source: activeSource ?? .bundledSample,
+            requestedSpatialLevel: spatialLevel
+        )
+
+        await cacheDataSource.setFlows(shaped, for: cacheKey)
+        return shaped
     }
 
     private func dominantUnitType(for bucketID: String, modes: Set<TransportMode>, spatialLevel: SpatialLevel) -> String? {
