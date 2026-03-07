@@ -3,7 +3,7 @@ import Foundation
 struct NationalBaselineMobilityFlowRepository: FlowRepository {
     private let dataSource: NationalBaselineMobilityDataSource
 
-    init(dataSource: NationalBaselineMobilityDataSource = NationalBaselinePlaceholderDataSource()) {
+    init(dataSource: NationalBaselineMobilityDataSource = NationalBaselineSnapshotDataSource()) {
         self.dataSource = dataSource
     }
 

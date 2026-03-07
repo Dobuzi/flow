@@ -37,21 +37,21 @@
       "quality_score": 0.92
     },
     {
-      "id": "korea-national-placeholder",
-      "dataset_id": "korea-national-placeholder",
+      "id": "korea-national-baseline",
+      "dataset_id": "korea-national-baseline-2025",
       "source": "korea_national",
-      "provider_id": "pending",
-      "display_name": "Korea National (Placeholder)",
-      "version": "0.0.1",
+      "provider_id": "korea_transport_institute",
+      "display_name": "Korea National Baseline",
+      "version": "2025.1",
       "schema_version": "1.0.0",
-      "updated_at": "2026-03-07T00:00:00Z",
+      "updated_at": "2025-12-31T00:00:00Z",
       "available_modes": ["road", "rail", "air", "maritime"],
       "supported_spatial_levels": ["national", "province", "city"],
-      "supported_granularities": ["year", "month"],
-      "reliability": "unknown",
-      "spatial_precision": "unknown",
-      "temporal_precision": "unknown",
-      "quality_score": null
+      "supported_granularities": ["year", "month", "hour_of_day"],
+      "reliability": "medium",
+      "spatial_precision": "province",
+      "temporal_precision": "month",
+      "quality_score": 0.8
     }
   ]
 }

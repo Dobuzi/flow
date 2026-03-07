@@ -3,7 +3,7 @@ import Foundation
 struct NationalBaselineMobilityLocationRepository: LocationRepository {
     private let dataSource: NationalBaselineMobilityDataSource
 
-    init(dataSource: NationalBaselineMobilityDataSource = NationalBaselinePlaceholderDataSource()) {
+    init(dataSource: NationalBaselineMobilityDataSource = NationalBaselineSnapshotDataSource()) {
         self.dataSource = dataSource
     }
 

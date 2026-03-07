@@ -60,6 +60,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Define and document `Resources/KoreaNationalData` file contract for manifest, nodes, and flows snapshot used by `koreaNational`.
 - Deliverable: Resource contract spec + placeholder folder scaffolding.
 - Definition of Done: Expected filenames, required fields, and encoding (`json`/`jsonl`, UTF-8) are explicit and versioned.
+- Status: Completed (2026-03-07)
+- Notes: Added `Flow/Resources/KoreaNationalData/README.md` with contract version, required filenames, required fields, canonical time-bucket policy, and activation/validation rules.
 
 ## P2-002 — Register real koreaNational descriptor in dataset catalog
 - Priority: P0
@@ -68,6 +70,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Replace placeholder descriptor metadata with real national baseline descriptor in bundled catalog while preserving source IDs.
 - Deliverable: Updated `dataset_catalog.json` entry for `koreaNational`.
 - Definition of Done: Catalog resolves `koreaNational` as active real dataset metadata (provider/version/coverage/precision).
+- Status: Completed (2026-03-07)
+- Notes: Updated `dataset_catalog.json` national descriptor to `korea-national-baseline-2025` with non-placeholder provider, version, precision, granularity, and quality metadata. Updated repository integration test expectation accordingly.
 
 ## P2-003 — Add nationwide manifest compatibility profile
 - Priority: P1
@@ -76,6 +80,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Extend schema/compatibility primitives with a national-baseline profile (required fields + accepted schema versions).
 - Deliverable: Validator/checker policy extension for national manifest.
 - Definition of Done: National manifest passes compatibility check; invalid manifest fails with structured reason.
+- Status: Completed (2026-03-07)
+- Notes: Added `RequiredFieldPolicy.koreaNationalBaseline` and source-aware compatibility evaluation in `DatasetCompatibilityChecker`, including national schema-version profile checks and updated test coverage.
 
 ## P2-004 — Add national baseline DTO definitions
 - Priority: P0
@@ -84,6 +90,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Define DTOs for national manifest, node, and flow payloads aligned to snapshot schema.
 - Deliverable: DTO files under `Data/DTOs` for national source.
 - Definition of Done: DTO decoding succeeds for fixture snapshot and enforces required fields.
+- Status: Completed (2026-03-07)
+- Notes: Added `NationalBaselineMobilityDTO.swift` with manifest/node/flow DTOs and metadata DTO. Added `NationalBaselineDTOTests` verifying valid decode and required-field decode failure behavior.
 
 ## P2-005 — Implement national baseline mapper normalization
 - Priority: P0
@@ -92,6 +100,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Map national DTOs into canonical domain models (`FlowDataset`, `LocationNode`, `FlowRecord`) with consistent time bucket and mode normalization.
 - Deliverable: National mapper module in `Data/Mappers`.
 - Definition of Done: Mapper outputs canonical records compatible with existing filtering/time/render pipelines.
+- Status: Completed (2026-03-07)
+- Notes: Added `NationalBaselineMobilityMapper` for manifest/node/flow mapping with mode normalization, canonical time-bucket validation, and negative-volume guard. Added mapper tests for mode mapping and validation behavior.
 
 ## P2-006 — Implement real NationalBaselineMobilityDataSource snapshot loader
 - Priority: P0
@@ -100,6 +110,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Replace placeholder throws with real local snapshot loading, decoding, mapping, and schema validation path.
 - Deliverable: Working national baseline data source implementation.
 - Definition of Done: Data source returns manifest/nodes/flows from bundled national snapshot without runtime crash.
+- Status: Completed (2026-03-07)
+- Notes: Replaced placeholder data source with `NationalBaselineSnapshotDataSource`, added bundled national snapshot resources (`manifest/nodes/flows`), wired national repositories to real source, and added integration tests for national load + source switching stability.
 
 ## P2-007 — Activate national repositories in factory with safe fallback
 - Priority: P0
