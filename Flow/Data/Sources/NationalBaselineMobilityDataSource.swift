@@ -7,6 +7,38 @@ enum NationalBaselineDataSourceError: Error {
 
 protocol NationalBaselineMobilityDataSource: FlowDataSource {}
 
+struct SafeNationalBaselineMobilityDataSource: NationalBaselineMobilityDataSource {
+    private let wrapped: NationalBaselineMobilityDataSource
+
+    init(wrapped: NationalBaselineMobilityDataSource = NationalBaselineSnapshotDataSource()) {
+        self.wrapped = wrapped
+    }
+
+    func loadDatasetManifest() throws -> FlowDataset {
+        do {
+            return try wrapped.loadDatasetManifest()
+        } catch {
+            throw NationalBaselineRepositoryError.map(error)
+        }
+    }
+
+    func loadNodes() throws -> [LocationNode] {
+        do {
+            return try wrapped.loadNodes()
+        } catch {
+            throw NationalBaselineRepositoryError.map(error)
+        }
+    }
+
+    func loadFlows() throws -> [FlowRecord] {
+        do {
+            return try wrapped.loadFlows()
+        } catch {
+            throw NationalBaselineRepositoryError.map(error)
+        }
+    }
+}
+
 struct NationalBaselineSnapshotDataSource: NationalBaselineMobilityDataSource {
     let bundle: Bundle
     private let schemaValidator: DatasetSchemaValidator

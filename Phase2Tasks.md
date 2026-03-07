@@ -120,6 +120,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Keep factory wiring to national repositories but add controlled fallback/error semantics when national snapshot is missing/corrupt.
 - Deliverable: Hardened repository activation behavior.
 - Definition of Done: Selecting `koreaNational` never crashes; returns data or controlled non-fatal error.
+- Status: Completed (2026-03-07)
+- Notes: Added `NationalBaselineRepositoryError` and `SafeNationalBaselineMobilityDataSource` to normalize national snapshot failures into controlled, testable semantics. Wired `MobilityRepositoryFactory` national path through a safe datasource builder and added fallback/error tests for missing manifest, incompatible schema, corrupt flows, plus regression checks for bundled sample and Seoul paths.
 
 ## P2-008 — Add baseline spatial aggregation policy for national source
 - Priority: P0

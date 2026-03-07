@@ -1,6 +1,12 @@
 import Foundation
 
 enum MobilityRepositoryFactory {
+    static var nationalDataSourceBuilder: () -> NationalBaselineMobilityDataSource = {
+        SafeNationalBaselineMobilityDataSource(
+            wrapped: NationalBaselineSnapshotDataSource()
+        )
+    }
+
     static func flowRepository(for source: FlowDatasetSource) -> FlowRepository {
         switch source {
         case .bundledSample:
@@ -8,7 +14,9 @@ enum MobilityRepositoryFactory {
         case .seoulCapitalSnapshot:
             return SeoulCapitalMobilityFlowRepository()
         case .koreaNational:
-            return NationalBaselineMobilityFlowRepository()
+            return NationalBaselineMobilityFlowRepository(
+                dataSource: nationalDataSourceBuilder()
+            )
         }
     }
 
@@ -19,7 +27,9 @@ enum MobilityRepositoryFactory {
         case .seoulCapitalSnapshot:
             return SeoulCapitalMobilityLocationRepository()
         case .koreaNational:
-            return NationalBaselineMobilityLocationRepository()
+            return NationalBaselineMobilityLocationRepository(
+                dataSource: nationalDataSourceBuilder()
+            )
         }
     }
 
