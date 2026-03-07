@@ -42,6 +42,7 @@ final class MapDashboardViewModel: ObservableObject {
     private let filteringEngine: FilteringEngine
     private let spatialAggregationEngine: SpatialAggregationEngine
     private let mobilityQuerying: MobilityQuerying
+    private let nationalRenderGuardrailPolicy: NationalRenderGuardrailPolicy
     private let cacheDataSource: CacheDataSource
     private let performanceMonitor: PerformanceMonitor
 
@@ -63,6 +64,7 @@ final class MapDashboardViewModel: ObservableObject {
         filteringEngine: FilteringEngine = FilteringEngine(),
         spatialAggregationEngine: SpatialAggregationEngine = SpatialAggregationEngine(),
         mobilityQuerying: MobilityQuerying = DefaultMobilityQueryAdapter(),
+        nationalRenderGuardrailPolicy: NationalRenderGuardrailPolicy = NationalRenderGuardrailPolicy(),
         cacheDataSource: CacheDataSource = CacheDataSource.shared,
         performanceMonitor: PerformanceMonitor = PerformanceMonitor()
     ) {
@@ -73,6 +75,7 @@ final class MapDashboardViewModel: ObservableObject {
         self.filteringEngine = filteringEngine
         self.spatialAggregationEngine = spatialAggregationEngine
         self.mobilityQuerying = mobilityQuerying
+        self.nationalRenderGuardrailPolicy = nationalRenderGuardrailPolicy
         self.cacheDataSource = cacheDataSource
         self.performanceMonitor = performanceMonitor
     }
@@ -150,6 +153,21 @@ final class MapDashboardViewModel: ObservableObject {
             var segments: [RenderableFlowSegment] = []
             performanceMonitor.measure("render_segment_build_ms") {
                 segments = mapRenderer.buildRenderableSegments(flows: scopedFlows, nodes: allNodes)
+            }
+
+            let guardrailResult = nationalRenderGuardrailPolicy.apply(
+                source: activeSource ?? .bundledSample,
+                spatialLevel: spatialLevel,
+                segments: segments,
+                selectedFlowID: selectedFlowID
+            )
+            segments = guardrailResult.segments
+            if guardrailResult.truncatedCount > 0 {
+                performanceMonitor.record(
+                    "render_guardrail_truncated_count",
+                    milliseconds: Double(guardrailResult.truncatedCount)
+                )
+                FlowLogger.info("National render guardrail truncated \(guardrailResult.truncatedCount) segments")
             }
 
             guard !Task.isCancelled else { return }

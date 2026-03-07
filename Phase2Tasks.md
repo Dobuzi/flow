@@ -158,6 +158,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Add national rendering cap/subset strategy by zoom and volume ranking to avoid overlay overload.
 - Deliverable: Renderer policy update for national source.
 - Definition of Done: National map remains interactive and stable at launch/zoom transitions with visible representative flows.
+- Status: Completed (2026-03-07)
+- Notes: Added `NationalRenderGuardrailPolicy` and integrated it into `MapDashboardViewModel` to apply deterministic, national-only overlay caps by spatial level with top-volume prioritization and selected-flow preservation. Added render-limit instrumentation (`render_guardrail_truncated_count`) and guardrail-focused tests verifying national capping behavior and non-national source passthrough.
 
 ## P2-012 — Ensure nationwide insights compatibility
 - Priority: P1
