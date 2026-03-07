@@ -140,6 +140,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Ensure `MobilityQuery` + adapter path can execute against national source and return aggregated/filtered result.
 - Deliverable: Query adapter enhancements for national baseline behavior.
 - Definition of Done: Query execution for `koreaNational` returns valid `MobilityQueryResult` with compatibility notes.
+- Status: Completed (2026-03-07)
+- Notes: Extended `DefaultMobilityQueryAdapter` to apply query-time mode filtering, time-context bucket resolution (hour -> month -> year fallback), and national spatial aggregation shaping. Integrated `MobilityQuerying` into `MapDashboardViewModel` for `koreaNational` path with non-fatal fallback to baseline pipeline on query failure. Added adapter and integration tests covering national query execution, time/mode preservation, spatial shaping compatibility, and source regression stability.
 
 ## P2-010 — Add national-specific cache key dimensions and pre-aggregation hooks
 - Priority: P1

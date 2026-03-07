@@ -41,6 +41,7 @@ final class MapDashboardViewModel: ObservableObject {
     private let timeSeriesEngine: TimeSeriesEngine
     private let filteringEngine: FilteringEngine
     private let spatialAggregationEngine: SpatialAggregationEngine
+    private let mobilityQuerying: MobilityQuerying
     private let cacheDataSource: CacheDataSource
     private let performanceMonitor: PerformanceMonitor
 
@@ -61,6 +62,7 @@ final class MapDashboardViewModel: ObservableObject {
         timeSeriesEngine: TimeSeriesEngine = TimeSeriesEngine(),
         filteringEngine: FilteringEngine = FilteringEngine(),
         spatialAggregationEngine: SpatialAggregationEngine = SpatialAggregationEngine(),
+        mobilityQuerying: MobilityQuerying = DefaultMobilityQueryAdapter(),
         cacheDataSource: CacheDataSource = CacheDataSource.shared,
         performanceMonitor: PerformanceMonitor = PerformanceMonitor()
     ) {
@@ -70,6 +72,7 @@ final class MapDashboardViewModel: ObservableObject {
         self.timeSeriesEngine = timeSeriesEngine
         self.filteringEngine = filteringEngine
         self.spatialAggregationEngine = spatialAggregationEngine
+        self.mobilityQuerying = mobilityQuerying
         self.cacheDataSource = cacheDataSource
         self.performanceMonitor = performanceMonitor
     }
@@ -138,7 +141,10 @@ final class MapDashboardViewModel: ObservableObject {
                 bucketID: bucketID,
                 modeSet: modeSet,
                 spatialLevel: spatialLevel,
-                datasetVersion: datasetVersion
+                datasetVersion: datasetVersion,
+                year: state.selectedYear,
+                month: state.selectedMonth,
+                hour: state.selectedHour
             )
 
             var segments: [RenderableFlowSegment] = []
@@ -184,7 +190,10 @@ final class MapDashboardViewModel: ObservableObject {
         bucketID: String,
         modeSet: Set<TransportMode>,
         spatialLevel: SpatialLevel,
-        datasetVersion: String
+        datasetVersion: String,
+        year: Int,
+        month: Int,
+        hour: Int
     ) async -> [FlowRecord] {
         guard !modeSet.isEmpty else { return [] }
 
@@ -199,6 +208,33 @@ final class MapDashboardViewModel: ObservableObject {
 
         if let cached = await cacheDataSource.getFlows(for: cacheKey) {
             return cached
+        }
+
+        if activeSource == .koreaNational {
+            let query = MobilityQuery(
+                sources: [.koreaNational],
+                selectedModes: modeSet,
+                spatialLevel: spatialLevel,
+                timeContext: MobilityTimeContext(
+                    year: year,
+                    month: month,
+                    hour: hour,
+                    granularity: .hourOfDay
+                ),
+                aggregation: .default
+            )
+
+            do {
+                let queryResult = try await mobilityQuerying.execute(query)
+                await cacheDataSource.setFlows(queryResult.flows, for: cacheKey)
+                return queryResult.flows
+            } catch {
+                FlowLogger.nonFatalError(
+                    scope: .dataLoad,
+                    userMessage: "National query path failed. Falling back to baseline flow pipeline.",
+                    underlying: error
+                )
+            }
         }
 
         let preAggregated = preAggregationIndex?.flows(
