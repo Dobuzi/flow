@@ -14,20 +14,28 @@ struct SettingsView: View {
             .navigationTitle("Settings")
         }
         .task {
-            await viewModel.load()
+            await viewModel.load(source: store.state.selectedDatasetSource)
             applyPreferredSpatialLevel()
+        }
+        .onChange(of: store.state.selectedDatasetSource) { _, value in
+            Task { await viewModel.load(source: value) }
         }
     }
 
     private var datasetSection: some View {
         Section("Dataset") {
-            Picker("Source", selection: $viewModel.selectedDatasetOptionRaw) {
-                ForEach(SettingsViewModel.DatasetOption.allCases) { option in
-                    Text(option.title).tag(option.rawValue)
+            Picker(
+                "Source",
+                selection: Binding(
+                    get: { store.state.selectedDatasetSource },
+                    set: { source in
+                        store.send(.setDatasetSource(source))
+                    }
+                )
+            ) {
+                ForEach(FlowDatasetSource.allCases, id: \.self) { source in
+                    Text(source.title).tag(source)
                 }
-            }
-            .onChange(of: viewModel.selectedDatasetOptionRaw) { _, value in
-                viewModel.saveDatasetOption(value)
             }
 
             if let dataset = viewModel.dataset {

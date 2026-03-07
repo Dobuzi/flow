@@ -4,9 +4,24 @@ import Combine
 @MainActor
 final class AppStore: ObservableObject {
     @Published private(set) var state = AppState()
+    private let userDefaults: UserDefaults
+    private let datasetSourceKey = "settings.dataset_option"
+
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
+        if
+            let stored = userDefaults.string(forKey: datasetSourceKey),
+            let source = FlowDatasetSource(rawValue: stored)
+        {
+            state.selectedDatasetSource = source
+        }
+    }
 
     func send(_ action: AppAction) {
         switch action {
+        case .setDatasetSource(let source):
+            state.selectedDatasetSource = source
+            userDefaults.set(source.rawValue, forKey: datasetSourceKey)
         case .setYear(let year):
             state.selectedYear = year
         case .setMonth(let month):

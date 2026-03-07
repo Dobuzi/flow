@@ -35,30 +35,35 @@ final class MapDashboardViewModel: ObservableObject {
     @Published private(set) var legendUnitStatus = LegendUnitStatus(dominantUnit: nil, isMixed: false)
     @Published private(set) var loadError: FlowNonFatalError?
 
-    private let flowRepository: FlowRepository
-    private let locationRepository: LocationRepository
+    private let flowRepositoryBuilder: (FlowDatasetSource) -> FlowRepository
+    private let locationRepositoryBuilder: (FlowDatasetSource) -> LocationRepository
     private let mapRenderer: FlowMapRenderer
     private let timeSeriesEngine: TimeSeriesEngine
     private let filteringEngine: FilteringEngine
     private let cacheDataSource: CacheDataSource
     private let performanceMonitor: PerformanceMonitor
 
+    private var activeSource: FlowDatasetSource?
     private var allFlows: [FlowRecord] = []
     private var allNodes: [LocationNode] = []
     private var preAggregationIndex: PreAggregationIndex?
     private var renderTask: Task<Void, Never>?
 
     init(
-        flowRepository: FlowRepository = LocalFlowRepository(),
-        locationRepository: LocationRepository = LocalLocationRepository(),
+        flowRepositoryBuilder: @escaping (FlowDatasetSource) -> FlowRepository = { source in
+            MobilityRepositoryFactory.flowRepository(for: source)
+        },
+        locationRepositoryBuilder: @escaping (FlowDatasetSource) -> LocationRepository = { source in
+            MobilityRepositoryFactory.locationRepository(for: source)
+        },
         mapRenderer: FlowMapRenderer = FlowMapRenderer(),
         timeSeriesEngine: TimeSeriesEngine = TimeSeriesEngine(),
         filteringEngine: FilteringEngine = FilteringEngine(),
         cacheDataSource: CacheDataSource = CacheDataSource.shared,
         performanceMonitor: PerformanceMonitor = PerformanceMonitor()
     ) {
-        self.flowRepository = flowRepository
-        self.locationRepository = locationRepository
+        self.flowRepositoryBuilder = flowRepositoryBuilder
+        self.locationRepositoryBuilder = locationRepositoryBuilder
         self.mapRenderer = mapRenderer
         self.timeSeriesEngine = timeSeriesEngine
         self.filteringEngine = filteringEngine
@@ -72,7 +77,10 @@ final class MapDashboardViewModel: ObservableObject {
 
     func load(initialState: AppState) async {
         let loadStart = CFAbsoluteTimeGetCurrent()
+        let source = initialState.selectedDatasetSource
         do {
+            let flowRepository = flowRepositoryBuilder(source)
+            let locationRepository = locationRepositoryBuilder(source)
             async let manifest = flowRepository.fetchDataset()
             async let flows = flowRepository.fetchFlowRecords()
             async let nodes = locationRepository.fetchLocationNodes()
@@ -84,11 +92,12 @@ final class MapDashboardViewModel: ObservableObject {
             allFlows = resolvedFlows
             allNodes = resolvedNodes
             preAggregationIndex = PreAggregationIndex(flows: resolvedFlows)
+            activeSource = source
             loadError = nil
             applySelection(from: initialState)
             let loadElapsed = (CFAbsoluteTimeGetCurrent() - loadStart) * 1000.0
             performanceMonitor.record("initial_load_ms", milliseconds: loadElapsed)
-            FlowLogger.info("Loaded sample dataset with \(flowCount) flows and \(nodeCount) nodes")
+            FlowLogger.info("Loaded \(source.rawValue) dataset with \(flowCount) flows and \(nodeCount) nodes")
         } catch {
             loadError = FlowLogger.nonFatalError(
                 scope: .dataLoad,
@@ -100,6 +109,7 @@ final class MapDashboardViewModel: ObservableObject {
     }
 
     func applySelection(from state: AppState) {
+        guard activeSource == state.selectedDatasetSource else { return }
         guard !allFlows.isEmpty else { return }
         guard let bucketID = resolveBucketID(
             year: state.selectedYear,

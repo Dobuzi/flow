@@ -5,6 +5,7 @@ struct AppState {
     var selectedYear: Int = 2025
     var selectedMonth: Int = 1
     var selectedHour: Int = 12
+    var selectedDatasetSource: FlowDatasetSource = .bundledSample
     var selectedModes: Set<TransportMode> = Set(TransportMode.allCases)
     var mapRegion: MKCoordinateRegion = .southKoreaDefault
     var spatialLevel: SpatialLevel = .national

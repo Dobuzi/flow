@@ -41,6 +41,9 @@ struct InsightsView: View {
         .onChange(of: store.state.selectedModes) { _, _ in
             viewModel.recompute(state: store.state)
         }
+        .onChange(of: store.state.selectedDatasetSource) { _, _ in
+            Task { await viewModel.loadIfNeeded(state: store.state) }
+        }
     }
 
     private func scopeCard(summary: InsightsSummary) -> some View {

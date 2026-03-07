@@ -54,8 +54,8 @@ struct MapRenderingIntegrationTests {
     @Test
     func selectionDetailClearsWhenFilteredOut() async {
         let viewModel = MapDashboardViewModel(
-            flowRepository: LocalFlowRepository(),
-            locationRepository: LocalLocationRepository(),
+            flowRepositoryBuilder: { _ in LocalFlowRepository() },
+            locationRepositoryBuilder: { _ in LocalLocationRepository() },
             mapRenderer: FlowMapRenderer(),
             timeSeriesEngine: TimeSeriesEngine(),
             filteringEngine: FilteringEngine(),

@@ -137,6 +137,12 @@ struct MapDashboardView: View {
         .onChange(of: store.state.spatialLevel) { _, _ in
             syncSelection()
         }
+        .onChange(of: store.state.selectedDatasetSource) { _, _ in
+            Task {
+                await viewModel.load(initialState: store.state)
+                syncSelection()
+            }
+        }
         .onChange(of: store.state.selectedFlowID) { _, _ in
             syncSelection()
         }

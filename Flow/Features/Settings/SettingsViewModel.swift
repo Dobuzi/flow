@@ -3,50 +3,35 @@ import Combine
 
 @MainActor
 final class SettingsViewModel: ObservableObject {
-    enum DatasetOption: String, CaseIterable, Identifiable {
-        case bundledSample = "bundled_sample"
-
-        var id: String { rawValue }
-
-        var title: String {
-            switch self {
-            case .bundledSample:
-                return "Bundled Sample"
-            }
-        }
-    }
-
     @Published private(set) var dataset: FlowDataset?
     @Published private(set) var cacheStats: CacheDataSource.CacheStats?
     @Published private(set) var loadError: FlowNonFatalError?
-    @Published var selectedDatasetOptionRaw: String
     @Published var preferredSpatialLevelRaw: String
 
-    private let flowRepository: FlowRepository
+    private let flowRepositoryBuilder: (FlowDatasetSource) -> FlowRepository
     private let cacheDataSource: CacheDataSource
     private let userDefaults: UserDefaults
 
-    private let datasetOptionKey = "settings.dataset_option"
     private let preferredSpatialLevelKey = "settings.preferred_spatial_level"
 
     init(
-        flowRepository: FlowRepository = LocalFlowRepository(),
+        flowRepositoryBuilder: @escaping (FlowDatasetSource) -> FlowRepository = { source in
+            MobilityRepositoryFactory.flowRepository(for: source)
+        },
         cacheDataSource: CacheDataSource = .shared,
         userDefaults: UserDefaults = .standard
     ) {
-        self.flowRepository = flowRepository
+        self.flowRepositoryBuilder = flowRepositoryBuilder
         self.cacheDataSource = cacheDataSource
         self.userDefaults = userDefaults
 
-        selectedDatasetOptionRaw = userDefaults.string(forKey: datasetOptionKey)
-            ?? DatasetOption.bundledSample.rawValue
         preferredSpatialLevelRaw = userDefaults.string(forKey: preferredSpatialLevelKey)
             ?? SpatialLevel.national.rawValue
     }
 
-    func load() async {
+    func load(source: FlowDatasetSource) async {
         do {
-            dataset = try await flowRepository.fetchDataset()
+            dataset = try await flowRepositoryBuilder(source).fetchDataset()
             loadError = nil
         } catch {
             loadError = FlowLogger.nonFatalError(
@@ -57,11 +42,6 @@ final class SettingsViewModel: ObservableObject {
             dataset = nil
         }
         await refreshCacheStats()
-    }
-
-    func saveDatasetOption(_ rawValue: String) {
-        selectedDatasetOptionRaw = rawValue
-        userDefaults.set(rawValue, forKey: datasetOptionKey)
     }
 
     func savePreferredSpatialLevel(_ rawValue: String) {

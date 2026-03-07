@@ -2,6 +2,7 @@ import Foundation
 import MapKit
 
 enum AppAction {
+    case setDatasetSource(FlowDatasetSource)
     case setYear(Int)
     case setMonth(Int)
     case setHour(Int)
