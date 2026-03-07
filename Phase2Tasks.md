@@ -188,6 +188,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Add test suite for national manifest decode, mapper normalization, repository load, query output, renderer-safe subset, and source-switch regression.
 - Deliverable: Passing automated Phase 2 regression tests.
 - Definition of Done: National tests pass alongside existing sample/Seoul tests with no regressions.
+- Status: Completed (2026-03-07)
+- Notes: Validated nationwide regression coverage across ingestion (`NationalBaselineDTOTests`, `NationalBaselineMobilityMapperTests`, `NationalRepositoryFactoryFallbackTests`), query/aggregation/render safety (`NationalQueryPathIntegrationTests`, `NationalRenderGuardrailPolicyTests`), insights truthfulness (`ComputeInsightsUseCaseTests`), source-state UX transitions (`MapDashboardSourceStatusTests`), and non-national compatibility (`SeoulCapitalDataSourceIntegrationTests`). Confirmed with targeted `xcodebuild test` run and clean build.
 
 ## P2-015 — Phase 2 status sync and rollout checklist
 - Priority: P0
