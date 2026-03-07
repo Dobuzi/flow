@@ -32,6 +32,7 @@ struct MapDashboardView: View {
                     flowCount: viewModel.flowCount,
                     nodeCount: viewModel.nodeCount
                 )
+                DatasetSourceBadge(source: store.state.selectedDatasetSource)
                 Button {
                     isTimeSheetPresented = true
                 } label: {

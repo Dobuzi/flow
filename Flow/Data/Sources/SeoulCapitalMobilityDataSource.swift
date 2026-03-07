@@ -2,9 +2,14 @@ import Foundation
 
 struct SeoulCapitalMobilityDataSource: FlowDataSource {
     let bundle: Bundle
+    private let schemaValidator: DatasetSchemaValidator
 
-    init(bundle: Bundle = .main) {
+    init(
+        bundle: Bundle = .main,
+        schemaValidator: DatasetSchemaValidator = DatasetSchemaValidator()
+    ) {
         self.bundle = bundle
+        self.schemaValidator = schemaValidator
     }
 
     func loadDatasetManifest() throws -> FlowDataset {
@@ -12,7 +17,7 @@ struct SeoulCapitalMobilityDataSource: FlowDataSource {
         let manifestDTO = try JSONDecoder().decode(SeoulCapitalDatasetManifestDTO.self, from: manifestData)
         let flows = try loadFlows()
         let mapped = SeoulCapitalMobilityMapper.map(manifest: manifestDTO, recordsCount: flows.count)
-        try LocalJSONDataSource.validateSchemaVersion(mapped)
+        try schemaValidator.validateOrThrow(dataset: mapped)
         return mapped
     }
 

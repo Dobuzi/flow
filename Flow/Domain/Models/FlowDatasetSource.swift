@@ -15,4 +15,26 @@ enum FlowDatasetSource: String, CaseIterable, Codable, Hashable {
             return "Korea National (Placeholder)"
         }
     }
+
+    static func fromPersistedValue(_ value: String) -> FlowDatasetSource? {
+        let normalized = value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        if let exact = FlowDatasetSource(rawValue: normalized) {
+            return exact
+        }
+
+        // Backward-compatible aliases for legacy persistence values.
+        switch normalized {
+        case "sample", "bundled", "bundledsample":
+            return .bundledSample
+        case "seoul", "seoulcapital", "seoul_capital":
+            return .seoulCapitalSnapshot
+        case "national", "korea", "koreanational":
+            return .koreaNational
+        default:
+            return nil
+        }
+    }
 }

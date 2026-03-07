@@ -9,11 +9,14 @@ final class AppStore: ObservableObject {
 
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
-        if
-            let stored = userDefaults.string(forKey: datasetSourceKey),
-            let source = FlowDatasetSource(rawValue: stored)
-        {
-            state.selectedDatasetSource = source
+        if let stored = userDefaults.string(forKey: datasetSourceKey) {
+            if let source = FlowDatasetSource.fromPersistedValue(stored) {
+                state.selectedDatasetSource = source
+            } else {
+                FlowLogger.warning("Unknown dataset source value '\(stored)'. Falling back to bundled sample.")
+                state.selectedDatasetSource = .bundledSample
+                userDefaults.set(FlowDatasetSource.bundledSample.rawValue, forKey: datasetSourceKey)
+            }
         }
     }
 

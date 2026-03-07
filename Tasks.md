@@ -375,7 +375,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 ## Milestone 8: Nationwide Platform Foundation (Phase 1)
 
 ## Task T-036 — Add active dataset source badge to Map and Insights
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: None
 - Complexity: Small
@@ -384,7 +384,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Active source is visible without opening Settings.
 
 ## Task T-037 — Extend `FlowDatasetSource` with `koreaNational` placeholder
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: None
 - Complexity: Small
@@ -393,7 +393,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Source picker can represent national placeholder source with no runtime regressions.
 
 ## Task T-038 — Harden source persistence fallback in `AppStore`
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: T-037
 - Complexity: Small
@@ -402,7 +402,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Invalid persisted value never crashes and defaults predictably.
 
 ## Task T-039 — Introduce `MobilityDatasetDescriptor` model
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: None
 - Complexity: Medium
@@ -411,7 +411,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Current sample and Seoul entries can be represented without changing existing `FlowDataset`.
 
 ## Task T-040 — Introduce dataset catalog container model
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: T-039
 - Complexity: Small
@@ -420,7 +420,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Model can represent multi-source catalog including placeholder national entry.
 
 ## Task T-041 — Add bundled dataset catalog resource + DTO/mapper
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: T-040
 - Complexity: Medium
@@ -429,7 +429,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Catalog loads from bundle and includes sample + Seoul + koreaNational.
 
 ## Task T-042 — Implement `MobilityCatalogRepository` (local)
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: T-041
 - Complexity: Medium
@@ -438,7 +438,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Features/services can fetch catalog entries through repository abstraction.
 
 ## Task T-043 — Add `DatasetSchemaValidator` skeleton
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: None
 - Complexity: Medium
@@ -447,7 +447,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Existing sample/Seoul manifests pass through validator path.
 
 ## Task T-044 — Add `DatasetCompatibilityChecker` skeleton
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-043
 - Complexity: Medium
@@ -456,7 +456,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Checker returns structured compatibility result for current datasets.
 
 ## Task T-045 — Add `RequiredFieldPolicy` foundation
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-044
 - Complexity: Small
@@ -465,7 +465,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Compatibility checker consumes policy object, not hardcoded field logic.
 
 ## Task T-046 — Introduce `MobilityQuery` model foundation
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: None
 - Complexity: Medium
@@ -474,7 +474,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Query can be built from current `AppState` values.
 
 ## Task T-047 — Introduce `MobilityQueryResult` model foundation
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: T-046
 - Complexity: Small
@@ -483,7 +483,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Existing single-source repository outputs can be represented in `MobilityQueryResult`.
 
 ## Task T-048 — Add `MobilityQuerying` protocol + adapter skeleton
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P1
 - Dependency: T-042, T-047
 - Complexity: Medium
@@ -492,7 +492,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Adapter returns `MobilityQueryResult` without changing existing feature behavior.
 
 ## Task T-049 — Add national baseline placeholder source/repository contracts
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: T-037, T-042
 - Complexity: Medium
@@ -501,7 +501,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 - Definition of Done: Selecting `koreaNational` does not crash and returns controlled fallback state.
 
 ## Task T-050 — Add Phase 1 primitive tests and status sync
-- Status: Not Started
+- Status: Completed (2026-03-07)
 - Priority: P0
 - Dependency: T-038, T-042, T-045, T-048, T-049
 - Complexity: Medium

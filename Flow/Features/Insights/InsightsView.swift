@@ -8,6 +8,7 @@ struct InsightsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
+                    DatasetSourceBadge(source: store.state.selectedDatasetSource)
                     if viewModel.isLoading {
                         ProgressView("Loading insights...")
                             .frame(maxWidth: .infinity, alignment: .center)

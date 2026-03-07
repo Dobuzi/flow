@@ -8,7 +8,7 @@ enum MobilityRepositoryFactory {
         case .seoulCapitalSnapshot:
             return SeoulCapitalMobilityFlowRepository()
         case .koreaNational:
-            return LocalFlowRepository()
+            return NationalBaselineMobilityFlowRepository()
         }
     }
 
@@ -19,7 +19,11 @@ enum MobilityRepositoryFactory {
         case .seoulCapitalSnapshot:
             return SeoulCapitalMobilityLocationRepository()
         case .koreaNational:
-            return LocalLocationRepository()
+            return NationalBaselineMobilityLocationRepository()
         }
+    }
+
+    static func catalogRepository() -> MobilityCatalogRepository {
+        LocalMobilityCatalogRepository()
     }
 }

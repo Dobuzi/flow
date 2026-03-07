@@ -7,15 +7,20 @@ enum DataSourceError: Error {
 
 struct LocalJSONDataSource: FlowDataSource {
     let bundle: Bundle
+    private let schemaValidator: DatasetSchemaValidator
 
-    init(bundle: Bundle = .main) {
+    init(
+        bundle: Bundle = .main,
+        schemaValidator: DatasetSchemaValidator = DatasetSchemaValidator()
+    ) {
         self.bundle = bundle
+        self.schemaValidator = schemaValidator
     }
 
     func loadDatasetManifest() throws -> FlowDataset {
         let data = try readFile(named: "dataset_manifest", extension: "json")
         let manifest = try JSONDecoder().decode(FlowDataset.self, from: data)
-        try Self.validateSchemaVersion(manifest)
+        try schemaValidator.validateOrThrow(dataset: manifest)
         return manifest
     }
 
@@ -25,9 +30,7 @@ struct LocalJSONDataSource: FlowDataSource {
     }
 
     static func validateSchemaVersion(_ dataset: FlowDataset) throws {
-        guard dataset.schemaVersion == "1.0.0" else {
-            throw DataSourceError.invalidSchemaVersion(dataset.schemaVersion)
-        }
+        try DatasetSchemaValidator().validateOrThrow(dataset: dataset)
     }
 
     func loadFlows() throws -> [FlowRecord] {
