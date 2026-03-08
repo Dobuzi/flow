@@ -117,6 +117,8 @@ Design constraints:
 - Dependency: P3-004
 - Description: Add version registry (`installed`, `active`, `lastKnownGood`, timestamps, source/provider tags).
 - Short goal: Track multiple snapshot versions safely.
+- Status: Completed (2026-03-08)
+- Notes: Added `DatasetVersionStoring` with `InMemoryDatasetVersionStore`, `StoredSnapshotVersion`, and `DatasetManifestIndex` for source/version/snapshot lookups and deterministic ordering. Integrated optional ingestion success indexing in coordinator with compatibility classification and activation eligibility metadata.
 
 ## P3-008 — Implement snapshot activation policy with rollback
 - Priority: P0

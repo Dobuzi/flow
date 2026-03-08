@@ -60,13 +60,15 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
     private let integrityChecker: SnapshotIntegrityChecking
     private let schemaValidator: DatasetSchemaValidating
     private let compatibilityChecker: DatasetCompatibilityChecking
+    private let datasetVersionStore: DatasetVersionStoring?
 
     init(
         adapter: ExternalDatasetAdapting,
         materializer: SnapshotMaterializing,
         integrityChecker: SnapshotIntegrityChecking = DefaultSnapshotIntegrityChecker(),
         schemaValidator: DatasetSchemaValidating = DatasetSchemaValidator(),
-        compatibilityChecker: DatasetCompatibilityChecking? = nil
+        compatibilityChecker: DatasetCompatibilityChecking? = nil,
+        datasetVersionStore: DatasetVersionStoring? = nil
     ) {
         self.adapter = adapter
         self.materializer = materializer
@@ -74,6 +76,7 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
         self.schemaValidator = schemaValidator
         self.compatibilityChecker = compatibilityChecker
             ?? DatasetCompatibilityChecker(schemaValidator: schemaValidator)
+        self.datasetVersionStore = datasetVersionStore
     }
 
     func ingest(request: IngestionPipelineRequest) async throws -> IngestionPipelineResult {
@@ -217,6 +220,15 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
             compatibilityEvaluated: true,
             compatibilityPassed: true
         )
+
+        if let datasetVersionStore {
+            await datasetVersionStore.upsert(
+                contract: contract,
+                compatibilityClassification: compatibilityClassification,
+                isIngestionCandidate: true,
+                indexedAt: ISO8601DateFormatter().string(from: Date())
+            )
+        }
 
         return IngestionPipelineResult(
             status: .succeeded,

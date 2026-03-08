@@ -103,6 +103,28 @@ struct IngestionPipelineCoordinatorTests {
     }
 
     @Test
+    func storesSuccessfulIngestionInVersionStore() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let coordinator = DefaultIngestionPipelineCoordinator(
+            adapter: StubExternalAdapter(result: .success(makeValidPayload())),
+            materializer: StubMaterializer(result: .success(.init(
+                status: .materialized,
+                contract: makeValidContract(),
+                warnings: []
+            ))),
+            integrityChecker: StubIntegrityChecker(result: .init(isValid: true, issues: [])),
+            datasetVersionStore: store
+        )
+
+        _ = try await coordinator.ingest(request: .init(fetchRequest: makeRequest()))
+
+        let stored = await store.snapshot(snapshotID: "korea_national-2026.01")
+        #expect(stored?.source == .koreaNational)
+        #expect(stored?.compatibilityClassification == .compatible)
+        #expect(stored?.isIngestionCandidate == true)
+    }
+
+    @Test
     func surfacesAdapterFailure() async {
         let coordinator = DefaultIngestionPipelineCoordinator(
             adapter: StubExternalAdapter(result: .failure(.rateLimited(retryAfterSeconds: 30))),
