@@ -65,6 +65,8 @@ Design constraints:
 - Dependency: None
 - Description: Define canonical contract for API-ingested snapshot artifacts (manifest, nodes, flows), naming/versioning/checksum fields, and required metadata.
 - Short goal: Establish one immutable ingestion target format for all adapters.
+- Status: Completed (2026-03-08)
+- Notes: Added `MaterializedSnapshotContract` primitives (`snapshotID`, source/schema/dataset versions, coverage, record counts, required files, compatibility metadata, activation eligibility), structural contract validation rules, and a snapshot materializer protocol boundary (`SnapshotMaterializing`) for future ingestion pipeline implementations.
 
 ## P3-002 — Add external API adapter protocol and error model
 - Priority: P0
