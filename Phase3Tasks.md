@@ -141,6 +141,8 @@ Design constraints:
 - Dependency: P3-002, P3-003
 - Description: Add first provider adapter that fetches Seoul data and emits pipeline-ready DTO payloads.
 - Short goal: Prove live ingestion path on an existing source.
+- Status: Completed (2026-03-08)
+- Notes: Added `SeoulCapitalExternalDatasetAdapter` with injectable `SeoulCapitalRemoteFetching` boundary and a local remote-simulation fetcher. Adapter now validates source/schema/version expectations, normalizes to `ExternalDatasetPayload` (`manifest`/`nodes`/`flows`), captures refresh metadata for incremental semantics, and maps failures to typed `ExternalDatasetAdapterError` cases.
 
 ## P3-011 — Wire refresh scheduler (manual + periodic safe trigger)
 - Priority: P1
