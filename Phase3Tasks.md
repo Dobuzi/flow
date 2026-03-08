@@ -133,6 +133,8 @@ Design constraints:
 - Dependency: P3-007
 - Description: Add live metadata fields (active version, last refresh outcome/time, refresh source) while keeping existing catalog compatibility.
 - Short goal: Surface operational state consistently.
+- Status: Completed (2026-03-08)
+- Notes: Extended catalog descriptor metadata with `DatasetLiveMetadata` and added optional live-state enrichment via `CatalogLiveMetadataEnricher` backed by `DatasetVersionStore` + `SnapshotActivationPolicy`. Static sources remain compatible (no live metadata required), while live-capable sources can now expose latest snapshot/version and readiness/sync state.
 
 ### M3-4 API Dataset Integration
 

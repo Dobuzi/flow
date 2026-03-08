@@ -34,7 +34,18 @@
       "reliability": "high",
       "spatial_precision": "district",
       "temporal_precision": "hour",
-      "quality_score": 0.92
+      "quality_score": 0.92,
+      "live_metadata": {
+        "supports_live_refresh": true,
+        "latest_known_dataset_version": null,
+        "latest_known_snapshot_id": null,
+        "last_refresh_attempt_at": null,
+        "last_successful_refresh_at": null,
+        "active_snapshot_id": null,
+        "last_known_good_snapshot_id": null,
+        "readiness": "pending_validation",
+        "sync_state": "idle"
+      }
     },
     {
       "id": "korea-national-baseline",
@@ -51,7 +62,18 @@
       "reliability": "medium",
       "spatial_precision": "province",
       "temporal_precision": "month",
-      "quality_score": 0.8
+      "quality_score": 0.8,
+      "live_metadata": {
+        "supports_live_refresh": true,
+        "latest_known_dataset_version": null,
+        "latest_known_snapshot_id": null,
+        "last_refresh_attempt_at": null,
+        "last_successful_refresh_at": null,
+        "active_snapshot_id": null,
+        "last_known_good_snapshot_id": null,
+        "readiness": "pending_validation",
+        "sync_state": "idle"
+      }
     }
   ]
 }

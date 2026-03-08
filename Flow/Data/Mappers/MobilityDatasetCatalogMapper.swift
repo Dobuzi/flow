@@ -25,7 +25,8 @@ enum MobilityDatasetCatalogMapper {
             reliability: dto.reliability,
             spatialPrecision: dto.spatialPrecision,
             temporalPrecision: dto.temporalPrecision,
-            qualityScore: dto.qualityScore
+            qualityScore: dto.qualityScore,
+            liveMetadata: dto.liveMetadata
         )
     }
 }

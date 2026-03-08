@@ -36,4 +36,16 @@ enum MobilityRepositoryFactory {
     static func catalogRepository() -> MobilityCatalogRepository {
         LocalMobilityCatalogRepository()
     }
+
+    static func liveAwareCatalogRepository(
+        versionStore: DatasetVersionStoring,
+        activationPolicy: SnapshotActivationPolicying
+    ) -> MobilityCatalogRepository {
+        LocalMobilityCatalogRepository(
+            liveMetadataEnricher: CatalogLiveMetadataEnricher(
+                versionStore: versionStore,
+                activationPolicy: activationPolicy
+            )
+        )
+    }
 }

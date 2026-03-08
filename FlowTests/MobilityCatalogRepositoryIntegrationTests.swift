@@ -13,5 +13,7 @@ struct MobilityCatalogRepositoryIntegrationTests {
         #expect(catalog.descriptor(for: .bundledSample)?.datasetID == "sample-korea-mobility-2025-q1")
         #expect(catalog.descriptor(for: .seoulCapitalSnapshot)?.datasetID == "seoul-capital-living-mobility")
         #expect(catalog.descriptor(for: .koreaNational)?.datasetID == "korea-national-baseline-2025")
+        #expect(catalog.descriptor(for: .bundledSample)?.liveMetadata == nil)
+        #expect(catalog.descriptor(for: .seoulCapitalSnapshot)?.liveMetadata?.supportsLiveRefresh == true)
     }
 }

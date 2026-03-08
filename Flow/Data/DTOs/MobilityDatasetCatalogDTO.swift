@@ -28,6 +28,7 @@ struct MobilityDatasetDescriptorDTO: Decodable {
     let spatialPrecision: MobilityDatasetDescriptor.SpatialPrecision
     let temporalPrecision: MobilityDatasetDescriptor.TemporalPrecision
     let qualityScore: Double?
+    let liveMetadata: DatasetLiveMetadata?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -45,5 +46,6 @@ struct MobilityDatasetDescriptorDTO: Decodable {
         case spatialPrecision = "spatial_precision"
         case temporalPrecision = "temporal_precision"
         case qualityScore = "quality_score"
+        case liveMetadata = "live_metadata"
     }
 }

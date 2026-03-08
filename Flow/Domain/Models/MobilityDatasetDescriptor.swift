@@ -1,5 +1,43 @@
 import Foundation
 
+enum DatasetRefreshReadiness: String, Codable, Hashable {
+    case staticOnly = "static_only"
+    case ready
+    case pendingValidation = "pending_validation"
+    case blocked
+}
+
+enum DatasetSyncState: String, Codable, Hashable {
+    case idle
+    case ready
+    case degraded
+    case failed
+}
+
+struct DatasetLiveMetadata: Codable, Hashable {
+    let supportsLiveRefresh: Bool
+    let latestKnownDatasetVersion: String?
+    let latestKnownSnapshotID: String?
+    let lastRefreshAttemptAt: String?
+    let lastSuccessfulRefreshAt: String?
+    let activeSnapshotID: String?
+    let lastKnownGoodSnapshotID: String?
+    let readiness: DatasetRefreshReadiness
+    let syncState: DatasetSyncState
+
+    enum CodingKeys: String, CodingKey {
+        case supportsLiveRefresh = "supports_live_refresh"
+        case latestKnownDatasetVersion = "latest_known_dataset_version"
+        case latestKnownSnapshotID = "latest_known_snapshot_id"
+        case lastRefreshAttemptAt = "last_refresh_attempt_at"
+        case lastSuccessfulRefreshAt = "last_successful_refresh_at"
+        case activeSnapshotID = "active_snapshot_id"
+        case lastKnownGoodSnapshotID = "last_known_good_snapshot_id"
+        case readiness
+        case syncState = "sync_state"
+    }
+}
+
 struct MobilityDatasetDescriptor: Codable, Hashable, Identifiable {
     enum Reliability: String, Codable, Hashable {
         case high
@@ -39,4 +77,26 @@ struct MobilityDatasetDescriptor: Codable, Hashable, Identifiable {
     let spatialPrecision: SpatialPrecision
     let temporalPrecision: TemporalPrecision
     let qualityScore: Double?
+    let liveMetadata: DatasetLiveMetadata?
+
+    func withLiveMetadata(_ liveMetadata: DatasetLiveMetadata?) -> MobilityDatasetDescriptor {
+        MobilityDatasetDescriptor(
+            id: id,
+            datasetID: datasetID,
+            source: source,
+            providerID: providerID,
+            displayName: displayName,
+            version: version,
+            schemaVersion: schemaVersion,
+            updatedAt: updatedAt,
+            availableModes: availableModes,
+            supportedSpatialLevels: supportedSpatialLevels,
+            supportedGranularities: supportedGranularities,
+            reliability: reliability,
+            spatialPrecision: spatialPrecision,
+            temporalPrecision: temporalPrecision,
+            qualityScore: qualityScore,
+            liveMetadata: liveMetadata
+        )
+    }
 }

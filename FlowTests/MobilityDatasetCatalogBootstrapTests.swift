@@ -22,5 +22,8 @@ struct MobilityDatasetCatalogBootstrapTests {
         #expect(catalog.descriptor(for: .bundledSample) != nil)
         #expect(catalog.descriptor(for: .seoulCapitalSnapshot) != nil)
         #expect(catalog.descriptor(for: .koreaNational) != nil)
+        #expect(catalog.descriptor(for: .bundledSample)?.liveMetadata == nil)
+        #expect(catalog.descriptor(for: .seoulCapitalSnapshot)?.liveMetadata?.supportsLiveRefresh == true)
+        #expect(catalog.descriptor(for: .koreaNational)?.liveMetadata?.supportsLiveRefresh == true)
     }
 }
