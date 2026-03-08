@@ -45,6 +45,22 @@ private struct StubIntegrityChecker: SnapshotIntegrityChecking {
     }
 }
 
+private struct StubSchemaValidator: DatasetSchemaValidating {
+    let result: DatasetSchemaValidationResult
+
+    func validate(dataset: FlowDataset) -> DatasetSchemaValidationResult {
+        result
+    }
+}
+
+private struct StubCompatibilityChecker: DatasetCompatibilityChecking {
+    let result: DatasetCompatibilityResult
+
+    func evaluate(dataset: FlowDataset, source: FlowDatasetSource) -> DatasetCompatibilityResult {
+        result
+    }
+}
+
 struct IngestionPipelineCoordinatorTests {
     @Test
     func coordinatorWorksWithDefaultSnapshotMaterializer() async throws {
@@ -79,7 +95,11 @@ struct IngestionPipelineCoordinatorTests {
         #expect(output.stepStatus.payloadValidated)
         #expect(output.stepStatus.materializerInvoked)
         #expect(output.stepStatus.contractValidated)
+        #expect(output.stepStatus.schemaValidated)
+        #expect(output.stepStatus.compatibilityEvaluated)
         #expect(output.stepStatus.compatibilityPassed)
+        #expect(output.schemaValidation?.isCompatible == true)
+        #expect(output.compatibilityGate?.classification == .compatible)
     }
 
     @Test
@@ -189,34 +209,105 @@ struct IngestionPipelineCoordinatorTests {
     }
 
     @Test
-    func surfacesCompatibilityFailure() async {
-        let incompatibleContract = MaterializedSnapshotContract(
-            snapshotID: "korea_national-2026.01",
+    func surfacesSchemaValidationFailure() async {
+        let contract = makeValidContract(schemaVersion: "2.0.0")
+        let coordinator = DefaultIngestionPipelineCoordinator(
+            adapter: StubExternalAdapter(result: .success(makeValidPayload())),
+            materializer: StubMaterializer(result: .success(.init(status: .materialized, contract: contract, warnings: []))),
+            integrityChecker: StubIntegrityChecker(result: .init(isValid: true, issues: []))
+        )
+
+        do {
+            _ = try await coordinator.ingest(request: .init(fetchRequest: makeRequest()))
+            Issue.record("Expected schemaValidationFailed")
+        } catch let error as IngestionPipelineError {
+            switch error {
+            case .schemaValidationFailed(let result):
+                #expect(result.schemaVersion == "2.0.0")
+                #expect(result.isCompatible == false)
+            default:
+                Issue.record("Unexpected error: \(error)")
+            }
+        } catch {
+            Issue.record("Unexpected non-pipeline error: \(error)")
+        }
+    }
+
+    @Test
+    func classifiesPartiallyCompatibleSnapshot() async {
+        let compatibility = DatasetCompatibilityResult(
             source: .koreaNational,
-            schemaVersion: "2.0.0",
-            datasetVersion: "2026.01",
-            generatedAt: "2026-03-08T00:00:00Z",
-            timeCoverage: "2026-01~2026-12",
-            spatialCoverage: .province,
-            recordsCount: 100,
-            requiredFiles: standardRequiredFiles(),
-            compatibility: SnapshotCompatibilityMetadata(
-                isSchemaCompatible: false,
-                isCompatibilityCheckPassed: false,
-                compatibilityReasons: ["schema_version_unsupported"],
-                checkedFields: ["schemaVersion"]
-            ),
-            activationEligibility: SnapshotActivationEligibility(state: .ineligible, reasons: ["schema_version_unsupported"])
+            isCompatible: false,
+            reasons: ["required_fields_missing"],
+            checkedFields: ["datasetID"],
+            missingFields: ["datasetID"]
         )
 
         let coordinator = DefaultIngestionPipelineCoordinator(
             adapter: StubExternalAdapter(result: .success(makeValidPayload())),
-            materializer: StubMaterializer(result: .success(.init(status: .materialized, contract: incompatibleContract, warnings: []))),
-            integrityChecker: StubIntegrityChecker(result: .init(isValid: true, issues: []))
+            materializer: StubMaterializer(result: .success(.init(status: .materialized, contract: makeValidContract(), warnings: []))),
+            integrityChecker: StubIntegrityChecker(result: .init(isValid: true, issues: [])),
+            schemaValidator: StubSchemaValidator(result: .init(
+                schemaVersion: "1.0.0",
+                supportedVersions: ["1.0.0"],
+                isCompatible: true,
+                reason: nil
+            )),
+            compatibilityChecker: StubCompatibilityChecker(result: compatibility)
         )
 
-        await #expect(throws: IngestionPipelineError.compatibilityFailed(["schema_version_unsupported", "schema_version_unsupported"])) {
+        do {
             _ = try await coordinator.ingest(request: .init(fetchRequest: makeRequest()))
+            Issue.record("Expected compatibilityFailed(partiallyCompatible)")
+        } catch let error as IngestionPipelineError {
+            switch error {
+            case .compatibilityFailed(let classification, let result):
+                #expect(classification == .partiallyCompatible)
+                #expect(result.reasons == ["required_fields_missing"])
+            default:
+                Issue.record("Unexpected error: \(error)")
+            }
+        } catch {
+            Issue.record("Unexpected non-pipeline error: \(error)")
+        }
+    }
+
+    @Test
+    func classifiesIncompatibleSnapshot() async {
+        let compatibility = DatasetCompatibilityResult(
+            source: .koreaNational,
+            isCompatible: false,
+            reasons: ["schema_version_unsupported"],
+            checkedFields: ["schemaVersion"],
+            missingFields: []
+        )
+
+        let coordinator = DefaultIngestionPipelineCoordinator(
+            adapter: StubExternalAdapter(result: .success(makeValidPayload())),
+            materializer: StubMaterializer(result: .success(.init(status: .materialized, contract: makeValidContract(), warnings: []))),
+            integrityChecker: StubIntegrityChecker(result: .init(isValid: true, issues: [])),
+            schemaValidator: StubSchemaValidator(result: .init(
+                schemaVersion: "1.0.0",
+                supportedVersions: ["1.0.0"],
+                isCompatible: true,
+                reason: nil
+            )),
+            compatibilityChecker: StubCompatibilityChecker(result: compatibility)
+        )
+
+        do {
+            _ = try await coordinator.ingest(request: .init(fetchRequest: makeRequest()))
+            Issue.record("Expected compatibilityFailed(incompatible)")
+        } catch let error as IngestionPipelineError {
+            switch error {
+            case .compatibilityFailed(let classification, let result):
+                #expect(classification == .incompatible)
+                #expect(result.reasons == ["schema_version_unsupported"])
+            default:
+                Issue.record("Unexpected error: \(error)")
+            }
+        } catch {
+            Issue.record("Unexpected non-pipeline error: \(error)")
         }
     }
 
@@ -259,11 +350,11 @@ struct IngestionPipelineCoordinatorTests {
         )
     }
 
-    private func makeValidContract() -> MaterializedSnapshotContract {
+    private func makeValidContract(schemaVersion: String = "1.0.0") -> MaterializedSnapshotContract {
         MaterializedSnapshotContract(
             snapshotID: "korea_national-2026.01",
             source: .koreaNational,
-            schemaVersion: "1.0.0",
+            schemaVersion: schemaVersion,
             datasetVersion: "2026.01",
             generatedAt: "2026-03-08T00:00:00Z",
             timeCoverage: "2026-01~2026-12",

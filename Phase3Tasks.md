@@ -107,6 +107,8 @@ Design constraints:
 - Dependency: P3-003, P3-005
 - Description: Enforce `DatasetSchemaValidator` + `DatasetCompatibilityChecker` in pipeline gate before activation eligibility.
 - Short goal: Block incompatible snapshots deterministically.
+- Status: Completed (2026-03-08)
+- Notes: Extended ingestion coordinator with explicit post-integrity schema and compatibility gates using `DatasetSchemaValidating` and `DatasetCompatibilityChecking`. Added typed gate outcomes (`compatible`/`partiallyCompatible`/`incompatible`) and explicit pipeline errors for schema/compatibility failures.
 
 ### M3-3 Dataset Version Management
 

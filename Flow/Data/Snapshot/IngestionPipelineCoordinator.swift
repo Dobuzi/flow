@@ -15,13 +15,28 @@ struct IngestionPipelineResult: Hashable {
         let payloadValidated: Bool
         let materializerInvoked: Bool
         let contractValidated: Bool
+        let schemaValidated: Bool
+        let compatibilityEvaluated: Bool
         let compatibilityPassed: Bool
+    }
+
+    struct CompatibilityGate: Hashable {
+        let classification: IngestionCompatibilityClassification
+        let result: DatasetCompatibilityResult
     }
 
     let status: Status
     let contract: MaterializedSnapshotContract?
     let materializationWarnings: [String]
+    let schemaValidation: DatasetSchemaValidationResult?
+    let compatibilityGate: CompatibilityGate?
     let stepStatus: StepStatus
+}
+
+enum IngestionCompatibilityClassification: String, Hashable {
+    case compatible
+    case partiallyCompatible
+    case incompatible
 }
 
 enum IngestionPipelineError: Error, Equatable {
@@ -31,7 +46,8 @@ enum IngestionPipelineError: Error, Equatable {
     case materializationRejected([String])
     case contractValidationFailed([String])
     case integrityFailed([String])
-    case compatibilityFailed([String])
+    case schemaValidationFailed(DatasetSchemaValidationResult)
+    case compatibilityFailed(IngestionCompatibilityClassification, DatasetCompatibilityResult)
 }
 
 protocol IngestionPipelineCoordinating {
@@ -42,15 +58,22 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
     private let adapter: ExternalDatasetAdapting
     private let materializer: SnapshotMaterializing
     private let integrityChecker: SnapshotIntegrityChecking
+    private let schemaValidator: DatasetSchemaValidating
+    private let compatibilityChecker: DatasetCompatibilityChecking
 
     init(
         adapter: ExternalDatasetAdapting,
         materializer: SnapshotMaterializing,
-        integrityChecker: SnapshotIntegrityChecking = DefaultSnapshotIntegrityChecker()
+        integrityChecker: SnapshotIntegrityChecking = DefaultSnapshotIntegrityChecker(),
+        schemaValidator: DatasetSchemaValidating = DatasetSchemaValidator(),
+        compatibilityChecker: DatasetCompatibilityChecking? = nil
     ) {
         self.adapter = adapter
         self.materializer = materializer
         self.integrityChecker = integrityChecker
+        self.schemaValidator = schemaValidator
+        self.compatibilityChecker = compatibilityChecker
+            ?? DatasetCompatibilityChecker(schemaValidator: schemaValidator)
     }
 
     func ingest(request: IngestionPipelineRequest) async throws -> IngestionPipelineResult {
@@ -59,6 +82,8 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
             payloadValidated: false,
             materializerInvoked: false,
             contractValidated: false,
+            schemaValidated: false,
+            compatibilityEvaluated: false,
             compatibilityPassed: false
         )
 
@@ -70,6 +95,8 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
                 payloadValidated: status.payloadValidated,
                 materializerInvoked: status.materializerInvoked,
                 contractValidated: status.contractValidated,
+                schemaValidated: status.schemaValidated,
+                compatibilityEvaluated: status.compatibilityEvaluated,
                 compatibilityPassed: status.compatibilityPassed
             )
         } catch let error as ExternalDatasetAdapterError {
@@ -87,6 +114,8 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
             payloadValidated: true,
             materializerInvoked: status.materializerInvoked,
             contractValidated: status.contractValidated,
+            schemaValidated: status.schemaValidated,
+            compatibilityEvaluated: status.compatibilityEvaluated,
             compatibilityPassed: status.compatibilityPassed
         )
 
@@ -104,6 +133,8 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
                 payloadValidated: status.payloadValidated,
                 materializerInvoked: true,
                 contractValidated: status.contractValidated,
+                schemaValidated: status.schemaValidated,
+                compatibilityEvaluated: status.compatibilityEvaluated,
                 compatibilityPassed: status.compatibilityPassed
             )
         } catch {
@@ -136,14 +167,15 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
             payloadValidated: status.payloadValidated,
             materializerInvoked: status.materializerInvoked,
             contractValidated: true,
+            schemaValidated: status.schemaValidated,
+            compatibilityEvaluated: status.compatibilityEvaluated,
             compatibilityPassed: status.compatibilityPassed
         )
 
-        guard contract.compatibility.isSchemaCompatible,
-              contract.compatibility.isCompatibilityCheckPassed,
-              contract.activationEligibility.state != .ineligible else {
-            let reasons = contract.compatibility.compatibilityReasons + contract.activationEligibility.reasons
-            throw IngestionPipelineError.compatibilityFailed(reasons)
+        let datasetCandidate = flowDataset(from: contract)
+        let schemaValidation = schemaValidator.validate(dataset: datasetCandidate)
+        guard schemaValidation.isCompatible else {
+            throw IngestionPipelineError.schemaValidationFailed(schemaValidation)
         }
 
         status = IngestionPipelineResult.StepStatus(
@@ -151,6 +183,38 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
             payloadValidated: status.payloadValidated,
             materializerInvoked: status.materializerInvoked,
             contractValidated: status.contractValidated,
+            schemaValidated: true,
+            compatibilityEvaluated: status.compatibilityEvaluated,
+            compatibilityPassed: status.compatibilityPassed
+        )
+
+        var compatibilityResult = compatibilityChecker.evaluate(
+            dataset: datasetCandidate,
+            source: contract.source
+        )
+        let contractCompatibilityIssues = contract.compatibility.compatibilityReasons + contract.activationEligibility.reasons
+        if !contractCompatibilityIssues.isEmpty {
+            compatibilityResult = DatasetCompatibilityResult(
+                source: compatibilityResult.source,
+                isCompatible: false,
+                reasons: compatibilityResult.reasons + contractCompatibilityIssues,
+                checkedFields: compatibilityResult.checkedFields,
+                missingFields: compatibilityResult.missingFields
+            )
+        }
+
+        let compatibilityClassification = classifyCompatibility(compatibilityResult)
+        guard compatibilityClassification == .compatible else {
+            throw IngestionPipelineError.compatibilityFailed(compatibilityClassification, compatibilityResult)
+        }
+
+        status = IngestionPipelineResult.StepStatus(
+            adapterFetched: status.adapterFetched,
+            payloadValidated: status.payloadValidated,
+            materializerInvoked: status.materializerInvoked,
+            contractValidated: status.contractValidated,
+            schemaValidated: status.schemaValidated,
+            compatibilityEvaluated: true,
             compatibilityPassed: true
         )
 
@@ -158,7 +222,36 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
             status: .succeeded,
             contract: contract,
             materializationWarnings: materialization.warnings,
+            schemaValidation: schemaValidation,
+            compatibilityGate: .init(
+                classification: compatibilityClassification,
+                result: compatibilityResult
+            ),
             stepStatus: status
         )
+    }
+
+    private func flowDataset(from contract: MaterializedSnapshotContract) -> FlowDataset {
+        FlowDataset(
+            datasetID: contract.snapshotID,
+            version: contract.datasetVersion,
+            source: contract.source.rawValue,
+            createdAt: contract.generatedAt,
+            spatialLevel: contract.spatialCoverage,
+            timeCoverage: contract.timeCoverage,
+            recordsCount: contract.recordsCount,
+            schemaVersion: contract.schemaVersion
+        )
+    }
+
+    private func classifyCompatibility(_ result: DatasetCompatibilityResult) -> IngestionCompatibilityClassification {
+        if result.isCompatible {
+            return .compatible
+        }
+        if !result.reasons.isEmpty,
+           result.reasons.allSatisfy({ $0 == "required_fields_missing" }) {
+            return .partiallyCompatible
+        }
+        return .incompatible
     }
 }
