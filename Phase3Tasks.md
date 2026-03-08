@@ -73,12 +73,16 @@ Design constraints:
 - Dependency: P3-001
 - Description: Introduce `MobilityAPIAdapter` protocol, typed transport/network/schema errors, and retryability metadata.
 - Short goal: Standardize provider adapters without changing runtime repositories.
+- Status: Completed (2026-03-08)
+- Notes: Added `ExternalDatasetAdapting` boundary and normalized fetch request/result/payload models with structural validation. Added typed `ExternalDatasetAdapterError` classifications (network/auth/rate-limit/payload/schema/version/empty/partial) including retryability semantics and mapping to materialization input.
 
 ## P3-003 — Implement ingestion pipeline coordinator skeleton
 - Priority: P0
 - Dependency: P3-001, P3-002
 - Description: Add orchestration service that executes fetch -> decode -> map -> validate -> materialize with structured result reporting.
 - Short goal: Create the end-to-end pipeline shell used by all providers.
+- Status: Completed (2026-03-08)
+- Notes: Added `IngestionPipelineCoordinating` and `DefaultIngestionPipelineCoordinator` to orchestrate adapter fetch, payload validation, materialization input conversion, materializer invocation, materialized contract structural validation, and compatibility gating with typed result/error reporting.
 
 ### M3-2 Snapshot Materialization Pipeline
 
