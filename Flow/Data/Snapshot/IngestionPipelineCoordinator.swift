@@ -30,6 +30,7 @@ enum IngestionPipelineError: Error, Equatable {
     case materializationFailed(String)
     case materializationRejected([String])
     case contractValidationFailed([String])
+    case integrityFailed([String])
     case compatibilityFailed([String])
 }
 
@@ -40,13 +41,16 @@ protocol IngestionPipelineCoordinating {
 struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
     private let adapter: ExternalDatasetAdapting
     private let materializer: SnapshotMaterializing
+    private let integrityChecker: SnapshotIntegrityChecking
 
     init(
         adapter: ExternalDatasetAdapting,
-        materializer: SnapshotMaterializing
+        materializer: SnapshotMaterializing,
+        integrityChecker: SnapshotIntegrityChecking = DefaultSnapshotIntegrityChecker()
     ) {
         self.adapter = adapter
         self.materializer = materializer
+        self.integrityChecker = integrityChecker
     }
 
     func ingest(request: IngestionPipelineRequest) async throws -> IngestionPipelineResult {
@@ -86,12 +90,14 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
             compatibilityPassed: status.compatibilityPassed
         )
 
+        let materializationInput = payload.toMaterializationInput(
+            rawPayloadFingerprint: payload.metadata["payload_fingerprint"]
+        )
+
         let materialization: SnapshotMaterializationResult
         do {
             materialization = try await materializer.materialize(
-                input: payload.toMaterializationInput(
-                    rawPayloadFingerprint: payload.metadata["payload_fingerprint"]
-                )
+                input: materializationInput
             )
             status = IngestionPipelineResult.StepStatus(
                 adapterFetched: status.adapterFetched,
@@ -116,6 +122,15 @@ struct DefaultIngestionPipelineCoordinator: IngestionPipelineCoordinating {
         guard contractValidation.isValid else {
             throw IngestionPipelineError.contractValidationFailed(contractValidation.reasons)
         }
+
+        let integrityResult = integrityChecker.check(
+            contract: contract,
+            files: materializationInput.files
+        )
+        guard integrityResult.isValid else {
+            throw IngestionPipelineError.integrityFailed(integrityResult.issues.map(\.code))
+        }
+
         status = IngestionPipelineResult.StepStatus(
             adapterFetched: status.adapterFetched,
             payloadValidated: status.payloadValidated,

@@ -99,6 +99,8 @@ Design constraints:
 - Dependency: P3-004
 - Description: Validate materialized snapshot completeness and checksum integrity before version registration.
 - Short goal: Prevent partial/corrupt snapshot activation.
+- Status: Completed (2026-03-08)
+- Notes: Added `SnapshotIntegrityChecking` with `DefaultSnapshotIntegrityChecker` to verify required file-role completeness, checksum presence/match, and file metadata consistency (`byteCount`, `recordCount`) against materialized payloads. Integrated integrity gating into `DefaultIngestionPipelineCoordinator` after contract validation and before compatibility readiness with explicit `integrityFailed` error semantics.
 
 ## P3-006 — Integrate schema validation + compatibility gates into ingestion
 - Priority: P0
