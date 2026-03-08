@@ -207,6 +207,74 @@ struct DatasetRefreshSchedulerTests {
         }
     }
 
+    @Test
+    func refreshStateStoreTracksSuccessFailureAndSkipOutcomes() async {
+        let stateStore = InMemoryDatasetRefreshStateStore()
+        let repository = StubCatalogRepository(catalog: makeCatalog())
+        let scheduler = DefaultDatasetRefreshScheduler(
+            catalogRepository: repository,
+            coordinatorRegistry: [
+                .seoulCapitalSnapshot: StubIngestionCoordinator(
+                    result: .success(makeIngestionSuccess(snapshotID: "seoul-2026.03"))
+                )
+            ],
+            refreshStateStore: stateStore
+        )
+
+        let succeeded = await scheduler.refresh(
+            DatasetRefreshRequest(
+                source: .seoulCapitalSnapshot,
+                trigger: .manual,
+                preferredUpstreamVersion: nil
+            )
+        )
+        #expect(succeeded.status == .succeeded)
+
+        let storedAfterSuccess = await stateStore.state(for: .seoulCapitalSnapshot)
+        #expect(storedAfterSuccess?.lastRefreshOutcome == .success)
+        #expect(storedAfterSuccess?.lastRefreshTrigger == .manual)
+        #expect(storedAfterSuccess?.latestCandidateSnapshotID == "seoul-2026.03")
+        #expect(storedAfterSuccess?.latestCandidateCompatibility == .compatible)
+        #expect(storedAfterSuccess?.latestCandidateEligibleForActivation == true)
+
+        let skipped = await scheduler.refresh(
+            DatasetRefreshRequest(
+                source: .bundledSample,
+                trigger: .manual,
+                preferredUpstreamVersion: nil
+            )
+        )
+        #expect(skipped.status == .skipped)
+
+        let storedAfterSkip = await stateStore.state(for: .bundledSample)
+        #expect(storedAfterSkip?.lastRefreshOutcome == .skipped)
+        #expect(storedAfterSkip?.lastRefreshFailureReason == "source_not_live_capable")
+
+        let failingScheduler = DefaultDatasetRefreshScheduler(
+            catalogRepository: repository,
+            coordinatorRegistry: [
+                .seoulCapitalSnapshot: StubIngestionCoordinator(
+                    result: .failure(.adapterFailure(.networkUnavailable))
+                )
+            ],
+            refreshStateStore: stateStore
+        )
+        let failed = await failingScheduler.refresh(
+            DatasetRefreshRequest(
+                source: .seoulCapitalSnapshot,
+                trigger: .periodic,
+                preferredUpstreamVersion: nil
+            )
+        )
+        #expect(failed.status == .failed)
+
+        let storedAfterFailure = await stateStore.state(for: .seoulCapitalSnapshot)
+        #expect(storedAfterFailure?.lastRefreshOutcome == .failed)
+        #expect(storedAfterFailure?.lastRefreshTrigger == .periodic)
+        #expect(storedAfterFailure?.lastRefreshFailedAt == failed.finishedAt)
+        #expect(storedAfterFailure?.lastRefreshFailureReason == "ingestion_failed_adapter_failure")
+    }
+
     private func makeCatalog() -> MobilityDatasetCatalog {
         MobilityDatasetCatalog(
             version: "1.0.0",

@@ -1,10 +1,5 @@
 import Foundation
 
-enum DatasetRefreshTrigger: String, Hashable {
-    case manual
-    case periodic
-}
-
 struct DatasetRefreshRequest: Hashable {
     let source: FlowDatasetSource
     let trigger: DatasetRefreshTrigger
@@ -25,6 +20,8 @@ struct DatasetRefreshResult: Equatable {
     let finishedAt: String
     let storedSnapshotID: String?
     let storedDatasetVersion: String?
+    let compatibilityClassification: IngestionCompatibilityClassification?
+    let eligibleForActivation: Bool?
     let didStoreCandidate: Bool
     let error: DatasetRefreshError?
 }
@@ -50,6 +47,7 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
     private let catalogRepository: MobilityCatalogRepository
     private let coordinatorRegistry: CoordinatorRegistry
     private let minimumPeriodicInterval: TimeInterval
+    private let refreshStateStore: DatasetRefreshStateStoring?
     private let nowProvider: () -> Date
     private let timestampProvider: (Date) -> String
 
@@ -60,6 +58,7 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
         catalogRepository: MobilityCatalogRepository,
         coordinatorRegistry: CoordinatorRegistry,
         minimumPeriodicInterval: TimeInterval = 60 * 60,
+        refreshStateStore: DatasetRefreshStateStoring? = nil,
         nowProvider: @escaping () -> Date = Date.init,
         timestampProvider: @escaping (Date) -> String = { date in
             ISO8601DateFormatter().string(from: date)
@@ -68,6 +67,7 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
         self.catalogRepository = catalogRepository
         self.coordinatorRegistry = coordinatorRegistry
         self.minimumPeriodicInterval = minimumPeriodicInterval
+        self.refreshStateStore = refreshStateStore
         self.nowProvider = nowProvider
         self.timestampProvider = timestampProvider
     }
@@ -80,7 +80,7 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
         do {
             catalog = try await catalogRepository.fetchCatalog()
         } catch {
-            return DatasetRefreshResult(
+            let result = DatasetRefreshResult(
                 source: request.source,
                 trigger: request.trigger,
                 status: .failed,
@@ -88,14 +88,18 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                 finishedAt: timestampProvider(nowProvider()),
                 storedSnapshotID: nil,
                 storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
                 didStoreCandidate: false,
                 error: .catalogUnavailable(reason: String(describing: error))
             )
+            await refreshStateStore?.record(result)
+            return result
         }
 
         guard let descriptor = catalog.descriptor(for: request.source),
               descriptor.liveMetadata?.supportsLiveRefresh == true else {
-            return DatasetRefreshResult(
+            let result = DatasetRefreshResult(
                 source: request.source,
                 trigger: request.trigger,
                 status: .skipped,
@@ -103,9 +107,13 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                 finishedAt: timestampProvider(nowProvider()),
                 storedSnapshotID: nil,
                 storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
                 didStoreCandidate: false,
                 error: .sourceNotLiveCapable
             )
+            await refreshStateStore?.record(result)
+            return result
         }
 
         if request.trigger == .periodic,
@@ -113,7 +121,7 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
             let elapsed = now.timeIntervalSince(lastAttempt)
             if elapsed < minimumPeriodicInterval {
                 let next = lastAttempt.addingTimeInterval(minimumPeriodicInterval)
-                return DatasetRefreshResult(
+                let result = DatasetRefreshResult(
                     source: request.source,
                     trigger: request.trigger,
                     status: .skipped,
@@ -121,14 +129,18 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                     finishedAt: timestampProvider(nowProvider()),
                     storedSnapshotID: nil,
                     storedDatasetVersion: nil,
+                    compatibilityClassification: nil,
+                    eligibleForActivation: nil,
                     didStoreCandidate: false,
                     error: .periodicNotDue(nextEligibleAt: timestampProvider(next))
                 )
+                await refreshStateStore?.record(result)
+                return result
             }
         }
 
         guard !inProgressSources.contains(request.source) else {
-            return DatasetRefreshResult(
+            let result = DatasetRefreshResult(
                 source: request.source,
                 trigger: request.trigger,
                 status: .skipped,
@@ -136,13 +148,17 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                 finishedAt: timestampProvider(nowProvider()),
                 storedSnapshotID: nil,
                 storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
                 didStoreCandidate: false,
                 error: .refreshInProgress
             )
+            await refreshStateStore?.record(result)
+            return result
         }
 
         guard let coordinator = coordinatorRegistry[request.source] else {
-            return DatasetRefreshResult(
+            let result = DatasetRefreshResult(
                 source: request.source,
                 trigger: request.trigger,
                 status: .skipped,
@@ -150,9 +166,13 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                 finishedAt: timestampProvider(nowProvider()),
                 storedSnapshotID: nil,
                 storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
                 didStoreCandidate: false,
                 error: .adapterNotConfigured
             )
+            await refreshStateStore?.record(result)
+            return result
         }
 
         inProgressSources.insert(request.source)
@@ -171,7 +191,7 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
             let ingestionResult = try await coordinator.ingest(
                 request: IngestionPipelineRequest(fetchRequest: fetchRequest)
             )
-            return DatasetRefreshResult(
+            let result = DatasetRefreshResult(
                 source: request.source,
                 trigger: request.trigger,
                 status: .succeeded,
@@ -179,11 +199,15 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                 finishedAt: timestampProvider(nowProvider()),
                 storedSnapshotID: ingestionResult.contract?.snapshotID,
                 storedDatasetVersion: ingestionResult.contract?.datasetVersion,
+                compatibilityClassification: ingestionResult.compatibilityGate?.classification,
+                eligibleForActivation: ingestionResult.contract?.activationEligibility.state == .eligible,
                 didStoreCandidate: ingestionResult.status == .succeeded && ingestionResult.contract != nil,
                 error: nil
             )
+            await refreshStateStore?.record(result)
+            return result
         } catch let error as IngestionPipelineError {
-            return DatasetRefreshResult(
+            let result = DatasetRefreshResult(
                 source: request.source,
                 trigger: request.trigger,
                 status: .failed,
@@ -191,11 +215,15 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                 finishedAt: timestampProvider(nowProvider()),
                 storedSnapshotID: nil,
                 storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
                 didStoreCandidate: false,
                 error: .ingestionFailed(error)
             )
+            await refreshStateStore?.record(result)
+            return result
         } catch {
-            return DatasetRefreshResult(
+            let result = DatasetRefreshResult(
                 source: request.source,
                 trigger: request.trigger,
                 status: .failed,
@@ -203,9 +231,13 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                 finishedAt: timestampProvider(nowProvider()),
                 storedSnapshotID: nil,
                 storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
                 didStoreCandidate: false,
                 error: .schedulerFailure(reason: String(describing: error))
             )
+            await refreshStateStore?.record(result)
+            return result
         }
     }
 
@@ -224,6 +256,8 @@ actor DefaultDatasetRefreshScheduler: DatasetRefreshScheduling {
                     finishedAt: timestampProvider(nowProvider()),
                     storedSnapshotID: nil,
                     storedDatasetVersion: nil,
+                    compatibilityClassification: nil,
+                    eligibleForActivation: nil,
                     didStoreCandidate: false,
                     error: .catalogUnavailable(reason: String(describing: error))
                 )

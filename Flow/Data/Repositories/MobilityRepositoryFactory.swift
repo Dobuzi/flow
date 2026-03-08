@@ -39,12 +39,14 @@ enum MobilityRepositoryFactory {
 
     static func liveAwareCatalogRepository(
         versionStore: DatasetVersionStoring,
-        activationPolicy: SnapshotActivationPolicying
+        activationPolicy: SnapshotActivationPolicying,
+        refreshStateStore: DatasetRefreshStateStoring? = nil
     ) -> MobilityCatalogRepository {
         LocalMobilityCatalogRepository(
             liveMetadataEnricher: CatalogLiveMetadataEnricher(
                 versionStore: versionStore,
-                activationPolicy: activationPolicy
+                activationPolicy: activationPolicy,
+                refreshStateStore: refreshStateStore
             )
         )
     }

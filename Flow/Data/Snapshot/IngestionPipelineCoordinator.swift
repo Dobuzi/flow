@@ -33,12 +33,6 @@ struct IngestionPipelineResult: Hashable {
     let stepStatus: StepStatus
 }
 
-enum IngestionCompatibilityClassification: String, Hashable {
-    case compatible
-    case partiallyCompatible
-    case incompatible
-}
-
 enum IngestionPipelineError: Error, Equatable {
     case adapterFailure(ExternalDatasetAdapterError)
     case payloadValidationFailed([String])

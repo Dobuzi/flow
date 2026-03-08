@@ -151,12 +151,16 @@ Design constraints:
 - Dependency: P3-003, P3-010
 - Description: Add controlled refresh triggers (manual action + periodic check) with backoff and foreground safety constraints.
 - Short goal: Make ingestion operable without background-service complexity.
+- Status: Completed (2026-03-08)
+- Notes: Added `DefaultDatasetRefreshScheduler` with typed request/result/error semantics, per-source live eligibility checks, periodic interval gating, in-progress deduplication, and safe integration with ingestion coordination while preserving non-auto-activation runtime behavior.
 
 ## P3-012 — Add source health/status reporting for refresh outcomes
 - Priority: P1
 - Dependency: P3-008, P3-011
 - Description: Expose refresh/activation outcomes as structured source status (`healthy`, `degraded`, `failed`, reason).
 - Short goal: Keep UX truthful during live refresh lifecycle.
+- Status: Completed (2026-03-08)
+- Notes: Added `DatasetRefreshState` + `DatasetRefreshStateStoring` for source-level refresh outcome tracking (attempt/success/failure timestamps, trigger, outcome, failure reason, candidate readiness). Wired scheduler result recording and `CatalogLiveMetadataEnricher` integration so live metadata surfaces latest refresh outcome and candidate activation-readiness without mutating runtime dataset switching.
 
 ### M3-5 Analytics Readiness and Regression Hardening
 
