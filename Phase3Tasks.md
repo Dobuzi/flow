@@ -125,6 +125,8 @@ Design constraints:
 - Dependency: P3-006, P3-007
 - Description: Add activation rules and atomic switch to new version; rollback to last-known-good on activation failure.
 - Short goal: Guarantee non-disruptive upgrades.
+- Status: Completed (2026-03-08)
+- Notes: Added `SnapshotActivationPolicying` with `DefaultSnapshotActivationPolicy` and explicit decision/state/error models for activation and rollback (`SnapshotActivationDecision`, `SnapshotActivationState`, `SnapshotRollbackDecision`, `SnapshotActivationError`). Policy now selects activatable snapshots from `DatasetVersionStore`, preserves last-known-good state, and exposes explicit no-safe-rollback semantics without changing runtime dataset switching.
 
 ## P3-009 — Extend dataset catalog metadata for live/version state
 - Priority: P1
