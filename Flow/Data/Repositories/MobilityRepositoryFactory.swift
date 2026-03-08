@@ -1,6 +1,12 @@
 import Foundation
 
 enum MobilityRepositoryFactory {
+    static let sharedVersionStore: DatasetVersionStoring = InMemoryDatasetVersionStore()
+    static let sharedActivationPolicy: SnapshotActivationPolicying = DefaultSnapshotActivationPolicy(
+        versionStore: sharedVersionStore
+    )
+    static let sharedRefreshStateStore: DatasetRefreshStateStoring = InMemoryDatasetRefreshStateStore()
+
     static var nationalDataSourceBuilder: () -> NationalBaselineMobilityDataSource = {
         SafeNationalBaselineMobilityDataSource(
             wrapped: NationalBaselineSnapshotDataSource()
@@ -20,6 +26,21 @@ enum MobilityRepositoryFactory {
         }
     }
 
+    static func flowRepository(
+        for source: FlowDatasetSource,
+        resolution: ActivatedSnapshotResolution
+    ) -> FlowRepository {
+        if resolution.isUsingActivatedSnapshot {
+            FlowLogger.info(
+                "Using activated snapshot context for \(source.rawValue): " +
+                "\(resolution.activatedSnapshotID ?? "unknown")"
+            )
+        } else if let reason = resolution.fallbackReason {
+            FlowLogger.info("Activation fallback for \(source.rawValue): \(reason.rawValue)")
+        }
+        return flowRepository(for: source)
+    }
+
     static func locationRepository(for source: FlowDatasetSource) -> LocationRepository {
         switch source {
         case .bundledSample:
@@ -33,14 +54,29 @@ enum MobilityRepositoryFactory {
         }
     }
 
+    static func locationRepository(
+        for source: FlowDatasetSource,
+        resolution: ActivatedSnapshotResolution
+    ) -> LocationRepository {
+        if resolution.isUsingActivatedSnapshot {
+            FlowLogger.info(
+                "Using activated location snapshot context for \(source.rawValue): " +
+                "\(resolution.activatedSnapshotID ?? "unknown")"
+            )
+        } else if let reason = resolution.fallbackReason {
+            FlowLogger.info("Activation fallback for location \(source.rawValue): \(reason.rawValue)")
+        }
+        return locationRepository(for: source)
+    }
+
     static func catalogRepository() -> MobilityCatalogRepository {
         LocalMobilityCatalogRepository()
     }
 
     static func liveAwareCatalogRepository(
-        versionStore: DatasetVersionStoring,
-        activationPolicy: SnapshotActivationPolicying,
-        refreshStateStore: DatasetRefreshStateStoring? = nil
+        versionStore: DatasetVersionStoring = sharedVersionStore,
+        activationPolicy: SnapshotActivationPolicying = sharedActivationPolicy,
+        refreshStateStore: DatasetRefreshStateStoring? = sharedRefreshStateStore
     ) -> MobilityCatalogRepository {
         LocalMobilityCatalogRepository(
             liveMetadataEnricher: CatalogLiveMetadataEnricher(
@@ -48,6 +84,22 @@ enum MobilityRepositoryFactory {
                 activationPolicy: activationPolicy,
                 refreshStateStore: refreshStateStore
             )
+        )
+    }
+
+    static func activatedSnapshotResolver(
+        versionStore: DatasetVersionStoring = sharedVersionStore,
+        activationPolicy: SnapshotActivationPolicying = sharedActivationPolicy,
+        refreshStateStore: DatasetRefreshStateStoring = sharedRefreshStateStore
+    ) -> ActivatedSnapshotResolving {
+        DefaultActivatedSnapshotResolver(
+            catalogRepository: liveAwareCatalogRepository(
+                versionStore: versionStore,
+                activationPolicy: activationPolicy,
+                refreshStateStore: refreshStateStore
+            ),
+            versionStore: versionStore,
+            activationPolicy: activationPolicy
         )
     }
 }

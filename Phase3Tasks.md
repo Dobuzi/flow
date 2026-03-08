@@ -169,6 +169,8 @@ Design constraints:
 - Dependency: P3-008
 - Description: Confirm repository/query paths resolve active snapshot versions without source switching regressions.
 - Short goal: Keep map/insights aligned with activated data version.
+- Status: Completed (2026-03-08)
+- Notes: Added activation-aware query resolution via `ActivatedSnapshotResolving` + `DefaultActivatedSnapshotResolver`, and wired `DefaultMobilityQueryAdapter`/`MobilityRepositoryFactory` to consume active snapshot context with explicit safe fallback for missing/ineligible activation state. Runtime repositories remain snapshot-safe and backward-compatible.
 
 ## P3-014 — Add ingestion-to-activation integration tests
 - Priority: P0
