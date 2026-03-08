@@ -150,6 +150,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Extend cache/pre-aggregation seams so national aggregated slices are reused safely across time/mode/spatial combinations.
 - Deliverable: National-aware cache/pre-aggregation integration updates.
 - Definition of Done: Repeated national queries avoid full recomputation for identical selection states.
+- Status: Completed (2026-03-07)
+- Notes: National map query path now uses source-aware cache keys including dataset/spatial/time/mode/unit dimensions and applies pre-aggregation index lookup before shaping, enabling deterministic reuse for repeated national selections without breaking sample/Seoul cache behavior.
 
 ## P2-011 — Implement map rendering guardrails for national-scale flow counts
 - Priority: P0
@@ -198,6 +200,8 @@ This phase is a safe, incremental vertical slice: it enables real national basel
 - Description: Synchronize `Tasks.md` status mapping for Phase 2 tasks and add rollout checklist for enabling national source by default/non-default.
 - Deliverable: Updated task tracking and release readiness notes.
 - Definition of Done: Phase 2 tasks are traceable, tested, and deployment toggles are documented.
+- Status: Completed (2026-03-07)
+- Notes: Synchronized Phase 2 completion state across `Phase2Tasks.md`, `Tasks.md`, and `ImplementationPlan.md`; added explicit Phase 2 completion summary, rollout checklist, and Phase 3 preview to support nationwide baseline release readiness.
 
 ## 7. Execution Order
 1. P2-001
@@ -252,3 +256,12 @@ This slice delivers a real ingestible national source path quickly, while keepin
 - Total tasks: 15
 - P0 tasks: P2-001, P2-002, P2-004, P2-005, P2-006, P2-007, P2-008, P2-009, P2-011, P2-014, P2-015
 - Recommended starting task: P2-001 — Define nationwide baseline snapshot resource contract
+
+## 11. Phase 2 Completion Summary
+Phase 2 is complete. The nationwide baseline vertical slice is implemented and documented:
+- `koreaNational` active bundled snapshot ingestion path (manifest/nodes/flows).
+- DTO -> Mapper -> DataSource -> Repository pipeline with schema/compatibility checks.
+- Safe fallback and explicit non-fatal error semantics in factory/repository path.
+- National spatial aggregation + query integration + map render guardrails.
+- Nationwide-compatible insights and source-state UX truthfulness.
+- Regression protection suite covering ingestion, mapping, repository fallback, query, aggregation, guardrails, insights, and source-switch status transitions.

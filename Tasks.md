@@ -521,6 +521,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 8. T-032 (QA and cleanup)
 9. T-033 → T-035 (external provider integration and live refresh hardening)
 10. T-036 → T-050 (nationwide platform foundation phase 1)
+11. Phase 2 (`P2-001` → `P2-015`) nationwide baseline vertical slice (completed; tracked in `Phase2Tasks.md`)
 
 Blocking dependencies:
 - Renderer work requires data/repository core (T-005/T-009).
@@ -553,6 +554,19 @@ Risk mitigation rules:
 - Ship static rendering before animation.
 - Keep pure-engine test coverage high before UI wiring.
 - Add fixture-driven integration tests before optimization changes.
+
+## 6.1 Phase 2 Status Sync (2026-03-07)
+- Source of truth: `Phase2Tasks.md`
+- Status: `P2-001` through `P2-015` completed
+- Completed capability set:
+  - nationwide snapshot ingestion (`koreaNational`) with manifest/node/flow resources
+  - DTO -> Mapper -> DataSource -> Repository national pipeline
+  - schema validation + compatibility checks + explicit safe fallback semantics
+  - national query integration and spatial aggregation
+  - national render guardrails and render-limit metadata
+  - nationwide insights compatibility
+  - source-state UX truthfulness (`loading/ready/limited/unavailable`)
+  - regression test protection across national + sample + Seoul paths
 
 ## 7. Suggested Initial Sprint (Vertical Slice)
 

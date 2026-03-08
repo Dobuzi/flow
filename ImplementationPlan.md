@@ -279,3 +279,46 @@ Add a new milestone after current hardening work:
   - API client and sync orchestration for Seoul source
   - schema drift detection and fallback policy
   - snapshot refresh workflow and integrity checks
+
+## 10. Phase 2 Completion Summary
+Phase 2 (nationwide baseline vertical slice) is complete.
+
+Implemented outcomes:
+- Nationwide baseline architecture activated for `koreaNational` using bundled snapshot resources.
+- Safe national ingestion path delivered with manifest/schema/compatibility validation and explicit non-fatal fallback semantics.
+- Render-safe nationwide visualization delivered via spatial aggregation and national render guardrails.
+- Nationwide insights compatibility delivered with truthful summary behavior under aggregation/guardrail limits.
+- Nationwide path protected by regression tests spanning ingestion, mapping, repository fallback, query path, aggregation, guardrails, insights, and source-status UX transitions.
+
+## 11. Phase 2 Rollout Checklist
+
+Architecture:
+- [x] Repository structure intact (`DTO -> Mapper -> DataSource -> Repository`).
+- [x] Source-specific responsibilities preserved without cross-layer leakage.
+
+Data pipeline:
+- [x] National snapshot manifest/nodes/flows load correctly when valid.
+- [x] Schema validation and compatibility checks enforced.
+- [x] Missing/corrupt/incompatible national inputs handled with explicit safe semantics.
+
+Rendering safety:
+- [x] National spatial aggregation enabled for map-safe baseline rendering.
+- [x] National render guardrails enforce deterministic overlay caps.
+- [x] Insights remain truthful under aggregation and render-limited conditions.
+
+UX behavior:
+- [x] Dataset switching remains stable across sample/Seoul/national sources.
+- [x] Source status banner surfaces `loading`, `ready`, `limited`, `unavailable`.
+- [x] Limited/unavailable national states are visible and non-fatal.
+
+Testing:
+- [x] Nationwide regression suites passing.
+- [x] `bundledSample` path not regressed.
+- [x] `seoulCapitalSnapshot` path not regressed.
+
+## 12. Phase 3 Preview
+- Introduce API-backed national dataset refresh and snapshot materialization workflow.
+- Start multi-dataset fusion path (national baseline + modal specialist datasets).
+- Expand query/aggregation for richer nationwide corridor and heatmap analytics.
+- Add streaming-ready time-series refresh seams for future near-real-time updates.
+- Profile and optimize large-scale rendering and query latency beyond Phase 2 safe baseline.
