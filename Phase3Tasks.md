@@ -91,6 +91,8 @@ Design constraints:
 - Dependency: P3-003
 - Description: Materialize canonical JSON/JSONL snapshot artifacts in app storage with atomic write strategy.
 - Short goal: Persist validated ingest outputs as runtime-consumable snapshots.
+- Status: Completed (2026-03-08)
+- Notes: Added `DefaultSnapshotMaterializer` conforming to `SnapshotMaterializing` with deterministic required-file role checks (`manifest`/`nodes`/`flows`), materialization metadata derivation (`dataset_id`, `snapshot_id`, `schema_version`, `time_coverage`, `spatial_coverage`), checksum generation fallback, contract assembly via `MaterializedSnapshotContract`, and structural rejection semantics for incomplete/inconsistent inputs.
 
 ## P3-005 — Add snapshot integrity checker (checksum + file completeness)
 - Priority: P0

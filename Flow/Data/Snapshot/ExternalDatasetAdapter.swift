@@ -64,12 +64,23 @@ struct ExternalDatasetPayload: Hashable {
     }
 
     func toMaterializationInput(rawPayloadFingerprint: String? = nil) -> SnapshotMaterializationInput {
-        SnapshotMaterializationInput(
+        let mappedFiles = files.map { file in
+            SnapshotMaterializationInput.FilePayload(
+                role: .init(rawValue: file.role.rawValue) ?? .flows,
+                data: file.data,
+                recordCountHint: file.recordCountHint,
+                checksumSHA256: file.checksumSHA256
+            )
+        }
+
+        return SnapshotMaterializationInput(
             source: source,
             providerID: providerID,
             upstreamVersion: upstreamVersion,
             fetchedAt: fetchedAt,
-            rawPayloadFingerprint: rawPayloadFingerprint
+            rawPayloadFingerprint: rawPayloadFingerprint,
+            files: mappedFiles,
+            metadata: metadata
         )
     }
 }

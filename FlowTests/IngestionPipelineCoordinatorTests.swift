@@ -35,6 +35,19 @@ private struct StubMaterializer: SnapshotMaterializing {
 
 struct IngestionPipelineCoordinatorTests {
     @Test
+    func coordinatorWorksWithDefaultSnapshotMaterializer() async throws {
+        let coordinator = DefaultIngestionPipelineCoordinator(
+            adapter: StubExternalAdapter(result: .success(makeValidPayload())),
+            materializer: DefaultSnapshotMaterializer()
+        )
+
+        let output = try await coordinator.ingest(request: .init(fetchRequest: makeRequest()))
+        #expect(output.status == .succeeded)
+        #expect(output.contract?.source == .koreaNational)
+        #expect(output.contract?.requiredFiles.count == 3)
+    }
+
+    @Test
     func succeedsWhenAllPipelineStagesPass() async throws {
         let coordinator = DefaultIngestionPipelineCoordinator(
             adapter: StubExternalAdapter(result: .success(makeValidPayload())),
@@ -183,7 +196,13 @@ struct IngestionPipelineCoordinatorTests {
                 .init(role: .nodes, data: Data("[]".utf8), recordCountHint: 0, checksumSHA256: "n"),
                 .init(role: .flows, data: Data("{}\n".utf8), recordCountHint: 1, checksumSHA256: "f")
             ],
-            metadata: [:]
+            metadata: [
+                "dataset_id": "korea-national-baseline-2026",
+                "snapshot_id": "korea_national-2026.01",
+                "schema_version": "1.0.0",
+                "spatial_coverage": "province",
+                "time_coverage": "2026-01~2026-12"
+            ]
         )
     }
 
