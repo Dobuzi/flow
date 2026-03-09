@@ -177,6 +177,8 @@ Design constraints:
 - Dependency: P3-006, P3-008, P3-010
 - Description: Add tests for success/failure pipeline, activation gating, rollback behavior, and non-fatal semantics.
 - Short goal: Lock down lifecycle correctness.
+- Status: Completed (2026-03-09)
+- Notes: Added cross-layer integration coverage in `IngestionActivationLifecycleIntegrationTests` for adapter→materialization→ingestion-gate→version-store→activation→activation-aware-query success path, safe fallback with no active snapshot, rejection paths (integrity/compatibility) preventing activation consumption, static-source activation immunity, and runtime regression checks across bundled/sample/national snapshot-backed paths.
 
 ## P3-015 — Add cross-source regression suite for live-refresh era
 - Priority: P0
