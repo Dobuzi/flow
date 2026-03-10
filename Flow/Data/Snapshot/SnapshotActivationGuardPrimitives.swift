@@ -57,13 +57,21 @@ struct SnapshotActivationGuardInput: Hashable {
             )
         }
 
-        let validationIssues = command.validationIssues()
-        if !validationIssues.isEmpty {
+        let validation = DefaultSnapshotActivationCommandValidator().validate(
+            command,
+            context: SnapshotActivationCommandValidationContext(
+                isLiveCapable: isLiveCapable,
+                currentState: currentState,
+                candidateSnapshot: candidateSnapshot,
+                rollbackTarget: rollbackTarget
+            )
+        )
+        if !validation.isValid {
             return SnapshotActivationGuardDecision(
                 input: self,
                 status: .blocked,
                 reasons: [.commandInvalid],
-                details: validationIssues.map(\.rawValue)
+                details: validation.issues.map(\.code.rawValue)
             )
         }
 

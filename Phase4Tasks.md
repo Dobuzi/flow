@@ -85,6 +85,8 @@ Design constraints:
 - Dependency: P4-001, P4-002
 - Description: Validate commands against source identity, candidate existence, and current activation state.
 - Short goal: Reject invalid commands before state mutation.
+- Status: Completed (2026-03-10)
+- Notes: Added `SnapshotActivationCommandValidating` with `DefaultSnapshotActivationCommandValidator`, typed validation result/issues, and context-aware checks for malformed command context, contradictory command inputs, source mismatch, and static-source rollback misuse. Wired guard baseline decision to use validator output before guard-policy evaluation.
 
 ### M4-2 Activation History and Audit State
 
