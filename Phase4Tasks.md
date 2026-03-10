@@ -69,6 +69,8 @@ Design constraints:
 - Dependency: None
 - Description: Add command models for `promote`, `demote`, `rollback`, plus typed execution results and error categories.
 - Short goal: Standardize operator actions with explicit, testable semantics.
+- Status: Completed (2026-03-10)
+- Notes: Added command primitives (`SnapshotActivationCommand`, `PromoteSnapshotCommand`, `DemoteSnapshotCommand`, `RollbackSnapshotCommand`) with shared context/trigger metadata and validation semantics; added typed execution primitives (`SnapshotActivationExecutionResult`, execution statuses, block/failure reasons) and compatibility mapping helpers from existing activation/rollback decision models.
 
 ## P4-002 — Define activation guard policy inputs and decision model
 - Priority: P0
