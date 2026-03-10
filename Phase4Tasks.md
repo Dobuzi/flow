@@ -77,6 +77,8 @@ Design constraints:
 - Dependency: P4-001
 - Description: Model preconditions (eligibility, compatibility, source match, LKG presence) and decision outcomes (`allowed`, `blocked`, `requiresConfirmation`).
 - Short goal: Make risky activation conditions explicit before execution.
+- Status: Completed (2026-03-10)
+- Notes: Added `SnapshotActivationGuardInput` and `SnapshotActivationGuardDecision` primitives with typed status (`allowed`, `blocked`, `noOp`, `requiresConfirmation`) and structured reasons. Included baseline guard evaluation semantics for promote/demote/rollback using current activation state, live-capability, candidate metadata, and existing activation/rollback policy outputs.
 
 ## P4-003 — Add activation command validation layer
 - Priority: P1
