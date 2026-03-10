@@ -522,6 +522,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 9. T-033 → T-035 (external provider integration and live refresh hardening)
 10. T-036 → T-050 (nationwide platform foundation phase 1)
 11. Phase 2 (`P2-001` → `P2-015`) nationwide baseline vertical slice (completed; tracked in `Phase2Tasks.md`)
+12. Phase 3 (`P3-001` → `P3-015`) live ingestion platform foundation (completed; tracked in `Phase3Tasks.md`)
 
 Blocking dependencies:
 - Renderer work requires data/repository core (T-005/T-009).
@@ -567,6 +568,18 @@ Risk mitigation rules:
   - nationwide insights compatibility
   - source-state UX truthfulness (`loading/ready/limited/unavailable`)
   - regression test protection across national + sample + Seoul paths
+
+## 6.2 Phase 3 Status Sync (2026-03-10)
+- Source of truth: `Phase3Tasks.md`
+- Status: `P3-001` through `P3-015` completed
+- Completed capability set:
+  - snapshot-first ingestion platform (`ExternalDatasetAdapting` → materialization → gated validation)
+  - concrete Seoul external adapter path for live-refresh ingestion proof
+  - ingestion coordinator with integrity/schema/compatibility typed gates
+  - dataset version store + manifest index + activation/rollback policy primitives
+  - refresh scheduler (manual/periodic) with refresh-state reporting
+  - activation-aware query consumption with safe fallback semantics
+  - ingestion-to-activation integration coverage and cross-source live-refresh regression protection
 
 ## 7. Suggested Initial Sprint (Vertical Slice)
 

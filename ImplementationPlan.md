@@ -316,9 +316,56 @@ Testing:
 - [x] `bundledSample` path not regressed.
 - [x] `seoulCapitalSnapshot` path not regressed.
 
-## 12. Phase 3 Preview
-- Introduce API-backed national dataset refresh and snapshot materialization workflow.
-- Start multi-dataset fusion path (national baseline + modal specialist datasets).
-- Expand query/aggregation for richer nationwide corridor and heatmap analytics.
-- Add streaming-ready time-series refresh seams for future near-real-time updates.
-- Profile and optimize large-scale rendering and query latency beyond Phase 2 safe baseline.
+## 12. Phase 3 Completion Summary
+Phase 3 (live mobility intelligence platform foundation) is complete.
+
+Implemented outcomes:
+- Snapshot-first live ingestion platform completed (adapter boundary, materialization contract, coordinator).
+- Concrete Seoul external adapter completed and integrated with the ingestion pipeline boundary.
+- Validated ingestion lifecycle completed (integrity, schema, compatibility gates + typed outcomes).
+- Activation-aware query path completed with safe fallback behavior for non-activated or ineligible candidates.
+- Cross-source regression protection completed for mixed operation (`bundledSample`, `seoulCapitalSnapshot`, `koreaNational`, live-capable metadata paths).
+
+## 13. Phase 3 Rollout Checklist
+
+Architecture integrity:
+- [x] Existing `DTO -> Mapper -> DataSource -> Repository` separation preserved.
+- [x] Runtime query/render path remains snapshot-based and backward compatible.
+- [x] Source-specific concerns remain isolated (no cross-source leakage).
+
+Ingestion safety:
+- [x] External adapter output normalized before materialization.
+- [x] Materialized snapshot contract enforced structurally.
+- [x] Integrity, schema, and compatibility gates are explicit and typed.
+
+Activation safety:
+- [x] Activation policy evaluates eligibility before activation readiness.
+- [x] Last-known-good and rollback primitives are available.
+- [x] Ineligible/incompatible snapshots do not replace stable runtime paths.
+
+Refresh safety:
+- [x] Manual + periodic refresh triggers are controlled and non-invasive.
+- [x] In-progress, non-live, and failed refresh outcomes are surfaced predictably.
+- [x] Refresh does not auto-mutate live runtime dataset switching.
+
+Catalog/live metadata correctness:
+- [x] Catalog supports live/version metadata enrichment without breaking static entries.
+- [x] Refresh and activation-readiness state are reflected coherently per source.
+- [x] Static sources remain free of bogus live metadata.
+
+Regression coverage:
+- [x] Ingestion-to-activation lifecycle integration tests are passing.
+- [x] Cross-source live-refresh-era regression suite is passing.
+- [x] Existing sample/Seoul/national snapshot-backed paths remain protected.
+
+Source isolation guarantees:
+- [x] `bundledSample` remains isolated from live-refresh activation metadata.
+- [x] Seoul live-capable semantics do not pollute unrelated sources.
+- [x] `koreaNational` remains isolated from Seoul-specific live refresh mechanics.
+
+## 14. Phase 4 Preview
+- Live activation rollout controls (operator-safe promotion/demotion of candidates).
+- Refresh/activation UI surfaces for status, eligibility, and manual control.
+- Source health observability (audit-friendly status timelines and failure diagnostics).
+- Operational safety tooling (guarded activation flows and explicit rollback actions).
+- Production-grade persistence and audit trail for snapshot/version/activation events.

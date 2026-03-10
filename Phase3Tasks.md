@@ -234,6 +234,18 @@ Mitigations:
 
 This slice establishes stable interfaces first, enabling safe incremental implementation without changing runtime visualization paths.
 
+## 12. Completion Summary (2026-03-10)
+- Status: `P3-001` through `P3-015` completed.
+- Platform outcome:
+  - Snapshot-first live ingestion architecture is fully established.
+  - External adapter boundary and concrete Seoul adapter are implemented.
+  - Ingestion lifecycle gates (integrity, schema, compatibility) are integrated and typed.
+  - Versioning, activation/rollback policy primitives, and refresh scheduling/reporting are in place.
+  - Activation-aware query resolution is integrated with safe fallback behavior.
+  - Cross-source regression suite protects coexistence of static, snapshot-backed, and live-capable source metadata paths.
+- Backward compatibility:
+  - `bundledSample`, `seoulCapitalSnapshot`, and `koreaNational` runtime paths remain supported and regression-protected.
+
 ---
 
 - Total tasks: 15
