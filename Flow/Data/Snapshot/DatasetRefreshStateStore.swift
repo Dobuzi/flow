@@ -36,7 +36,7 @@ actor InMemoryDatasetRefreshStateStore: DatasetRefreshStateStoring {
         } else if result.status == .succeeded {
             failureReason = nil
         } else {
-            failureReason = existing?.lastRefreshFailureReason
+            failureReason = summarize(result.error) ?? existing?.lastRefreshFailureReason
         }
 
         let candidateSnapshotID = result.storedSnapshotID ?? existing?.latestCandidateSnapshotID

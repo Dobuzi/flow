@@ -185,6 +185,8 @@ Design constraints:
 - Dependency: P3-014
 - Description: Validate no regressions across `bundledSample`, `seoulCapitalSnapshot`, and `koreaNational` with live-ingestion features enabled.
 - Short goal: Preserve backward compatibility while adding live ingestion.
+- Status: Completed (2026-03-09)
+- Notes: Added `CrossSourceLiveRefreshRegressionTests` covering mixed-source coexistence in live-refresh mode: static sample immunity to activation/live metadata, Seoul live/snapshot fallback isolation, national-source isolation from Seoul refresh mechanics, activation-aware query scoping by source, mixed catalog enrichment correctness, periodic refresh live-source targeting, and deterministic repository selection across source types. Updated refresh-state reason recording for skipped outcomes so refresh-state regression assertions remain consistent.
 
 ## 8. Execution Order
 1. P3-001
