@@ -147,6 +147,8 @@ Design constraints:
 - Dependency: P4-007, P4-008
 - Description: Execute rollback to last-known-good when available; return explicit non-success result when no safe rollback target exists.
 - Short goal: Deterministic and safe rollback behavior.
+- Status: Completed (2026-03-12)
+- Notes: Tightened rollback guard/executor semantics to distinguish no safe target, missing target, incompatible/ineligible fallback, already-satisfied no-op, and successful rollback restoration. Added executor/guard regression coverage for rollback success, blocked, incompatible, no-op, and non-mutation guarantees.
 
 ## P4-011 — Add rollback guard confirmations for high-risk transitions
 - Priority: P1

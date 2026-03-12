@@ -161,7 +161,9 @@ struct SnapshotActivationExecutorTests {
         #expect(result.status == .succeeded)
         #expect(result.resultingState?.activeSnapshotID == "seoul-2026.02")
         #expect(result.resultingState?.lastKnownGoodSnapshotID == "seoul-2026.03")
+        #expect(result.details.contains("rollback_executed"))
         #expect(result.details.contains("rollback_target_restored"))
+        #expect(result.details.contains("last_known_good_preserved"))
 
         let history = await historyStore.events(commandID: "cmd-rollback-success")
         #expect(history.count == 2)
@@ -238,6 +240,152 @@ struct SnapshotActivationExecutorTests {
         #expect(projected.lastKnownGoodSnapshotID == "seoul-2026.03")
         #expect(projected.latestActivationEvent?.type == .demoteSucceeded)
         #expect(projected.rollbackAvailable)
+    }
+
+    @Test
+    func rollbackBlocksClearlyWhenNoSafeRollbackTargetExists() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let stateBefore = await policy.currentState(for: .seoulCapitalSnapshot)
+
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.rollback(
+            RollbackSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                expectedActiveSnapshotID: "seoul-2026.03",
+                context: .init(
+                    commandID: "cmd-rollback-no-safe-target",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .recoveryRollback
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .blocked)
+        #expect(result.blockReason == .noRollbackTarget)
+
+        let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(stateAfter == stateBefore)
+
+        let history = await historyStore.events(commandID: "cmd-rollback-no-safe-target")
+        #expect(history.count == 2)
+        #expect(history.contains(where: { $0.type == .rollbackBlocked }))
+    }
+
+    @Test
+    func rollbackNoOpIsSurfacedWhenTargetIsAlreadyActive() async throws {
+        let rollbackTarget = makeStoredSnapshot(
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            compatibility: .compatible,
+            activationState: .eligible
+        )
+        let policy = StubRollbackPolicy(
+            currentState: SnapshotActivationState(
+                source: .seoulCapitalSnapshot,
+                activeSnapshotID: "seoul-2026.03",
+                lastKnownGoodSnapshotID: "seoul-2026.03",
+                updatedAt: "2026-03-12T00:00:00Z"
+            ),
+            rollbackDecision: SnapshotRollbackDecision(
+                source: .seoulCapitalSnapshot,
+                status: .rollbackAvailable,
+                target: rollbackTarget,
+                reasons: []
+            )
+        )
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: InMemoryDatasetVersionStore(),
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.rollback(
+            RollbackSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                expectedActiveSnapshotID: "seoul-2026.03",
+                context: .init(
+                    commandID: "cmd-rollback-noop",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .recoveryRollback
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .noOp)
+        #expect(result.blockReason == .alreadyActive)
+        #expect(await policy.rollbackCallCount == 0)
+    }
+
+    @Test
+    func rollbackBlocksClearlyWhenFallbackTargetIsIncompatible() async {
+        let incompatibleTarget = makeStoredSnapshot(
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.02-bad",
+            compatibility: .incompatible,
+            activationState: .ineligible
+        )
+        let currentState = SnapshotActivationState(
+            source: .seoulCapitalSnapshot,
+            activeSnapshotID: "seoul-2026.03",
+            lastKnownGoodSnapshotID: "seoul-2026.02-bad",
+            updatedAt: "2026-03-12T00:00:00Z"
+        )
+        let policy = StubRollbackPolicy(
+            currentState: currentState,
+            rollbackDecision: SnapshotRollbackDecision(
+                source: .seoulCapitalSnapshot,
+                status: .noSafeRollback,
+                target: incompatibleTarget,
+                reasons: ["last_known_good_not_activatable", "compatibility_incompatible"]
+            )
+        )
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: InMemoryDatasetVersionStore(),
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.rollback(
+            RollbackSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                expectedActiveSnapshotID: "seoul-2026.03",
+                context: .init(
+                    commandID: "cmd-rollback-incompatible-target",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .recoveryRollback
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .blocked)
+        #expect(result.blockReason == .snapshotIncompatible)
+        #expect(result.previousState == currentState)
+        #expect(await policy.rollbackCallCount == 0)
+
+        let history = await historyStore.events(commandID: "cmd-rollback-incompatible-target")
+        #expect(history.count == 2)
+        #expect(history.contains(where: { $0.type == .rollbackBlocked }))
     }
 
     @Test
@@ -567,5 +715,86 @@ struct SnapshotActivationExecutorTests {
             isIngestionCandidate: true,
             indexedAt: generatedAt
         )
+    }
+
+    private func makeStoredSnapshot(
+        source: FlowDatasetSource,
+        snapshotID: String,
+        compatibility: IngestionCompatibilityClassification,
+        activationState: SnapshotActivationEligibility.State
+    ) -> StoredSnapshotVersion {
+        let contract = MaterializedSnapshotContract(
+            snapshotID: snapshotID,
+            source: source,
+            schemaVersion: "1.0.0",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-10T00:00:00Z",
+            timeCoverage: "2026-03-01~2026-03-31",
+            spatialCoverage: .city,
+            recordsCount: 100,
+            requiredFiles: [
+                SnapshotRequiredFile(role: .manifest, relativePath: "manifest.json", checksumSHA256: "m", byteCount: 10, recordCount: nil),
+                SnapshotRequiredFile(role: .nodes, relativePath: "nodes.json", checksumSHA256: "n", byteCount: 20, recordCount: 2),
+                SnapshotRequiredFile(role: .flows, relativePath: "flows.jsonl", checksumSHA256: "f", byteCount: 30, recordCount: 1)
+            ],
+            compatibility: SnapshotCompatibilityMetadata(
+                isSchemaCompatible: compatibility != .incompatible,
+                isCompatibilityCheckPassed: compatibility == .compatible,
+                compatibilityReasons: compatibility == .compatible ? [] : ["compatibility_\(compatibility.rawValue)"],
+                checkedFields: ["schemaVersion"]
+            ),
+            activationEligibility: SnapshotActivationEligibility(
+                state: activationState,
+                reasons: activationState == .eligible ? [] : ["activation_\(activationState.rawValue)"]
+            )
+        )
+
+        return StoredSnapshotVersion.from(
+            contract: contract,
+            compatibilityClassification: compatibility,
+            isIngestionCandidate: true,
+            indexedAt: "2026-03-10T00:01:00Z"
+        )
+    }
+}
+
+private actor StubRollbackPolicy: SnapshotActivationPolicying {
+    private let stubCurrentState: SnapshotActivationState
+    private let stubRollbackDecision: SnapshotRollbackDecision
+    private(set) var rollbackCallCount = 0
+
+    init(
+        currentState: SnapshotActivationState,
+        rollbackDecision: SnapshotRollbackDecision
+    ) {
+        self.stubCurrentState = currentState
+        self.stubRollbackDecision = rollbackDecision
+    }
+
+    func currentState(for source: FlowDatasetSource) async -> SnapshotActivationState {
+        stubCurrentState
+    }
+
+    func evaluateActivation(source: FlowDatasetSource, requestedSnapshotID: String?) async -> SnapshotActivationDecision {
+        SnapshotActivationDecision(
+            source: source,
+            requestedSnapshotID: requestedSnapshotID,
+            status: .noCandidate,
+            candidate: nil,
+            reasons: ["unsupported_in_stub"]
+        )
+    }
+
+    func activate(source: FlowDatasetSource, requestedSnapshotID: String?) async throws -> SnapshotActivationState {
+        stubCurrentState
+    }
+
+    func evaluateRollback(source: FlowDatasetSource) async -> SnapshotRollbackDecision {
+        stubRollbackDecision
+    }
+
+    func rollback(source: FlowDatasetSource) async throws -> SnapshotActivationState {
+        rollbackCallCount += 1
+        throw SnapshotActivationError.noRollbackTarget(source)
     }
 }

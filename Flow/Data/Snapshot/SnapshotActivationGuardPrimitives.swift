@@ -207,7 +207,7 @@ struct SnapshotActivationGuardInput: Hashable {
                 return SnapshotActivationGuardDecision(
                     input: self,
                     status: .blocked,
-                    reasons: [.noRollbackTarget],
+                    reasons: [mappedRollbackGuardReason(from: decision.reasons)],
                     details: decision.reasons
                 )
             }
@@ -258,7 +258,7 @@ struct SnapshotActivationGuardInput: Hashable {
                 return SnapshotActivationGuardDecision(
                     input: self,
                     status: .blocked,
-                    reasons: [.noRollbackTarget],
+                    reasons: [mappedRollbackGuardReason(from: decision.reasons)],
                     details: decision.reasons
                 )
             }
@@ -285,6 +285,19 @@ struct SnapshotActivationGuardInput: Hashable {
             status: .requiresConfirmation,
             reasons: []
         )
+    }
+
+    private func mappedRollbackGuardReason(from reasons: [String]) -> SnapshotActivationGuardReason {
+        if reasons.contains("last_known_good_not_found") {
+            return .targetSnapshotNotFound
+        }
+        if reasons.contains(where: { $0 == "last_known_good_not_activatable" || $0.hasPrefix("compatibility_") || $0.contains("schema_version_unsupported") }) {
+            return .targetSnapshotIncompatible
+        }
+        if reasons.contains(where: { $0.hasPrefix("activation_") || $0 == "not_ingestion_candidate" }) {
+            return .targetSnapshotNotEligible
+        }
+        return .noRollbackTarget
     }
 }
 

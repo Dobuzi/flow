@@ -198,10 +198,14 @@ struct DefaultSnapshotActivationExecutor: SnapshotActivationExecuting {
         case .rollback(let rollback):
             do {
                 let resulting = try await activationPolicy.rollback(source: rollback.source)
-                var details: [String] = []
+                var details: [String] = ["rollback_executed"]
                 if let rollbackTargetID = context.rollbackTarget?.snapshotID,
                    rollbackTargetID == resulting.activeSnapshotID {
                     details.append("rollback_target_restored")
+                }
+                if context.currentState.activeSnapshotID != nil,
+                   resulting.lastKnownGoodSnapshotID == context.currentState.activeSnapshotID {
+                    details.append("last_known_good_preserved")
                 }
                 return .succeeded(
                     command: command,
@@ -212,7 +216,7 @@ struct DefaultSnapshotActivationExecutor: SnapshotActivationExecuting {
             } catch SnapshotActivationError.noRollbackTarget {
                 return .blocked(
                     command: command,
-                    reason: .noRollbackTarget,
+                    reason: mapRollbackBlockReason(from: context.rollbackDecision),
                     previousState: context.currentState
                 )
             } catch {
@@ -381,6 +385,26 @@ struct DefaultSnapshotActivationExecutor: SnapshotActivationExecuting {
             return .alreadyInactive
         case .staticSource, .policyRejected:
             return .policyRejected
+        }
+    }
+
+    private func mapRollbackBlockReason(from decision: SnapshotRollbackDecision?) -> SnapshotActivationBlockReason {
+        guard let decision else { return .noRollbackTarget }
+
+        switch decision.status {
+        case .rollbackAvailable:
+            return .policyRejected
+        case .noSafeRollback:
+            if decision.reasons.contains("last_known_good_not_found") {
+                return .snapshotNotFound
+            }
+            if decision.reasons.contains(where: { $0 == "last_known_good_not_activatable" || $0.hasPrefix("compatibility_") || $0.contains("schema_version_unsupported") }) {
+                return .snapshotIncompatible
+            }
+            if decision.reasons.contains(where: { $0.hasPrefix("activation_") || $0 == "not_ingestion_candidate" }) {
+                return .snapshotNotEligible
+            }
+            return .noRollbackTarget
         }
     }
 }
