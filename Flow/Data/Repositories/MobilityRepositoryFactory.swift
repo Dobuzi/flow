@@ -5,7 +5,13 @@ enum MobilityRepositoryFactory {
     static let sharedActivationPolicy: SnapshotActivationPolicying = DefaultSnapshotActivationPolicy(
         versionStore: sharedVersionStore
     )
+    static let sharedActivationHistoryStore: SnapshotActivationHistoryStoring = InMemorySnapshotActivationHistoryStore()
     static let sharedRefreshStateStore: DatasetRefreshStateStoring = InMemoryDatasetRefreshStateStore()
+    static let sharedActivationStateProjector: SnapshotActivationStateProjecting = DefaultSnapshotActivationStateProjector(
+        activationPolicy: sharedActivationPolicy,
+        historyStore: sharedActivationHistoryStore,
+        versionStore: sharedVersionStore
+    )
 
     static var nationalDataSourceBuilder: () -> NationalBaselineMobilityDataSource = {
         SafeNationalBaselineMobilityDataSource(
@@ -76,13 +82,15 @@ enum MobilityRepositoryFactory {
     static func liveAwareCatalogRepository(
         versionStore: DatasetVersionStoring = sharedVersionStore,
         activationPolicy: SnapshotActivationPolicying = sharedActivationPolicy,
-        refreshStateStore: DatasetRefreshStateStoring? = sharedRefreshStateStore
+        refreshStateStore: DatasetRefreshStateStoring? = sharedRefreshStateStore,
+        activationStateProjector: SnapshotActivationStateProjecting? = sharedActivationStateProjector
     ) -> MobilityCatalogRepository {
         LocalMobilityCatalogRepository(
             liveMetadataEnricher: CatalogLiveMetadataEnricher(
                 versionStore: versionStore,
                 activationPolicy: activationPolicy,
-                refreshStateStore: refreshStateStore
+                refreshStateStore: refreshStateStore,
+                activationStateProjector: activationStateProjector
             )
         )
     }
@@ -96,7 +104,12 @@ enum MobilityRepositoryFactory {
             catalogRepository: liveAwareCatalogRepository(
                 versionStore: versionStore,
                 activationPolicy: activationPolicy,
-                refreshStateStore: refreshStateStore
+                refreshStateStore: refreshStateStore,
+                activationStateProjector: DefaultSnapshotActivationStateProjector(
+                    activationPolicy: activationPolicy,
+                    historyStore: sharedActivationHistoryStore,
+                    versionStore: versionStore
+                )
             ),
             versionStore: versionStore,
             activationPolicy: activationPolicy

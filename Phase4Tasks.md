@@ -165,6 +165,8 @@ Design constraints:
 - Dependency: P4-006, P4-008, P4-010
 - Description: Surface active snapshot, candidate readiness, last action, and rollback availability in live metadata.
 - Short goal: Keep source status truthful and actionable.
+- Status: Completed (2026-03-12)
+- Notes: Extended `DatasetLiveMetadata` with source-scoped `activationMetadata` and enriched it through `CatalogLiveMetadataEnricher` using activation projection, version-store candidate state, refresh state, and latest activation event context. Added regression coverage for static-source compatibility, truthful live-source activation fields, latest event surfacing, rollback readiness, and confirmation-required metadata.
 
 ## P4-013 — Add minimal operator controls UI (Settings or operator-safe panel)
 - Priority: P1

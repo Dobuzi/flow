@@ -20,6 +20,47 @@ enum DatasetRefreshOutcome: String, Codable, Hashable {
     case failed
 }
 
+enum DatasetOperatorActivationStatus: String, Codable, Hashable {
+    case noHistory = "no_history"
+    case inactive
+    case inactiveCandidateReady = "inactive_candidate_ready"
+    case active
+    case activeRollbackReady = "active_rollback_ready"
+    case attentionRequired = "attention_required"
+}
+
+struct DatasetActivationMetadata: Codable, Hashable {
+    let activeSnapshotID: String?
+    let lastKnownGoodSnapshotID: String?
+    let latestCandidateSnapshotID: String?
+    let latestCandidateDatasetVersion: String?
+    let latestCandidateCompatibility: IngestionCompatibilityClassification?
+    let latestCandidateEligibleForActivation: Bool?
+    let rollbackAvailable: Bool
+    let latestActivationEventType: String?
+    let latestActivationEventAt: String?
+    let operatorActivationStatus: DatasetOperatorActivationStatus
+    let promoteRequiresConfirmation: Bool?
+    let demoteRequiresConfirmation: Bool?
+    let rollbackRequiresConfirmation: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case activeSnapshotID = "active_snapshot_id"
+        case lastKnownGoodSnapshotID = "last_known_good_snapshot_id"
+        case latestCandidateSnapshotID = "latest_candidate_snapshot_id"
+        case latestCandidateDatasetVersion = "latest_candidate_dataset_version"
+        case latestCandidateCompatibility = "latest_candidate_compatibility"
+        case latestCandidateEligibleForActivation = "latest_candidate_eligible_for_activation"
+        case rollbackAvailable = "rollback_available"
+        case latestActivationEventType = "latest_activation_event_type"
+        case latestActivationEventAt = "latest_activation_event_at"
+        case operatorActivationStatus = "operator_activation_status"
+        case promoteRequiresConfirmation = "promote_requires_confirmation"
+        case demoteRequiresConfirmation = "demote_requires_confirmation"
+        case rollbackRequiresConfirmation = "rollback_requires_confirmation"
+    }
+}
+
 struct DatasetLiveMetadata: Codable, Hashable {
     let supportsLiveRefresh: Bool
     let latestKnownDatasetVersion: String?
@@ -35,6 +76,7 @@ struct DatasetLiveMetadata: Codable, Hashable {
     let latestCandidateEligibleForActivation: Bool?
     let activeSnapshotID: String?
     let lastKnownGoodSnapshotID: String?
+    let activationMetadata: DatasetActivationMetadata?
     let readiness: DatasetRefreshReadiness
     let syncState: DatasetSyncState
 
@@ -53,6 +95,7 @@ struct DatasetLiveMetadata: Codable, Hashable {
         case latestCandidateEligibleForActivation = "latest_candidate_eligible_for_activation"
         case activeSnapshotID = "active_snapshot_id"
         case lastKnownGoodSnapshotID = "last_known_good_snapshot_id"
+        case activationMetadata = "activation_metadata"
         case readiness
         case syncState = "sync_state"
     }
@@ -72,6 +115,7 @@ struct DatasetLiveMetadata: Codable, Hashable {
         latestCandidateEligibleForActivation: Bool? = nil,
         activeSnapshotID: String?,
         lastKnownGoodSnapshotID: String?,
+        activationMetadata: DatasetActivationMetadata? = nil,
         readiness: DatasetRefreshReadiness,
         syncState: DatasetSyncState
     ) {
@@ -89,6 +133,7 @@ struct DatasetLiveMetadata: Codable, Hashable {
         self.latestCandidateEligibleForActivation = latestCandidateEligibleForActivation
         self.activeSnapshotID = activeSnapshotID
         self.lastKnownGoodSnapshotID = lastKnownGoodSnapshotID
+        self.activationMetadata = activationMetadata
         self.readiness = readiness
         self.syncState = syncState
     }
@@ -109,6 +154,7 @@ struct DatasetLiveMetadata: Codable, Hashable {
         latestCandidateEligibleForActivation = try container.decodeIfPresent(Bool.self, forKey: .latestCandidateEligibleForActivation)
         activeSnapshotID = try container.decodeIfPresent(String.self, forKey: .activeSnapshotID)
         lastKnownGoodSnapshotID = try container.decodeIfPresent(String.self, forKey: .lastKnownGoodSnapshotID)
+        activationMetadata = try container.decodeIfPresent(DatasetActivationMetadata.self, forKey: .activationMetadata)
         readiness = try container.decode(DatasetRefreshReadiness.self, forKey: .readiness)
         syncState = try container.decode(DatasetSyncState.self, forKey: .syncState)
     }

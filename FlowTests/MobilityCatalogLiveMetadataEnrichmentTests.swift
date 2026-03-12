@@ -6,6 +6,7 @@ struct MobilityCatalogLiveMetadataEnrichmentTests {
     func enrichesLiveMetadataFromVersionStoreAndActivationState() async throws {
         let store = InMemoryDatasetVersionStore()
         let refreshStateStore = InMemoryDatasetRefreshStateStore()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
         await seed(
             store: store,
             source: .seoulCapitalSnapshot,
@@ -33,18 +34,26 @@ struct MobilityCatalogLiveMetadataEnrichmentTests {
 
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let projector = DefaultSnapshotActivationStateProjector(
+            activationPolicy: policy,
+            historyStore: historyStore,
+            versionStore: store,
+            nowProvider: { "2026-03-08T01:05:00Z" }
+        )
 
         let repository = LocalMobilityCatalogRepository(
             liveMetadataEnricher: CatalogLiveMetadataEnricher(
                 versionStore: store,
                 activationPolicy: policy,
-                refreshStateStore: refreshStateStore
+                refreshStateStore: refreshStateStore,
+                activationStateProjector: projector
             )
         )
 
         let catalog = try await repository.fetchCatalog()
         let seoul = try #require(catalog.descriptor(for: .seoulCapitalSnapshot))
         let live = try #require(seoul.liveMetadata)
+        let activation = try #require(live.activationMetadata)
 
         #expect(live.supportsLiveRefresh)
         #expect(live.latestKnownDatasetVersion == "2026.03")
@@ -59,6 +68,18 @@ struct MobilityCatalogLiveMetadataEnrichmentTests {
         #expect(live.activeSnapshotID == "seoul-2026.03")
         #expect(live.readiness == .ready)
         #expect(live.syncState == .ready)
+        #expect(activation.activeSnapshotID == "seoul-2026.03")
+        #expect(activation.lastKnownGoodSnapshotID == nil)
+        #expect(activation.latestCandidateSnapshotID == "seoul-2026.03")
+        #expect(activation.latestCandidateDatasetVersion == "2026.03")
+        #expect(activation.latestCandidateCompatibility == .compatible)
+        #expect(activation.latestCandidateEligibleForActivation == true)
+        #expect(activation.rollbackAvailable == false)
+        #expect(activation.latestActivationEventType == nil)
+        #expect(activation.operatorActivationStatus == .active)
+        #expect(activation.promoteRequiresConfirmation == false)
+        #expect(activation.demoteRequiresConfirmation == false)
+        #expect(activation.rollbackRequiresConfirmation == false)
     }
 
     @Test
@@ -80,7 +101,14 @@ struct MobilityCatalogLiveMetadataEnrichmentTests {
     func enrichesFailureRefreshStateWithoutBreakingReadinessSemantics() async throws {
         let store = InMemoryDatasetVersionStore()
         let refreshStateStore = InMemoryDatasetRefreshStateStore()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let projector = DefaultSnapshotActivationStateProjector(
+            activationPolicy: policy,
+            historyStore: historyStore,
+            versionStore: store,
+            nowProvider: { "2026-03-09T02:01:00Z" }
+        )
 
         await refreshStateStore.record(
             DatasetRefreshResult(
@@ -102,7 +130,8 @@ struct MobilityCatalogLiveMetadataEnrichmentTests {
             liveMetadataEnricher: CatalogLiveMetadataEnricher(
                 versionStore: store,
                 activationPolicy: policy,
-                refreshStateStore: refreshStateStore
+                refreshStateStore: refreshStateStore,
+                activationStateProjector: projector
             )
         )
 
@@ -116,6 +145,107 @@ struct MobilityCatalogLiveMetadataEnrichmentTests {
         #expect(live.lastRefreshFailureReason == "ingestion_failed_adapter_failure")
         #expect(live.readiness == .pendingValidation)
         #expect(live.syncState == .idle)
+        #expect(live.activationMetadata?.operatorActivationStatus == .noHistory)
+    }
+
+    @Test
+    func enrichesOperatorActivationMetadataFromProjectionAndLatestEvent() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let refreshStateStore = InMemoryDatasetRefreshStateStore()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+
+        await seed(
+            store: store,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-08T00:00:00Z",
+            indexedAt: "2026-03-08T01:00:00Z"
+        )
+        await seed(
+            store: store,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.04",
+            datasetVersion: "2026.04",
+            generatedAt: "2026-04-08T00:00:00Z",
+            indexedAt: "2026-04-08T01:00:00Z"
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+
+        let command = SnapshotActivationCommand.promote(
+            PromoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                datasetVersion: "2026.04",
+                context: SnapshotActivationCommandContext(
+                    commandID: "promote-2026-04",
+                    requestedAt: "2026-04-08T01:05:00Z",
+                    trigger: .operatorConfirmed
+                )
+            )
+        )
+        await historyStore.append(
+            SnapshotActivationHistoryEvent(
+                eventID: "event-promote-success",
+                type: .promoteSucceeded,
+                timestamp: "2026-04-08T01:06:00Z",
+                metadata: SnapshotActivationEventMetadata(
+                    source: .seoulCapitalSnapshot,
+                    snapshotID: "seoul-2026.04",
+                    datasetVersion: "2026.04",
+                    commandID: "promote-2026-04",
+                    commandAction: command.action,
+                    trigger: .operatorConfirmed,
+                    requestedBy: nil,
+                    note: nil,
+                    validation: nil,
+                    guardDecision: nil,
+                    execution: nil
+                ),
+                result: SnapshotActivationEventResult(
+                    status: .succeeded,
+                    reasonCode: nil,
+                    message: nil
+                )
+            )
+        )
+
+        let projector = DefaultSnapshotActivationStateProjector(
+            activationPolicy: policy,
+            historyStore: historyStore,
+            versionStore: store,
+            nowProvider: { "2026-04-08T01:07:00Z" }
+        )
+
+        let repository = LocalMobilityCatalogRepository(
+            liveMetadataEnricher: CatalogLiveMetadataEnricher(
+                versionStore: store,
+                activationPolicy: policy,
+                refreshStateStore: refreshStateStore,
+                activationStateProjector: projector
+            )
+        )
+
+        let catalog = try await repository.fetchCatalog()
+        let seoul = try #require(catalog.descriptor(for: .seoulCapitalSnapshot))
+        let live = try #require(seoul.liveMetadata)
+        let activation = try #require(live.activationMetadata)
+
+        #expect(activation.activeSnapshotID == "seoul-2026.03")
+        #expect(activation.lastKnownGoodSnapshotID == nil)
+        #expect(activation.latestCandidateSnapshotID == "seoul-2026.04")
+        #expect(activation.latestCandidateDatasetVersion == "2026.04")
+        #expect(activation.latestCandidateEligibleForActivation == true)
+        #expect(activation.latestCandidateCompatibility == .compatible)
+        #expect(activation.latestActivationEventType == SnapshotActivationEventType.promoteSucceeded.rawValue)
+        #expect(activation.latestActivationEventAt == "2026-04-08T01:06:00Z")
+        #expect(activation.operatorActivationStatus == .active)
+        #expect(activation.promoteRequiresConfirmation == true)
+        #expect(activation.demoteRequiresConfirmation == false)
+        #expect(activation.rollbackRequiresConfirmation == false)
+        #expect(activation.rollbackAvailable == false)
     }
 
     private func seed(
