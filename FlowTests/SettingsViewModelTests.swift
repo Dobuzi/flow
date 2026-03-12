@@ -137,7 +137,136 @@ struct SettingsViewModelTests {
         await viewModel.load(source: .seoulCapitalSnapshot)
         await viewModel.triggerOperatorAction(SnapshotActivationCommand.Action.promote)
 
-        #expect(viewModel.confirmationPrompt != nil)
+        let prompt = try #require(viewModel.confirmationPrompt)
+        #expect(prompt.title == "Confirm Snapshot Promotion")
+        #expect(prompt.confirmButtonTitle == "Promote")
+        #expect(prompt.sourceTitle == FlowDatasetSource.seoulCapitalSnapshot.title)
+        #expect(prompt.currentActiveSnapshotID == "seoul-2026.03")
+        #expect(prompt.targetSnapshotID == "seoul-2026.04")
+        #expect(prompt.effectSummary == "This will replace the active snapshot with seoul-2026.04.")
+        #expect(prompt.message.contains("Source: Seoul Capital"))
+        #expect(prompt.message.contains("Current Active: seoul-2026.03"))
+        #expect(prompt.message.contains("Target: seoul-2026.04"))
+        #expect(await executor.executedCommands().isEmpty)
+    }
+
+    @Test
+    func demoteConfirmationContentIsActionSpecific() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = RecordingActivationExecutor()
+
+        await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.03", datasetVersion: "2026.03", indexedAt: "2026-03-08T01:00:00Z")
+        await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.02", datasetVersion: "2026.02", indexedAt: "2026-02-08T01:00:00Z")
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.02")
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+
+        let descriptor = makeDescriptor(
+            source: .seoulCapitalSnapshot,
+            live: makeLiveMetadata(
+                source: .seoulCapitalSnapshot,
+                activation: DatasetActivationMetadata(
+                    activeSnapshotID: "seoul-2026.03",
+                    lastKnownGoodSnapshotID: "seoul-2026.02",
+                    latestCandidateSnapshotID: "seoul-2026.03",
+                    latestCandidateDatasetVersion: "2026.03",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    rollbackAvailable: true,
+                    latestActivationEventType: nil,
+                    latestActivationEventAt: nil,
+                    operatorActivationStatus: .activeRollbackReady,
+                    promoteRequiresConfirmation: false,
+                    demoteRequiresConfirmation: true,
+                    rollbackRequiresConfirmation: true
+                )
+            )
+        )
+
+        let viewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: StubCatalogRepository(
+                catalog: MobilityDatasetCatalog(
+                    version: "1",
+                    defaultSource: .seoulCapitalSnapshot,
+                    datasets: [descriptor]
+                )
+            ),
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.demote.\(UUID().uuidString)")!
+        )
+
+        await viewModel.load(source: .seoulCapitalSnapshot)
+        await viewModel.triggerOperatorAction(SnapshotActivationCommand.Action.demote)
+
+        let prompt = try #require(viewModel.confirmationPrompt)
+        #expect(prompt.title == "Confirm Safe Demotion")
+        #expect(prompt.confirmButtonTitle == "Demote")
+        #expect(prompt.currentActiveSnapshotID == "seoul-2026.03")
+        #expect(prompt.targetSnapshotID == "seoul-2026.02")
+        #expect(prompt.effectSummary == "This will step down the active snapshot and restore seoul-2026.02.")
+        #expect(await executor.executedCommands().isEmpty)
+    }
+
+    @Test
+    func rollbackConfirmationContentIsActionSpecific() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = RecordingActivationExecutor()
+
+        await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.03", datasetVersion: "2026.03", indexedAt: "2026-03-08T01:00:00Z")
+        await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.02", datasetVersion: "2026.02", indexedAt: "2026-02-08T01:00:00Z")
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.02")
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+
+        let descriptor = makeDescriptor(
+            source: .seoulCapitalSnapshot,
+            live: makeLiveMetadata(
+                source: .seoulCapitalSnapshot,
+                activation: DatasetActivationMetadata(
+                    activeSnapshotID: "seoul-2026.03",
+                    lastKnownGoodSnapshotID: "seoul-2026.02",
+                    latestCandidateSnapshotID: "seoul-2026.03",
+                    latestCandidateDatasetVersion: "2026.03",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    rollbackAvailable: true,
+                    latestActivationEventType: nil,
+                    latestActivationEventAt: nil,
+                    operatorActivationStatus: .activeRollbackReady,
+                    promoteRequiresConfirmation: false,
+                    demoteRequiresConfirmation: true,
+                    rollbackRequiresConfirmation: true
+                )
+            )
+        )
+
+        let viewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: StubCatalogRepository(
+                catalog: MobilityDatasetCatalog(
+                    version: "1",
+                    defaultSource: .seoulCapitalSnapshot,
+                    datasets: [descriptor]
+                )
+            ),
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.rollback.\(UUID().uuidString)")!
+        )
+
+        await viewModel.load(source: .seoulCapitalSnapshot)
+        await viewModel.triggerOperatorAction(SnapshotActivationCommand.Action.rollback)
+
+        let prompt = try #require(viewModel.confirmationPrompt)
+        #expect(prompt.title == "Confirm Rollback")
+        #expect(prompt.confirmButtonTitle == "Rollback")
+        #expect(prompt.currentActiveSnapshotID == "seoul-2026.03")
+        #expect(prompt.targetSnapshotID == "seoul-2026.02")
+        #expect(prompt.effectSummary == "This will restore seoul-2026.02 as the active snapshot.")
         #expect(await executor.executedCommands().isEmpty)
     }
 
@@ -243,6 +372,63 @@ struct SettingsViewModelTests {
         let commands = await executor.executedCommands()
         #expect(commands.count == 1)
         #expect(commands.first?.context.trigger == .operatorManual)
+        #expect(viewModel.confirmationPrompt == nil)
+    }
+
+    @Test
+    func confirmedActionRoutesThroughExecutorWithConfirmedTrigger() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = RecordingActivationExecutor()
+
+        await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.03", datasetVersion: "2026.03", indexedAt: "2026-03-08T01:00:00Z")
+        await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.04", datasetVersion: "2026.04", indexedAt: "2026-04-08T01:00:00Z")
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+
+        let descriptor = makeDescriptor(
+            source: .seoulCapitalSnapshot,
+            live: makeLiveMetadata(
+                source: .seoulCapitalSnapshot,
+                activation: DatasetActivationMetadata(
+                    activeSnapshotID: "seoul-2026.03",
+                    lastKnownGoodSnapshotID: nil,
+                    latestCandidateSnapshotID: "seoul-2026.04",
+                    latestCandidateDatasetVersion: "2026.04",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    rollbackAvailable: false,
+                    latestActivationEventType: nil,
+                    latestActivationEventAt: nil,
+                    operatorActivationStatus: .active,
+                    promoteRequiresConfirmation: true,
+                    demoteRequiresConfirmation: false,
+                    rollbackRequiresConfirmation: false
+                )
+            )
+        )
+
+        let viewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: StubCatalogRepository(
+                catalog: MobilityDatasetCatalog(
+                    version: "1",
+                    defaultSource: .seoulCapitalSnapshot,
+                    datasets: [descriptor]
+                )
+            ),
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.confirmed-run.\(UUID().uuidString)")!
+        )
+
+        await viewModel.load(source: .seoulCapitalSnapshot)
+        await viewModel.triggerOperatorAction(.promote)
+        await viewModel.confirmPendingAction()
+
+        let commands = await executor.executedCommands()
+        #expect(commands.count == 1)
+        #expect(commands.first?.context.trigger == .operatorConfirmed)
         #expect(viewModel.confirmationPrompt == nil)
     }
 

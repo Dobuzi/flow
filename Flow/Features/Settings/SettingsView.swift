@@ -35,7 +35,7 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) {
                     viewModel.dismissConfirmation()
                 }
-                Button("Confirm") {
+                Button(viewModel.confirmationPrompt?.confirmButtonTitle ?? "Confirm") {
                     Task { await viewModel.confirmPendingAction() }
                 }
             },

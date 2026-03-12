@@ -181,6 +181,8 @@ Design constraints:
 - Dependency: P4-013
 - Description: Add non-intrusive confirmations showing source, target snapshot, risk/guard notes, and expected outcome before execution.
 - Short goal: Reduce accidental operator errors.
+- Status: Completed (2026-03-12)
+- Notes: Refined Settings confirmation prompts into action-specific operator confirmations with source, current active snapshot, target/fallback snapshot, effect summary, and action-specific CTA labels. Added view-model regression coverage for promote/demote/rollback confirmation payloads, non-execution before confirmation, confirmed execution routing, and blocked/no-op behavior.
 
 ### M4-6 Regression and Rollout Safety
 

@@ -42,7 +42,24 @@ struct OperatorControlsPanelState: Hashable {
 struct OperatorConfirmationPrompt: Identifiable, Hashable {
     let command: SnapshotActivationCommand
     let title: String
-    let message: String
+    let confirmButtonTitle: String
+    let sourceTitle: String
+    let currentActiveSnapshotID: String?
+    let targetSnapshotID: String?
+    let effectSummary: String
+
+    var message: String {
+        var lines: [String] = []
+        lines.append("Source: \(sourceTitle)")
+        if let currentActiveSnapshotID {
+            lines.append("Current Active: \(currentActiveSnapshotID)")
+        }
+        if let targetSnapshotID {
+            lines.append("Target: \(targetSnapshotID)")
+        }
+        lines.append(effectSummary)
+        return lines.joined(separator: "\n")
+    }
 
     var id: String {
         command.context.commandID
@@ -149,7 +166,11 @@ final class SettingsViewModel: ObservableObject {
             confirmationPrompt = OperatorConfirmationPrompt(
                 command: command,
                 title: confirmationTitle(for: action),
-                message: confirmationMessage(for: action, decision: decision)
+                confirmButtonTitle: confirmationButtonTitle(for: action),
+                sourceTitle: currentSource.title,
+                currentActiveSnapshotID: descriptor?.liveMetadata?.activationMetadata?.activeSnapshotID,
+                targetSnapshotID: confirmationTargetSnapshotID(for: action, decision: decision),
+                effectSummary: confirmationEffectSummary(for: action, decision: decision)
             )
         case .blocked:
             activationFeedback = feedbackMessage(for: action, decision: decision, fallback: "Action is blocked.")
@@ -385,28 +406,53 @@ final class SettingsViewModel: ObservableObject {
     private func confirmationTitle(for action: SnapshotActivationCommand.Action) -> String {
         switch action {
         case .promote:
-            return "Confirm Promote"
+            return "Confirm Snapshot Promotion"
         case .demote:
-            return "Confirm Demote"
+            return "Confirm Safe Demotion"
         case .rollback:
             return "Confirm Rollback"
         }
     }
 
-    private func confirmationMessage(
+    private func confirmationButtonTitle(for action: SnapshotActivationCommand.Action) -> String {
+        switch action {
+        case .promote:
+            return "Promote"
+        case .demote:
+            return "Demote"
+        case .rollback:
+            return "Rollback"
+        }
+    }
+
+    private func confirmationTargetSnapshotID(
+        for action: SnapshotActivationCommand.Action,
+        decision: SnapshotActivationGuardDecision
+    ) -> String? {
+        switch action {
+        case .promote:
+            return decision.candidateSnapshotID ?? descriptor?.liveMetadata?.activationMetadata?.latestCandidateSnapshotID
+        case .demote:
+            return decision.rollbackTargetSnapshotID ?? descriptor?.liveMetadata?.activationMetadata?.lastKnownGoodSnapshotID
+        case .rollback:
+            return decision.rollbackTargetSnapshotID ?? descriptor?.liveMetadata?.activationMetadata?.lastKnownGoodSnapshotID
+        }
+    }
+
+    private func confirmationEffectSummary(
         for action: SnapshotActivationCommand.Action,
         decision: SnapshotActivationGuardDecision
     ) -> String {
         switch action {
         case .promote:
-            let target = decision.candidateSnapshotID ?? descriptor?.liveMetadata?.activationMetadata?.latestCandidateSnapshotID ?? "the latest candidate"
-            return "Promote \(target) to active snapshot. This changes the current active state."
+            let target = confirmationTargetSnapshotID(for: action, decision: decision) ?? "the candidate snapshot"
+            return "This will replace the active snapshot with \(target)."
         case .demote:
-            let target = decision.rollbackTargetSnapshotID ?? descriptor?.liveMetadata?.activationMetadata?.lastKnownGoodSnapshotID ?? "the safe fallback"
-            return "Demote the active snapshot and restore \(target)."
+            let target = confirmationTargetSnapshotID(for: action, decision: decision) ?? "the safe fallback"
+            return "This will step down the active snapshot and restore \(target)."
         case .rollback:
-            let target = decision.rollbackTargetSnapshotID ?? descriptor?.liveMetadata?.activationMetadata?.lastKnownGoodSnapshotID ?? "the rollback target"
-            return "Rollback the current active snapshot to \(target)."
+            let target = confirmationTargetSnapshotID(for: action, decision: decision) ?? "the last-known-good snapshot"
+            return "This will restore \(target) as the active snapshot."
         }
     }
 
