@@ -604,6 +604,108 @@ struct SettingsViewModelTests {
         #expect(controls.recentHistory[0].title == "Promote Succeeded")
     }
 
+    @Test
+    func recentActivityOrderingMatchesHistoryStoreAcrossAuditOutcomes() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+
+        let descriptor = makeDescriptor(
+            source: .seoulCapitalSnapshot,
+            live: makeLiveMetadata(
+                source: .seoulCapitalSnapshot,
+                activation: DatasetActivationMetadata(
+                    activeSnapshotID: "seoul-2026.03",
+                    lastKnownGoodSnapshotID: "seoul-2026.02",
+                    latestCandidateSnapshotID: "seoul-2026.04",
+                    latestCandidateDatasetVersion: "2026.04",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    rollbackAvailable: true,
+                    latestActivationEventType: "promote_succeeded",
+                    latestActivationEventAt: "2026-03-12T12:03:00Z",
+                    operatorActivationStatus: .activeRollbackReady,
+                    promoteRequiresConfirmation: true,
+                    demoteRequiresConfirmation: true,
+                    rollbackRequiresConfirmation: true
+                )
+            )
+        )
+
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "evt-requested",
+                type: .promoteRequested,
+                timestamp: "2026-03-12T12:01:00Z",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                status: .requested
+            )
+        )
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "evt-blocked",
+                type: .rollbackBlocked,
+                timestamp: "2026-03-12T12:02:00Z",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.02",
+                status: .blocked,
+                message: "No safe rollback target."
+            )
+        )
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "evt-succeeded",
+                type: .promoteSucceeded,
+                timestamp: "2026-03-12T12:03:00Z",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                status: .succeeded
+            )
+        )
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "evt-noop",
+                type: .demoteBlocked,
+                timestamp: "2026-03-12T12:04:00Z",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.03",
+                status: .noOp,
+                message: "Already inactive."
+            )
+        )
+
+        let viewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: StubCatalogRepository(
+                catalog: MobilityDatasetCatalog(
+                    version: "1",
+                    defaultSource: .seoulCapitalSnapshot,
+                    datasets: [descriptor]
+                )
+            ),
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            activationHistoryStore: historyStore,
+            userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.audit-order.\(UUID().uuidString)")!
+        )
+
+        await viewModel.load(source: .seoulCapitalSnapshot)
+
+        let controls = try #require(viewModel.operatorControls)
+        #expect(controls.recentHistory.count == 4)
+        #expect(controls.recentHistory.map(\.id) == ["evt-noop", "evt-succeeded", "evt-blocked", "evt-requested"])
+        #expect(controls.recentHistory.map(\.status) == ["No-op", "Succeeded", "Blocked", "Requested"])
+        #expect(controls.recentHistory[0].title == "Demote Blocked")
+        #expect(controls.recentHistory[0].detail == "Already inactive.")
+        #expect(controls.recentHistory[1].title == "Promote Succeeded")
+        #expect(controls.recentHistory[2].title == "Rollback Blocked")
+        #expect(controls.recentHistory[2].detail == "No safe rollback target.")
+        #expect(controls.recentHistory[3].title == "Promote Requested")
+    }
+
     private func makeDataset(source: FlowDatasetSource) -> FlowDataset {
         FlowDataset(
             datasetID: source.rawValue,

@@ -207,6 +207,8 @@ Design constraints:
 - Dependency: P4-005, P4-015
 - Description: Verify event append order, projection correctness, and action-result/history consistency.
 - Short goal: Guarantee auditability integrity.
+- Status: Completed (2026-03-12)
+- Notes: Added audit-focused regression coverage across executor, history store, state projector, and Settings recent activity mapping. Verified requested-to-terminal event sequencing, no-op/blocked/failed audit semantics, source-scoped history isolation, and newest-first operator timeline ordering without changing runtime source behavior.
 
 ## P4-018 — Phase 4 status sync and rollout readiness checklist
 - Priority: P1

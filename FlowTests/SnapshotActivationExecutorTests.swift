@@ -3,6 +3,69 @@ import Testing
 
 struct SnapshotActivationExecutorTests {
     @Test
+    func promoteHistorySequenceAndMetadataStayAuditCorrect() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.04",
+            datasetVersion: "2026.04",
+            generatedAt: "2026-03-04T00:00:00Z"
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.promote(
+            PromoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                datasetVersion: "2026.04",
+                context: .init(
+                    commandID: "cmd-promote-audit-sequence",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorConfirmed
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .succeeded)
+
+        let history = await historyStore.query(
+            SnapshotActivationHistoryQuery(
+                commandID: "cmd-promote-audit-sequence",
+                sortOrder: .oldestFirst
+            )
+        )
+        #expect(history.count == 2)
+        #expect(history[0].type == .promoteRequested)
+        #expect(history[1].type == .promoteSucceeded)
+        #expect(history[0].result.status == .requested)
+        #expect(history[1].result.status == .succeeded)
+        #expect(history[0].metadata.commandID == "cmd-promote-audit-sequence")
+        #expect(history[1].metadata.commandID == "cmd-promote-audit-sequence")
+        #expect(history[0].metadata.source == .seoulCapitalSnapshot)
+        #expect(history[1].metadata.source == .seoulCapitalSnapshot)
+        #expect(history[0].metadata.snapshotID == "seoul-2026.04")
+        #expect(history[1].metadata.snapshotID == "seoul-2026.04")
+        #expect(history[1].metadata.execution?.status == .succeeded)
+    }
+
+    @Test
     func promoteCommandRunsValidationGuardExecutionAndStoresHistory() async throws {
         let versionStore = InMemoryDatasetVersionStore()
         await seedVersion(
@@ -220,6 +283,73 @@ struct SnapshotActivationExecutorTests {
         #expect(history.count == 2)
         #expect(history.contains(where: { $0.type == .rollbackRequested }))
         #expect(history.contains(where: { $0.type == .rollbackSucceeded }))
+    }
+
+    @Test
+    func demoteHistorySequenceAndProjectionStayAligned() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.02",
+            datasetVersion: "2026.02",
+            generatedAt: "2026-03-02T00:00:00Z"
+        )
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.02")
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.demote(
+            DemoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                expectedActiveSnapshotID: "seoul-2026.03",
+                preserveLastKnownGood: true,
+                context: .init(
+                    commandID: "cmd-demote-audit-sequence",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorConfirmed
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .succeeded)
+
+        let history = await historyStore.query(
+            SnapshotActivationHistoryQuery(
+                commandID: "cmd-demote-audit-sequence",
+                sortOrder: .oldestFirst
+            )
+        )
+        #expect(history.count == 2)
+        #expect(history[0].type == .demoteRequested)
+        #expect(history[1].type == .demoteSucceeded)
+        #expect(history[1].result.status == .succeeded)
+
+        let projector = DefaultSnapshotActivationStateProjector(
+            activationPolicy: policy,
+            historyStore: historyStore,
+            versionStore: versionStore
+        )
+        let projected = await projector.project(for: .seoulCapitalSnapshot)
+        #expect(projected.activeSnapshotID == "seoul-2026.02")
+        #expect(projected.lastKnownGoodSnapshotID == "seoul-2026.03")
+        #expect(projected.latestActivationEvent?.type == .demoteSucceeded)
     }
 
     @Test
@@ -471,9 +601,18 @@ struct SnapshotActivationExecutorTests {
         #expect(stateAfter.activeSnapshotID == nil)
         #expect(stateAfter.lastKnownGoodSnapshotID == nil)
 
-        let history = await historyStore.events(commandID: "cmd-demote-noop")
+        let history = await historyStore.query(
+            SnapshotActivationHistoryQuery(
+                commandID: "cmd-demote-noop",
+                sortOrder: .oldestFirst
+            )
+        )
         #expect(history.count == 2)
+        #expect(history[0].type == .demoteRequested)
+        #expect(history[1].type == .demoteBlocked)
+        #expect(history[1].result.status == .noOp)
         #expect(history.contains(where: { $0.type == .demoteBlocked }))
+        #expect(history.contains(where: { $0.type == .demoteSucceeded }) == false)
     }
 
     @Test
@@ -726,6 +865,62 @@ struct SnapshotActivationExecutorTests {
         #expect(stateAfter == stateBefore)
     }
 
+    @Test
+    func failedExecutionRecordsRequestedThenFailedAuditEvents() async {
+        let failingState = SnapshotActivationState(
+            source: .seoulCapitalSnapshot,
+            activeSnapshotID: "seoul-2026.03",
+            lastKnownGoodSnapshotID: nil,
+            updatedAt: "2026-03-12T00:00:00Z"
+        )
+        let candidate = makeStoredSnapshot(
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.04",
+            compatibility: .compatible,
+            activationState: .eligible
+        )
+        let policy = ThrowingActivatePolicy(
+            currentState: failingState,
+            candidateSnapshot: candidate
+        )
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let versionStore = InMemoryDatasetVersionStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.promote(
+            PromoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                context: .init(
+                    commandID: "cmd-promote-failed-audit",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorConfirmed
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .failed)
+        #expect(result.failureReason == .stateMutationFailed)
+
+        let history = await historyStore.query(
+            SnapshotActivationHistoryQuery(
+                commandID: "cmd-promote-failed-audit",
+                sortOrder: .oldestFirst
+            )
+        )
+        #expect(history.count == 2)
+        #expect(history[0].type == .promoteRequested)
+        #expect(history[1].type == .promoteFailed)
+        #expect(history[1].result.status == .failed)
+        #expect(history[1].metadata.commandID == "cmd-promote-failed-audit")
+        #expect(history[1].metadata.source == .seoulCapitalSnapshot)
+    }
+
     private func seedVersion(
         store: InMemoryDatasetVersionStore,
         source: FlowDatasetSource,
@@ -847,5 +1042,50 @@ private actor StubRollbackPolicy: SnapshotActivationPolicying {
     func rollback(source: FlowDatasetSource) async throws -> SnapshotActivationState {
         rollbackCallCount += 1
         throw SnapshotActivationError.noRollbackTarget(source)
+    }
+}
+
+private actor ThrowingActivatePolicy: SnapshotActivationPolicying {
+    private let stubCurrentState: SnapshotActivationState
+    private let candidateSnapshot: StoredSnapshotVersion
+
+    init(
+        currentState: SnapshotActivationState,
+        candidateSnapshot: StoredSnapshotVersion
+    ) {
+        self.stubCurrentState = currentState
+        self.candidateSnapshot = candidateSnapshot
+    }
+
+    func currentState(for source: FlowDatasetSource) async -> SnapshotActivationState {
+        stubCurrentState
+    }
+
+    func evaluateActivation(source: FlowDatasetSource, requestedSnapshotID: String?) async -> SnapshotActivationDecision {
+        SnapshotActivationDecision(
+            source: source,
+            requestedSnapshotID: requestedSnapshotID,
+            status: .activatable,
+            candidate: candidateSnapshot,
+            reasons: []
+        )
+    }
+
+    func activate(source: FlowDatasetSource, requestedSnapshotID: String?) async throws -> SnapshotActivationState {
+        struct SyntheticMutationError: Error {}
+        throw SyntheticMutationError()
+    }
+
+    func evaluateRollback(source: FlowDatasetSource) async -> SnapshotRollbackDecision {
+        SnapshotRollbackDecision(
+            source: source,
+            status: .noSafeRollback,
+            target: nil,
+            reasons: ["no_rollback_target"]
+        )
+    }
+
+    func rollback(source: FlowDatasetSource) async throws -> SnapshotActivationState {
+        stubCurrentState
     }
 }
