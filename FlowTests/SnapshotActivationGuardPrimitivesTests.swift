@@ -139,6 +139,77 @@ struct SnapshotActivationGuardPrimitivesTests {
     }
 
     @Test
+    func demoteWithoutSafeFallbackIsBlocked() {
+        let command = SnapshotActivationCommand.demote(
+            DemoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                expectedActiveSnapshotID: "seoul-2026.03",
+                preserveLastKnownGood: true,
+                context: .init(trigger: .operatorConfirmed)
+            )
+        )
+
+        let decision = SnapshotActivationGuardInput(
+            command: command,
+            isLiveCapable: true,
+            currentState: SnapshotActivationState(
+                source: .seoulCapitalSnapshot,
+                activeSnapshotID: "seoul-2026.03",
+                lastKnownGoodSnapshotID: nil,
+                updatedAt: "2026-03-10T00:00:00Z"
+            ),
+            rollbackDecision: SnapshotRollbackDecision(
+                source: .seoulCapitalSnapshot,
+                status: .noSafeRollback,
+                target: nil,
+                reasons: ["last_known_good_missing"]
+            )
+        ).baselineDecision()
+
+        #expect(decision.status == .blocked)
+        #expect(decision.reasons == [.noRollbackTarget])
+    }
+
+    @Test
+    func demoteWithSafeFallbackRequiresConfirmation() {
+        let target = makeStoredSnapshot(
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.02",
+            compatibility: .compatible,
+            activationState: .eligible
+        )
+
+        let command = SnapshotActivationCommand.demote(
+            DemoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                expectedActiveSnapshotID: "seoul-2026.03",
+                preserveLastKnownGood: true,
+                context: .init(trigger: .operatorManual)
+            )
+        )
+
+        let decision = SnapshotActivationGuardInput(
+            command: command,
+            isLiveCapable: true,
+            currentState: SnapshotActivationState(
+                source: .seoulCapitalSnapshot,
+                activeSnapshotID: "seoul-2026.03",
+                lastKnownGoodSnapshotID: "seoul-2026.02",
+                updatedAt: "2026-03-10T00:00:00Z"
+            ),
+            rollbackDecision: SnapshotRollbackDecision(
+                source: .seoulCapitalSnapshot,
+                status: .rollbackAvailable,
+                target: target,
+                reasons: []
+            )
+        ).baselineDecision()
+
+        #expect(decision.status == .requiresConfirmation)
+        #expect(decision.rollbackTargetSnapshotID == "seoul-2026.02")
+    }
+
+    @Test
     func rollbackWithoutTargetIsBlocked() {
         let command = SnapshotActivationCommand.rollback(
             RollbackSnapshotCommand(

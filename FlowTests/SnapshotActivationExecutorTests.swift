@@ -170,8 +170,15 @@ struct SnapshotActivationExecutorTests {
     }
 
     @Test
-    func demoteCommandIsHandledBySkeletonAndRecorded() async throws {
+    func demoteCommandSucceedsWhenSafeFallbackIsAvailableAndConfirmed() async throws {
         let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.02",
+            datasetVersion: "2026.02",
+            generatedAt: "2026-03-02T00:00:00Z"
+        )
         await seedVersion(
             store: versionStore,
             source: .seoulCapitalSnapshot,
@@ -181,6 +188,7 @@ struct SnapshotActivationExecutorTests {
         )
 
         let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.02")
         _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
 
         let historyStore = InMemorySnapshotActivationHistoryStore()
@@ -196,25 +204,40 @@ struct SnapshotActivationExecutorTests {
                 expectedActiveSnapshotID: "seoul-2026.03",
                 preserveLastKnownGood: true,
                 context: .init(
-                    commandID: "cmd-demote-skeleton",
+                    commandID: "cmd-demote-success",
                     requestedAt: "2026-03-12T00:00:00Z",
-                    trigger: .operatorManual
+                    trigger: .operatorConfirmed
                 )
             )
         )
 
         let result = await executor.execute(command)
 
-        #expect(result.status == .blocked)
-        #expect(result.blockReason == .policyRejected)
-        #expect(result.details.contains("demote_execution_placeholder"))
+        #expect(result.status == .succeeded)
+        #expect(result.resultingState?.activeSnapshotID == "seoul-2026.02")
+        #expect(result.resultingState?.lastKnownGoodSnapshotID == "seoul-2026.03")
+        #expect(result.details.contains("demoted_to_safe_fallback"))
+        #expect(result.details.contains("safe_fallback_restored"))
+        #expect(result.details.contains("last_known_good_preserved"))
         let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
-        #expect(stateAfter.activeSnapshotID == "seoul-2026.03")
+        #expect(stateAfter.activeSnapshotID == "seoul-2026.02")
+        #expect(stateAfter.lastKnownGoodSnapshotID == "seoul-2026.03")
 
-        let history = await historyStore.events(commandID: "cmd-demote-skeleton")
+        let history = await historyStore.events(commandID: "cmd-demote-success")
         #expect(history.count == 2)
         #expect(history.contains(where: { $0.type == .demoteRequested }))
-        #expect(history.contains(where: { $0.type == .demoteBlocked }))
+        #expect(history.contains(where: { $0.type == .demoteSucceeded }))
+
+        let projector = DefaultSnapshotActivationStateProjector(
+            activationPolicy: policy,
+            historyStore: historyStore,
+            versionStore: versionStore
+        )
+        let projected = await projector.project(for: .seoulCapitalSnapshot)
+        #expect(projected.activeSnapshotID == "seoul-2026.02")
+        #expect(projected.lastKnownGoodSnapshotID == "seoul-2026.03")
+        #expect(projected.latestActivationEvent?.type == .demoteSucceeded)
+        #expect(projected.rollbackAvailable)
     }
 
     @Test
@@ -252,6 +275,105 @@ struct SnapshotActivationExecutorTests {
         let history = await historyStore.events(commandID: "cmd-demote-noop")
         #expect(history.count == 2)
         #expect(history.contains(where: { $0.type == .demoteBlocked }))
+    }
+
+    @Test
+    func demoteBlocksWhenNoSafeFallbackExists() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let stateBefore = await policy.currentState(for: .seoulCapitalSnapshot)
+
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.demote(
+            DemoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                expectedActiveSnapshotID: "seoul-2026.03",
+                preserveLastKnownGood: true,
+                context: .init(
+                    commandID: "cmd-demote-blocked-no-fallback",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorConfirmed
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .blocked)
+        #expect(result.blockReason == .noRollbackTarget)
+
+        let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(stateAfter == stateBefore)
+
+        let history = await historyStore.events(commandID: "cmd-demote-blocked-no-fallback")
+        #expect(history.count == 2)
+        #expect(history.contains(where: { $0.type == .demoteBlocked }))
+    }
+
+    @Test
+    func demoteRequiresConfirmationForManualTrigger() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.02",
+            datasetVersion: "2026.02",
+            generatedAt: "2026-03-02T00:00:00Z"
+        )
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.02")
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let stateBefore = await policy.currentState(for: .seoulCapitalSnapshot)
+
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.demote(
+            DemoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                expectedActiveSnapshotID: "seoul-2026.03",
+                preserveLastKnownGood: true,
+                context: .init(
+                    commandID: "cmd-demote-requires-confirmation",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorManual
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .blocked)
+        #expect(result.blockReason == .policyRejected)
+        #expect(result.details.contains("requires_confirmation"))
+
+        let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(stateAfter == stateBefore)
     }
 
     @Test

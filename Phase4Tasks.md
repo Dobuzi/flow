@@ -137,6 +137,8 @@ Design constraints:
 - Dependency: P4-007
 - Description: Add explicit demote action that reverts source from activated candidate to stable fallback without cross-source side effects.
 - Short goal: Safe manual deactivation path.
+- Status: Completed (2026-03-12)
+- Notes: Replaced demote placeholder semantics with guarded safe-fallback behavior. Demote now requires a valid rollback target and confirmation, restores a safe fallback via activation policy rollback semantics, preserves last-known-good state, and remains blocked/no-op without mutation when no safe fallback exists or confirmation is missing.
 
 ### M4-4 Rollback Execution Controls
 

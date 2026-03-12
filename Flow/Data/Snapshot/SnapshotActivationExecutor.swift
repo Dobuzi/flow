@@ -163,12 +163,37 @@ struct DefaultSnapshotActivationExecutor: SnapshotActivationExecuting {
             }
 
         case .demote:
-            return .blocked(
-                command: command,
-                reason: .policyRejected,
-                previousState: context.currentState,
-                details: ["demote_execution_placeholder"]
-            )
+            do {
+                let resulting = try await activationPolicy.rollback(source: command.source)
+                var details: [String] = ["demoted_to_safe_fallback"]
+                if let rollbackTargetID = context.rollbackTarget?.snapshotID,
+                   rollbackTargetID == resulting.activeSnapshotID {
+                    details.append("safe_fallback_restored")
+                }
+                if context.currentState.activeSnapshotID != nil,
+                   resulting.lastKnownGoodSnapshotID == context.currentState.activeSnapshotID {
+                    details.append("last_known_good_preserved")
+                }
+                return .succeeded(
+                    command: command,
+                    previousState: context.currentState,
+                    resultingState: resulting,
+                    details: details
+                )
+            } catch SnapshotActivationError.noRollbackTarget {
+                return .blocked(
+                    command: command,
+                    reason: .noRollbackTarget,
+                    previousState: context.currentState
+                )
+            } catch {
+                return .failed(
+                    command: command,
+                    reason: .stateMutationFailed,
+                    previousState: context.currentState,
+                    details: [String(describing: error)]
+                )
+            }
 
         case .rollback(let rollback):
             do {

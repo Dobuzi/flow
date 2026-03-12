@@ -187,10 +187,53 @@ struct SnapshotActivationGuardInput: Hashable {
             )
         }
 
+        if let decision = rollbackDecision {
+            switch decision.status {
+            case .rollbackAvailable:
+                if decision.target?.snapshotID == active {
+                    return SnapshotActivationGuardDecision(
+                        input: self,
+                        status: .noOp,
+                        reasons: [.alreadyActive]
+                    )
+                }
+                return SnapshotActivationGuardDecision(
+                    input: self,
+                    status: .requiresConfirmation,
+                    reasons: [],
+                    details: ["safe_fallback_available"] + decision.reasons
+                )
+            case .noSafeRollback:
+                return SnapshotActivationGuardDecision(
+                    input: self,
+                    status: .blocked,
+                    reasons: [.noRollbackTarget],
+                    details: decision.reasons
+                )
+            }
+        }
+
+        guard let rollbackTarget else {
+            return SnapshotActivationGuardDecision(
+                input: self,
+                status: .blocked,
+                reasons: [.noRollbackTarget]
+            )
+        }
+
+        if rollbackTarget.snapshotID == active {
+            return SnapshotActivationGuardDecision(
+                input: self,
+                status: .noOp,
+                reasons: [.alreadyActive]
+            )
+        }
+
         return SnapshotActivationGuardDecision(
             input: self,
-            status: .allowed,
-            reasons: []
+            status: .requiresConfirmation,
+            reasons: [],
+            details: ["safe_fallback_available"]
         )
     }
 
