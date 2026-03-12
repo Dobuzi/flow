@@ -13,6 +13,8 @@ enum SnapshotActivationGuardReason: String, Hashable {
     case targetSnapshotNotFound
     case targetSnapshotNotEligible
     case targetSnapshotIncompatible
+    case activeSnapshotWillChange
+    case fallbackTransition
     case noActiveSnapshot
     case noRollbackTarget
     case expectedActiveSnapshotMismatch
@@ -99,11 +101,7 @@ struct SnapshotActivationGuardInput: Hashable {
         if let decision = activationDecision {
             switch decision.status {
             case .activatable:
-                return SnapshotActivationGuardDecision(
-                    input: self,
-                    status: .allowed,
-                    reasons: []
-                )
+                return confirmationAwarePromotionDecision(targetSnapshotID: decision.candidate?.snapshotID)
             case .snapshotNotFound:
                 return SnapshotActivationGuardDecision(
                     input: self,
@@ -154,11 +152,7 @@ struct SnapshotActivationGuardInput: Hashable {
                 )
             }
 
-            return SnapshotActivationGuardDecision(
-                input: self,
-                status: .allowed,
-                reasons: []
-            )
+            return confirmationAwarePromotionDecision(targetSnapshotID: candidateSnapshot.snapshotID)
         }
 
         return SnapshotActivationGuardDecision(
@@ -200,7 +194,7 @@ struct SnapshotActivationGuardInput: Hashable {
                 return SnapshotActivationGuardDecision(
                     input: self,
                     status: .requiresConfirmation,
-                    reasons: [],
+                    reasons: [.fallbackTransition],
                     details: ["safe_fallback_available"] + decision.reasons
                 )
             case .noSafeRollback:
@@ -232,7 +226,7 @@ struct SnapshotActivationGuardInput: Hashable {
         return SnapshotActivationGuardDecision(
             input: self,
             status: .requiresConfirmation,
-            reasons: [],
+            reasons: [.fallbackTransition],
             details: ["safe_fallback_available"]
         )
     }
@@ -251,8 +245,8 @@ struct SnapshotActivationGuardInput: Hashable {
                 return SnapshotActivationGuardDecision(
                     input: self,
                     status: .requiresConfirmation,
-                    reasons: [],
-                    details: decision.reasons
+                    reasons: [.fallbackTransition],
+                    details: ["rollback_changes_active_snapshot"] + decision.reasons
                 )
             case .noSafeRollback:
                 return SnapshotActivationGuardDecision(
@@ -283,7 +277,33 @@ struct SnapshotActivationGuardInput: Hashable {
         return SnapshotActivationGuardDecision(
             input: self,
             status: .requiresConfirmation,
-            reasons: []
+            reasons: [.fallbackTransition],
+            details: ["rollback_changes_active_snapshot"]
+        )
+    }
+
+    private func confirmationAwarePromotionDecision(targetSnapshotID: String?) -> SnapshotActivationGuardDecision {
+        guard let currentActive = currentState?.activeSnapshotID else {
+            return SnapshotActivationGuardDecision(
+                input: self,
+                status: .allowed,
+                reasons: []
+            )
+        }
+
+        guard targetSnapshotID != currentActive else {
+            return SnapshotActivationGuardDecision(
+                input: self,
+                status: .noOp,
+                reasons: [.alreadyActive]
+            )
+        }
+
+        return SnapshotActivationGuardDecision(
+            input: self,
+            status: .requiresConfirmation,
+            reasons: [.activeSnapshotWillChange],
+            details: ["active_snapshot_change"]
         )
     }
 

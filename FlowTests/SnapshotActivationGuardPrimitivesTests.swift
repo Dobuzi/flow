@@ -22,7 +22,7 @@ struct SnapshotActivationGuardPrimitivesTests {
     }
 
     @Test
-    func promoteWithActivatableDecisionIsAllowed() {
+    func promoteWithActivatableDecisionRequiresConfirmationWhenActiveSnapshotWillChange() {
         let command = SnapshotActivationCommand.promote(
             PromoteSnapshotCommand(
                 source: .seoulCapitalSnapshot,
@@ -57,9 +57,50 @@ struct SnapshotActivationGuardPrimitivesTests {
             activationDecision: activationDecision
         ).baselineDecision()
 
+        #expect(decision.status == .requiresConfirmation)
+        #expect(decision.reasons == [.activeSnapshotWillChange])
+        #expect(decision.details.contains("active_snapshot_change"))
+        #expect(decision.candidateSnapshotID == "seoul-2026.03")
+    }
+
+    @Test
+    func initialPromoteWithActivatableDecisionRemainsAllowed() {
+        let command = SnapshotActivationCommand.promote(
+            PromoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.03",
+                context: .init(trigger: .operatorConfirmed)
+            )
+        )
+
+        let candidate = makeStoredSnapshot(
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            compatibility: .compatible,
+            activationState: .eligible
+        )
+        let activationDecision = SnapshotActivationDecision(
+            source: .seoulCapitalSnapshot,
+            requestedSnapshotID: "seoul-2026.03",
+            status: .activatable,
+            candidate: candidate,
+            reasons: []
+        )
+
+        let decision = SnapshotActivationGuardInput(
+            command: command,
+            isLiveCapable: true,
+            currentState: SnapshotActivationState(
+                source: .seoulCapitalSnapshot,
+                activeSnapshotID: nil,
+                lastKnownGoodSnapshotID: nil,
+                updatedAt: "2026-03-10T00:00:00Z"
+            ),
+            activationDecision: activationDecision
+        ).baselineDecision()
+
         #expect(decision.status == .allowed)
         #expect(decision.reasons.isEmpty)
-        #expect(decision.candidateSnapshotID == "seoul-2026.03")
     }
 
     @Test
@@ -206,6 +247,7 @@ struct SnapshotActivationGuardPrimitivesTests {
         ).baselineDecision()
 
         #expect(decision.status == .requiresConfirmation)
+        #expect(decision.reasons == [.fallbackTransition])
         #expect(decision.rollbackTargetSnapshotID == "seoul-2026.02")
     }
 
@@ -266,6 +308,7 @@ struct SnapshotActivationGuardPrimitivesTests {
         ).baselineDecision()
 
         #expect(decision.status == .requiresConfirmation)
+        #expect(decision.reasons == [.fallbackTransition])
         #expect(decision.rollbackTargetSnapshotID == "seoul-2026.02")
     }
 

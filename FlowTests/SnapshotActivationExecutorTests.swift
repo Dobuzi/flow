@@ -45,6 +45,57 @@ struct SnapshotActivationExecutorTests {
     }
 
     @Test
+    func riskyPromoteRequiresConfirmationForManualTrigger() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.04",
+            datasetVersion: "2026.04",
+            generatedAt: "2026-03-04T00:00:00Z"
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let stateBefore = await policy.currentState(for: .seoulCapitalSnapshot)
+
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.promote(
+            PromoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                context: .init(
+                    commandID: "cmd-promote-requires-confirmation",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorManual
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .blocked)
+        #expect(result.blockReason == .policyRejected)
+        #expect(result.details.contains("requires_confirmation"))
+        #expect(result.details.contains("active_snapshot_change"))
+
+        let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(stateAfter == stateBefore)
+    }
+
+    @Test
     func invalidCommandFailsEarlyAndStoresFailureEvent() async {
         let versionStore = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)

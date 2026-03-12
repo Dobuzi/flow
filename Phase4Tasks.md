@@ -150,11 +150,13 @@ Design constraints:
 - Status: Completed (2026-03-12)
 - Notes: Tightened rollback guard/executor semantics to distinguish no safe target, missing target, incompatible/ineligible fallback, already-satisfied no-op, and successful rollback restoration. Added executor/guard regression coverage for rollback success, blocked, incompatible, no-op, and non-mutation guarantees.
 
-## P4-011 — Add rollback guard confirmations for high-risk transitions
+## P4-011 — Confirmation hardening for operator-safe activation flows
 - Priority: P1
-- Dependency: P4-010
-- Description: Add confirmation-required classification for rollback paths that can reduce data coverage/quality.
-- Short goal: Prevent accidental risky rollbacks.
+- Dependency: P4-007, P4-008, P4-009, P4-010
+- Description: Strengthen confirmation-required classification for high-impact promote, demote, and rollback transitions while keeping blocked and no-op semantics explicit.
+- Short goal: Prevent accidental risky activation state changes.
+- Status: Completed (2026-03-12)
+- Notes: Promote now requires confirmation when it would replace the current active snapshot, while initial activation with no active snapshot remains allowed. Demote and rollback confirmation paths now carry explicit fallback-transition reasons, and executor coverage verifies blocked invalid/incompatible actions are not mislabeled as confirmation-required.
 
 ### M4-5 Minimal Operator UI and Visibility
 

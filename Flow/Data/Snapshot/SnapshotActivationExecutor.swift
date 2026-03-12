@@ -373,6 +373,8 @@ struct DefaultSnapshotActivationExecutor: SnapshotActivationExecuting {
             return .snapshotNotEligible
         case .targetSnapshotIncompatible:
             return .snapshotIncompatible
+        case .activeSnapshotWillChange, .fallbackTransition:
+            return .policyRejected
         case .noActiveSnapshot:
             return .noActiveSnapshot
         case .noRollbackTarget:
