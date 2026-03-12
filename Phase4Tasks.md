@@ -95,6 +95,8 @@ Design constraints:
 - Dependency: P4-001
 - Description: Add event schema for `promoted`, `demoted`, `rollback_started`, `rollback_succeeded`, `rollback_failed`, including actor/reason/timestamp metadata.
 - Short goal: Ensure every operator action is auditable.
+- Status: Completed (2026-03-10)
+- Notes: Added `SnapshotActivationHistoryEvent` schema with typed event classification across promote/demote/rollback request/blocked/failed/succeeded outcomes, plus structured metadata and summaries for command context, validation, guard decision, and execution result compatibility.
 
 ## P4-005 — Implement activation history store (in-memory + extensible interface)
 - Priority: P0
