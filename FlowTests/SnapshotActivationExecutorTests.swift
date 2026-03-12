@@ -106,6 +106,9 @@ struct SnapshotActivationExecutorTests {
 
         #expect(result.status == .blocked)
         #expect(result.blockReason == .policyRejected)
+        let stateAfter = await policy.currentState(for: .bundledSample)
+        #expect(stateAfter.activeSnapshotID == nil)
+        #expect(stateAfter.lastKnownGoodSnapshotID == nil)
 
         let history = await historyStore.events(commandID: "cmd-static-block")
         #expect(history.count == 2)
@@ -157,6 +160,8 @@ struct SnapshotActivationExecutorTests {
 
         #expect(result.status == .succeeded)
         #expect(result.resultingState?.activeSnapshotID == "seoul-2026.02")
+        #expect(result.resultingState?.lastKnownGoodSnapshotID == "seoul-2026.03")
+        #expect(result.details.contains("rollback_target_restored"))
 
         let history = await historyStore.events(commandID: "cmd-rollback-success")
         #expect(history.count == 2)
@@ -203,6 +208,8 @@ struct SnapshotActivationExecutorTests {
         #expect(result.status == .blocked)
         #expect(result.blockReason == .policyRejected)
         #expect(result.details.contains("demote_execution_placeholder"))
+        let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(stateAfter.activeSnapshotID == "seoul-2026.03")
 
         let history = await historyStore.events(commandID: "cmd-demote-skeleton")
         #expect(history.count == 2)
@@ -238,10 +245,164 @@ struct SnapshotActivationExecutorTests {
 
         #expect(result.status == .noOp)
         #expect(result.blockReason == .alreadyInactive)
+        let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(stateAfter.activeSnapshotID == nil)
+        #expect(stateAfter.lastKnownGoodSnapshotID == nil)
 
         let history = await historyStore.events(commandID: "cmd-demote-noop")
         #expect(history.count == 2)
         #expect(history.contains(where: { $0.type == .demoteBlocked }))
+    }
+
+    @Test
+    func promotePreservesLastKnownGoodAndProjectionRemainsConsistent() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.04",
+            datasetVersion: "2026.04",
+            generatedAt: "2026-03-04T00:00:00Z"
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.promote(
+            PromoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                context: .init(
+                    commandID: "cmd-promote-lkg",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorConfirmed
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .succeeded)
+        #expect(result.resultingState?.activeSnapshotID == "seoul-2026.04")
+        #expect(result.resultingState?.lastKnownGoodSnapshotID == "seoul-2026.03")
+        #expect(result.details.contains("last_known_good_preserved"))
+
+        let projector = DefaultSnapshotActivationStateProjector(
+            activationPolicy: policy,
+            historyStore: historyStore,
+            versionStore: versionStore
+        )
+        let projected = await projector.project(for: .seoulCapitalSnapshot)
+        #expect(projected.activeSnapshotID == "seoul-2026.04")
+        #expect(projected.lastKnownGoodSnapshotID == "seoul-2026.03")
+        #expect(projected.rollbackAvailable)
+    }
+
+    @Test
+    func blockedPromotionDoesNotMutateActivationState() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.04-partial",
+            datasetVersion: "2026.04",
+            generatedAt: "2026-03-04T00:00:00Z",
+            compatibilityClassification: .partiallyCompatible,
+            eligibilityState: .ineligible,
+            compatibilityReasons: ["required_fields_missing"],
+            activationReasons: ["required_fields_missing"]
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let stateBefore = await policy.currentState(for: .seoulCapitalSnapshot)
+
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let command = SnapshotActivationCommand.promote(
+            PromoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04-partial",
+                context: .init(
+                    commandID: "cmd-promote-blocked-no-mutate",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorConfirmed
+                )
+            )
+        )
+
+        let result = await executor.execute(command)
+        #expect(result.status == .blocked)
+        #expect(result.blockReason == .snapshotIncompatible || result.blockReason == .snapshotNotEligible)
+
+        let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(stateAfter == stateBefore)
+    }
+
+    @Test
+    func failedCommandDoesNotMutateActivationState() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            generatedAt: "2026-03-03T00:00:00Z"
+        )
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+        let stateBefore = await policy.currentState(for: .seoulCapitalSnapshot)
+
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: versionStore,
+            historyStore: historyStore
+        )
+
+        let invalid = SnapshotActivationCommand.promote(
+            PromoteSnapshotCommand(
+                source: .seoulCapitalSnapshot,
+                snapshotID: nil,
+                datasetVersion: nil,
+                context: .init(
+                    commandID: "cmd-invalid-no-mutate",
+                    requestedAt: "2026-03-12T00:00:00Z",
+                    trigger: .operatorManual
+                )
+            )
+        )
+
+        let result = await executor.execute(invalid)
+        #expect(result.status == .failed)
+        #expect(result.failureReason == .policyEvaluationFailed)
+
+        let stateAfter = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(stateAfter == stateBefore)
     }
 
     private func seedVersion(
@@ -249,7 +410,11 @@ struct SnapshotActivationExecutorTests {
         source: FlowDatasetSource,
         snapshotID: String,
         datasetVersion: String,
-        generatedAt: String
+        generatedAt: String,
+        compatibilityClassification: IngestionCompatibilityClassification = .compatible,
+        eligibilityState: SnapshotActivationEligibility.State = .eligible,
+        compatibilityReasons: [String] = [],
+        activationReasons: [String] = []
     ) async {
         let contract = MaterializedSnapshotContract(
             snapshotID: snapshotID,
@@ -266,17 +431,17 @@ struct SnapshotActivationExecutorTests {
                 SnapshotRequiredFile(role: .flows, relativePath: "flows.jsonl", checksumSHA256: "f", byteCount: 30, recordCount: 1)
             ],
             compatibility: SnapshotCompatibilityMetadata(
-                isSchemaCompatible: true,
-                isCompatibilityCheckPassed: true,
-                compatibilityReasons: [],
+                isSchemaCompatible: compatibilityClassification != .incompatible,
+                isCompatibilityCheckPassed: compatibilityClassification == .compatible,
+                compatibilityReasons: compatibilityReasons,
                 checkedFields: ["schemaVersion"]
             ),
-            activationEligibility: SnapshotActivationEligibility(state: .eligible, reasons: [])
+            activationEligibility: SnapshotActivationEligibility(state: eligibilityState, reasons: activationReasons)
         )
 
         await store.upsert(
             contract: contract,
-            compatibilityClassification: .compatible,
+            compatibilityClassification: compatibilityClassification,
             isIngestionCandidate: true,
             indexedAt: generatedAt
         )

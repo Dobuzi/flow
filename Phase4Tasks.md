@@ -129,6 +129,8 @@ Design constraints:
 - Dependency: P4-007
 - Description: Implement explicit promote flow for eligible candidate snapshots, preserving last-known-good before activation state switch.
 - Short goal: Safe manual promotion path.
+- Status: Completed (2026-03-12)
+- Notes: Integrated guarded state-mutation semantics verification through `DefaultSnapshotActivationExecutor` and activation policy hooks. Successful promote/rollback transitions now explicitly preserve/restore last-known-good state while blocked/failed/no-op flows remain mutation-free; added executor-level regression tests for promote, rollback, blocked, failed, no-op, and conservative demote behavior.
 
 ## P4-009 — Implement guarded demote/disable flow
 - Priority: P1

@@ -135,10 +135,17 @@ struct DefaultSnapshotActivationExecutor: SnapshotActivationExecuting {
                     source: promote.source,
                     requestedSnapshotID: requestedSnapshotID
                 )
+                var details: [String] = []
+                if context.currentState.activeSnapshotID != nil,
+                   context.currentState.activeSnapshotID != resulting.activeSnapshotID,
+                   resulting.lastKnownGoodSnapshotID == context.currentState.activeSnapshotID {
+                    details.append("last_known_good_preserved")
+                }
                 return .succeeded(
                     command: command,
                     previousState: context.currentState,
-                    resultingState: resulting
+                    resultingState: resulting,
+                    details: details
                 )
             } catch let error as SnapshotActivationError {
                 return mapActivationError(
@@ -166,10 +173,16 @@ struct DefaultSnapshotActivationExecutor: SnapshotActivationExecuting {
         case .rollback(let rollback):
             do {
                 let resulting = try await activationPolicy.rollback(source: rollback.source)
+                var details: [String] = []
+                if let rollbackTargetID = context.rollbackTarget?.snapshotID,
+                   rollbackTargetID == resulting.activeSnapshotID {
+                    details.append("rollback_target_restored")
+                }
                 return .succeeded(
                     command: command,
                     previousState: context.currentState,
-                    resultingState: resulting
+                    resultingState: resulting,
+                    details: details
                 )
             } catch SnapshotActivationError.noRollbackTarget {
                 return .blocked(
