@@ -103,6 +103,8 @@ Design constraints:
 - Dependency: P4-004
 - Description: Add append/read APIs for per-source activation history with deterministic ordering.
 - Short goal: Provide reliable audit retrieval for UI and tests.
+- Status: Completed (2026-03-12)
+- Notes: Added `SnapshotActivationHistoryStoring` and `InMemorySnapshotActivationHistoryStore` with deterministic timeline ordering and typed query support (source, commandID, snapshotID, event type, limit, sort order). Added regression tests for append/list/filter/latest/ordering behavior.
 
 ## P4-006 — Add activation state projection from history + current policy state
 - Priority: P1
