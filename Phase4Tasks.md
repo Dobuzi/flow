@@ -111,6 +111,8 @@ Design constraints:
 - Dependency: P4-004, P4-005
 - Description: Build projection model for operator-facing state (`active`, `candidate`, `lastKnownGood`, recent outcome).
 - Short goal: Present concise activation status without reading raw events.
+- Status: Completed (2026-03-12)
+- Notes: Added `SnapshotActivationStateProjecting` and `DefaultSnapshotActivationStateProjector` with `ProjectedActivationState`/status models. Projection combines activation policy state, history timeline context, version metadata, and rollback evaluation into a stable operator-facing derived snapshot per source.
 
 ### M4-3 Guarded Promote/Demote Flow
 
