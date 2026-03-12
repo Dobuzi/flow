@@ -121,6 +121,8 @@ Design constraints:
 - Dependency: P4-001, P4-002, P4-003, P4-005
 - Description: Add coordinator/service that executes validated commands, applies guard decisions, and emits typed execution results.
 - Short goal: Centralize operator action execution.
+- Status: Completed (2026-03-12)
+- Notes: Added `SnapshotActivationExecuting` with `DefaultSnapshotActivationExecutor` skeleton wiring command validation, guard evaluation, typed execution results, and history event persistence. Promote/rollback paths use existing activation policy hooks; demote flow remains explicit placeholder-blocked for safety in this skeleton stage.
 
 ## P4-008 — Wire guarded promote flow to activation policy + version store
 - Priority: P0
