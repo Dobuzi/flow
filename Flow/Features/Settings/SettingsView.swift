@@ -8,6 +8,7 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 datasetSection
+                operatorControlsSection
                 cacheSection
                 visualizationSection
             }
@@ -17,9 +18,31 @@ struct SettingsView: View {
             await viewModel.load(source: store.state.selectedDatasetSource)
             applyPreferredSpatialLevel()
         }
-        .onChange(of: store.state.selectedDatasetSource) { _, value in
+            .onChange(of: store.state.selectedDatasetSource) { _, value in
             Task { await viewModel.load(source: value) }
         }
+        .alert(
+            viewModel.confirmationPrompt?.title ?? "Confirm Action",
+            isPresented: Binding(
+                get: { viewModel.confirmationPrompt != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel.dismissConfirmation()
+                    }
+                }
+            ),
+            actions: {
+                Button("Cancel", role: .cancel) {
+                    viewModel.dismissConfirmation()
+                }
+                Button("Confirm") {
+                    Task { await viewModel.confirmPendingAction() }
+                }
+            },
+            message: {
+                Text(viewModel.confirmationPrompt?.message ?? "")
+            }
+        )
     }
 
     private var datasetSection: some View {
@@ -68,6 +91,21 @@ struct SettingsView: View {
 
             Button("Clear Cache", role: .destructive) {
                 Task { await viewModel.clearCache() }
+            }
+        }
+    }
+
+    private var operatorControlsSection: some View {
+        Group {
+            if let controls = viewModel.operatorControls {
+                OperatorControlsSection(
+                    controls: controls,
+                    activationFeedback: viewModel.activationFeedback,
+                    isPerformingAction: viewModel.isPerformingActivationAction,
+                    onPromote: { Task { await viewModel.triggerOperatorAction(.promote) } },
+                    onDemote: { Task { await viewModel.triggerOperatorAction(.demote) } },
+                    onRollback: { Task { await viewModel.triggerOperatorAction(.rollback) } }
+                )
             }
         }
     }

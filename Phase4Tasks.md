@@ -173,6 +173,8 @@ Design constraints:
 - Dependency: P4-012
 - Description: Add explicit controls for promote/demote/rollback on live-capable sources with disabled states when blocked.
 - Short goal: Provide minimal but usable operator control surface.
+- Status: Completed (2026-03-12)
+- Notes: Added a compact operator controls section in Settings backed by live catalog metadata and guard evaluation. The panel surfaces active/last-known-good/candidate metadata, action availability, rollback readiness, latest activation event summary, and minimal confirmation handling for risky actions while keeping static sources free of operator controls.
 
 ## P4-014 — Add confirmation flows for promote/demote/rollback actions
 - Priority: P1
