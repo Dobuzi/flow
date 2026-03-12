@@ -88,6 +88,239 @@ private struct CrossSourceLocationRepository: LocationRepository {
 @MainActor
 struct CrossSourceLiveRefreshRegressionTests {
     @Test
+    func seoulActivationExecutionDoesNotMutateBundledOrNationalState() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: store,
+            historyStore: historyStore
+        )
+
+        await seedCompatibleSnapshot(
+            store: store,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            version: "2026.03"
+        )
+        await seedCompatibleSnapshot(
+            store: store,
+            source: .koreaNational,
+            snapshotID: "national-2026.03",
+            version: "2026.03"
+        )
+
+        let result = await executor.execute(
+            .promote(
+                PromoteSnapshotCommand(
+                    source: .seoulCapitalSnapshot,
+                    snapshotID: "seoul-2026.03",
+                    context: .init(
+                        commandID: "cmd-cross-source-promote",
+                        requestedAt: "2026-03-12T00:00:00Z",
+                        trigger: .operatorConfirmed
+                    )
+                )
+            )
+        )
+
+        #expect(result.status == .succeeded)
+
+        let seoulState = await policy.currentState(for: .seoulCapitalSnapshot)
+        #expect(seoulState.activeSnapshotID == "seoul-2026.03")
+
+        let bundledState = await policy.currentState(for: .bundledSample)
+        #expect(bundledState.activeSnapshotID == nil)
+        #expect(bundledState.lastKnownGoodSnapshotID == nil)
+
+        let nationalState = await policy.currentState(for: .koreaNational)
+        #expect(nationalState.activeSnapshotID == nil)
+        #expect(nationalState.lastKnownGoodSnapshotID == nil)
+
+        let seoulHistory = await historyStore.events(for: .seoulCapitalSnapshot)
+        #expect(seoulHistory.count == 2)
+        let bundledHistory = await historyStore.events(for: .bundledSample)
+        #expect(bundledHistory.isEmpty)
+        let nationalHistory = await historyStore.events(for: .koreaNational)
+        #expect(nationalHistory.isEmpty)
+    }
+
+    @Test
+    func projectionAndHistoryRemainSourceScopedAfterSeoulActivation() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: store,
+            historyStore: historyStore
+        )
+        let projector = DefaultSnapshotActivationStateProjector(
+            activationPolicy: policy,
+            historyStore: historyStore,
+            versionStore: store,
+            nowProvider: { "2026-03-12T00:00:00Z" }
+        )
+
+        await seedCompatibleSnapshot(
+            store: store,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            version: "2026.03"
+        )
+        await seedCompatibleSnapshot(
+            store: store,
+            source: .koreaNational,
+            snapshotID: "national-2026.03",
+            version: "2026.03"
+        )
+
+        _ = await executor.execute(
+            .promote(
+                PromoteSnapshotCommand(
+                    source: .seoulCapitalSnapshot,
+                    snapshotID: "seoul-2026.03",
+                    context: .init(
+                        commandID: "cmd-projection-seoul",
+                        requestedAt: "2026-03-12T00:00:00Z",
+                        trigger: .operatorConfirmed
+                    )
+                )
+            )
+        )
+
+        let seoulProjection = await projector.project(for: .seoulCapitalSnapshot)
+        #expect(seoulProjection.activeSnapshotID == "seoul-2026.03")
+        #expect(seoulProjection.hasActivationHistory == true)
+        #expect(seoulProjection.latestActivationEvent?.metadata.source == .seoulCapitalSnapshot)
+
+        let nationalProjection = await projector.project(for: .koreaNational)
+        #expect(nationalProjection.activeSnapshotID == nil)
+        #expect(nationalProjection.latestCandidateSnapshotID == "national-2026.03")
+        #expect(nationalProjection.hasActivationHistory == false)
+        #expect(nationalProjection.latestActivationEvent == nil)
+
+        let bundledProjection = await projector.project(for: .bundledSample)
+        #expect(bundledProjection.activeSnapshotID == nil)
+        #expect(bundledProjection.latestCandidateSnapshotID == nil)
+        #expect(bundledProjection.hasActivationHistory == false)
+    }
+
+    @Test
+    func mixedSourceSettingsStateKeepsOperatorHistoryAndControlsScoped() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let refreshStateStore = InMemoryDatasetRefreshStateStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let projector = DefaultSnapshotActivationStateProjector(
+            activationPolicy: policy,
+            historyStore: historyStore,
+            versionStore: store,
+            nowProvider: { "2026-03-12T00:00:00Z" }
+        )
+        let catalogRepository = LocalMobilityCatalogRepository(
+            liveMetadataEnricher: CatalogLiveMetadataEnricher(
+                versionStore: store,
+                activationPolicy: policy,
+                refreshStateStore: refreshStateStore,
+                activationStateProjector: projector
+            )
+        )
+        let executor = DefaultSnapshotActivationExecutor(
+            activationPolicy: policy,
+            versionStore: store,
+            historyStore: historyStore
+        )
+
+        await seedCompatibleSnapshot(
+            store: store,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            version: "2026.03"
+        )
+        await seedCompatibleSnapshot(
+            store: store,
+            source: .koreaNational,
+            snapshotID: "national-2026.03",
+            version: "2026.03"
+        )
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.03")
+
+        await historyStore.append(
+            SnapshotActivationHistoryEvent(
+                eventID: "seoul-history-1",
+                type: .promoteSucceeded,
+                timestamp: "2026-03-12T01:00:00Z",
+                metadata: SnapshotActivationEventMetadata(
+                    source: .seoulCapitalSnapshot,
+                    snapshotID: "seoul-2026.03",
+                    datasetVersion: "2026.03",
+                    commandID: "cmd-seoul-history",
+                    commandAction: .promote,
+                    trigger: .operatorConfirmed,
+                    requestedBy: nil,
+                    note: nil,
+                    validation: nil,
+                    guardDecision: nil,
+                    execution: nil
+                ),
+                result: SnapshotActivationEventResult(
+                    status: .succeeded,
+                    reasonCode: nil,
+                    message: "Seoul promoted."
+                )
+            )
+        )
+
+        let bundledViewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .bundledSample)) },
+            catalogRepository: catalogRepository,
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            activationHistoryStore: historyStore,
+            userDefaults: UserDefaults(suiteName: "CrossSourceLiveRefreshRegressionTests.settings.bundled.\(UUID().uuidString)")!
+        )
+        await bundledViewModel.load(source: .bundledSample)
+        #expect(bundledViewModel.operatorControls == nil)
+
+        let nationalViewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .koreaNational)) },
+            catalogRepository: catalogRepository,
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            activationHistoryStore: historyStore,
+            userDefaults: UserDefaults(suiteName: "CrossSourceLiveRefreshRegressionTests.settings.national.\(UUID().uuidString)")!
+        )
+        await nationalViewModel.load(source: .koreaNational)
+
+        let nationalControls = try #require(nationalViewModel.operatorControls)
+        #expect(nationalControls.activeSnapshotID == nil)
+        #expect(nationalControls.latestCandidateSnapshotID == "national-2026.03")
+        #expect(nationalControls.recentHistory.isEmpty)
+        #expect(nationalControls.latestActivationEventSummary == nil)
+
+        let seoulViewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: catalogRepository,
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            activationHistoryStore: historyStore,
+            userDefaults: UserDefaults(suiteName: "CrossSourceLiveRefreshRegressionTests.settings.seoul.\(UUID().uuidString)")!
+        )
+        await seoulViewModel.load(source: .seoulCapitalSnapshot)
+
+        let seoulControls = try #require(seoulViewModel.operatorControls)
+        #expect(seoulControls.activeSnapshotID == "seoul-2026.03")
+        #expect(seoulControls.recentHistory.count == 1)
+        #expect(seoulControls.recentHistory.first?.snapshotID == "seoul-2026.03")
+        #expect(seoulControls.recentHistory.first?.title == "Promote Succeeded")
+    }
+
+    @Test
     func bundledSampleRemainsIsolatedFromLiveActivationMetadata() async throws {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
@@ -424,4 +657,29 @@ private struct CrossSourceStubCoordinator: IngestionPipelineCoordinating {
             )
         )
     }
+}
+
+private struct StubFlowRepository: FlowRepository {
+    let dataset: FlowDataset
+
+    func fetchDataset() async throws -> FlowDataset {
+        dataset
+    }
+
+    func fetchFlowRecords() async throws -> [FlowRecord] {
+        []
+    }
+}
+
+private func makeDataset(source: FlowDatasetSource) -> FlowDataset {
+    FlowDataset(
+        datasetID: "dataset-\(source.rawValue)",
+        version: "2025.01.snapshot1",
+        source: source.rawValue,
+        createdAt: "2026-03-01T00:00:00Z",
+        spatialLevel: .city,
+        timeCoverage: "2025-01-01~2025-01-31",
+        recordsCount: source == .bundledSample ? 4 : 8,
+        schemaVersion: "1.0.0"
+    )
 }

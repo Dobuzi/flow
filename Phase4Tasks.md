@@ -199,6 +199,8 @@ Design constraints:
 - Dependency: P4-015
 - Description: Ensure activation actions for one source do not mutate runtime/metadata behavior of unrelated sources.
 - Short goal: Preserve mixed-source isolation guarantees.
+- Status: Completed (2026-03-12)
+- Notes: Added source-isolation regression coverage across executor, history store, activation projection, catalog enrichment, activation-aware query resolution, and Settings operator state. Verified that Seoul live activation remains scoped to Seoul, while `bundledSample` and `koreaNational` retain clean, unaffected runtime and operator metadata behavior.
 
 ## P4-017 — Add activation history consistency and audit tests
 - Priority: P1
