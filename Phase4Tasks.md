@@ -186,11 +186,13 @@ Design constraints:
 
 ### M4-6 Regression and Rollout Safety
 
-## P4-015 — Add activation execution integration tests
+## P4-015 — Add operator timeline/history visibility and final rollout-safety regression coverage
 - Priority: P0
 - Dependency: P4-008, P4-009, P4-010
-- Description: Cover successful promote, blocked promote, demote, rollback success, and no-safe-rollback outcomes.
-- Short goal: Lock activation/rollback lifecycle correctness.
+- Description: Surface a minimal recent activation timeline in the operator controls UI and lock in regression coverage for mixed command/guard/execution/history/projection/UI behavior.
+- Short goal: Make recent operator activation activity visible and keep rollout-safety behavior regression-protected.
+- Status: Completed (2026-03-12)
+- Notes: Added recent activation history visibility to the Settings operator controls surface using source-scoped history store queries and concise timeline entries. Added regression coverage for newest-first event ordering, source scoping, and operator history state exposure while preserving static-source isolation. Simulator verification confirmed recent promote/demote/rollback history visibility for a live-capable source, action-specific confirmation dialogs still working, and no bogus operator history for `bundledSample`.
 
 ## P4-016 — Add cross-source activation safety regression tests
 - Priority: P0

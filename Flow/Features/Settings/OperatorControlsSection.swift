@@ -29,6 +29,44 @@ struct OperatorControlsSection: View {
             operatorActionRow(controls.demote, action: onDemote)
             operatorActionRow(controls.rollback, action: onRollback)
 
+            if !controls.recentHistory.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Recent Activity")
+                        .font(.subheadline.weight(.semibold))
+
+                    ForEach(controls.recentHistory) { event in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(event.title)
+                                    .font(.caption.weight(.semibold))
+                                Spacer()
+                                Text(event.status)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            if let snapshotID = event.snapshotID {
+                                Text(snapshotID)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Text(event.timestamp)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+
+                            if let detail = event.detail {
+                                Text(detail)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+
             if let activationFeedback {
                 Text(activationFeedback)
                     .font(.caption)

@@ -11,6 +11,7 @@ struct SettingsViewModelTests {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
 
         let viewModel = SettingsViewModel(
             flowRepositoryBuilder: { _ in StubFlowRepository(dataset: dataset) },
@@ -24,6 +25,7 @@ struct SettingsViewModelTests {
             versionStore: store,
             activationPolicy: policy,
             activationExecutor: executor,
+            activationHistoryStore: historyStore,
             userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.static.\(UUID().uuidString)")!
         )
 
@@ -37,6 +39,7 @@ struct SettingsViewModelTests {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
 
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.03", datasetVersion: "2026.03", indexedAt: "2026-03-08T01:00:00Z")
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.04", datasetVersion: "2026.04", indexedAt: "2026-04-08T01:00:00Z")
@@ -74,6 +77,7 @@ struct SettingsViewModelTests {
             versionStore: store,
             activationPolicy: policy,
             activationExecutor: executor,
+            activationHistoryStore: historyStore,
             userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.live.\(UUID().uuidString)")!
         )
 
@@ -85,6 +89,7 @@ struct SettingsViewModelTests {
         #expect(controls.promote.availability == OperatorActionAvailability.requiresConfirmation)
         #expect(controls.demote.availability == OperatorActionAvailability.blocked)
         #expect(controls.rollback.availability == OperatorActionAvailability.blocked)
+        #expect(controls.recentHistory.isEmpty)
     }
 
     @Test
@@ -92,6 +97,7 @@ struct SettingsViewModelTests {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
 
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.03", datasetVersion: "2026.03", indexedAt: "2026-03-08T01:00:00Z")
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.04", datasetVersion: "2026.04", indexedAt: "2026-04-08T01:00:00Z")
@@ -131,6 +137,7 @@ struct SettingsViewModelTests {
             versionStore: store,
             activationPolicy: policy,
             activationExecutor: executor,
+            activationHistoryStore: historyStore,
             userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.confirm.\(UUID().uuidString)")!
         )
 
@@ -155,6 +162,7 @@ struct SettingsViewModelTests {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
 
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.03", datasetVersion: "2026.03", indexedAt: "2026-03-08T01:00:00Z")
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.02", datasetVersion: "2026.02", indexedAt: "2026-02-08T01:00:00Z")
@@ -195,6 +203,7 @@ struct SettingsViewModelTests {
             versionStore: store,
             activationPolicy: policy,
             activationExecutor: executor,
+            activationHistoryStore: historyStore,
             userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.demote.\(UUID().uuidString)")!
         )
 
@@ -215,6 +224,7 @@ struct SettingsViewModelTests {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
 
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.03", datasetVersion: "2026.03", indexedAt: "2026-03-08T01:00:00Z")
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.02", datasetVersion: "2026.02", indexedAt: "2026-02-08T01:00:00Z")
@@ -255,6 +265,7 @@ struct SettingsViewModelTests {
             versionStore: store,
             activationPolicy: policy,
             activationExecutor: executor,
+            activationHistoryStore: historyStore,
             userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.rollback.\(UUID().uuidString)")!
         )
 
@@ -275,6 +286,7 @@ struct SettingsViewModelTests {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
 
         let descriptor = makeDescriptor(
             source: .seoulCapitalSnapshot,
@@ -310,6 +322,7 @@ struct SettingsViewModelTests {
             versionStore: store,
             activationPolicy: policy,
             activationExecutor: executor,
+            activationHistoryStore: historyStore,
             userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.blocked.\(UUID().uuidString)")!
         )
 
@@ -326,6 +339,7 @@ struct SettingsViewModelTests {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
 
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.04", datasetVersion: "2026.04", indexedAt: "2026-04-08T01:00:00Z")
 
@@ -363,6 +377,7 @@ struct SettingsViewModelTests {
             versionStore: store,
             activationPolicy: policy,
             activationExecutor: executor,
+            activationHistoryStore: historyStore,
             userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.allowed.\(UUID().uuidString)")!
         )
 
@@ -380,6 +395,7 @@ struct SettingsViewModelTests {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
 
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.03", datasetVersion: "2026.03", indexedAt: "2026-03-08T01:00:00Z")
         await seed(store: store, source: .seoulCapitalSnapshot, snapshotID: "seoul-2026.04", datasetVersion: "2026.04", indexedAt: "2026-04-08T01:00:00Z")
@@ -419,6 +435,7 @@ struct SettingsViewModelTests {
             versionStore: store,
             activationPolicy: policy,
             activationExecutor: executor,
+            activationHistoryStore: historyStore,
             userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.confirmed-run.\(UUID().uuidString)")!
         )
 
@@ -430,6 +447,161 @@ struct SettingsViewModelTests {
         #expect(commands.count == 1)
         #expect(commands.first?.context.trigger == .operatorConfirmed)
         #expect(viewModel.confirmationPrompt == nil)
+    }
+
+    @Test
+    func liveSourceShowsRecentActivationHistoryInNewestFirstOrder() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+
+        let descriptor = makeDescriptor(
+            source: .seoulCapitalSnapshot,
+            live: makeLiveMetadata(
+                source: .seoulCapitalSnapshot,
+                activation: DatasetActivationMetadata(
+                    activeSnapshotID: "seoul-2026.03",
+                    lastKnownGoodSnapshotID: "seoul-2026.02",
+                    latestCandidateSnapshotID: "seoul-2026.04",
+                    latestCandidateDatasetVersion: "2026.04",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    rollbackAvailable: true,
+                    latestActivationEventType: "rollback_succeeded",
+                    latestActivationEventAt: "2026-03-10T11:00:00Z",
+                    operatorActivationStatus: .activeRollbackReady,
+                    promoteRequiresConfirmation: true,
+                    demoteRequiresConfirmation: true,
+                    rollbackRequiresConfirmation: true
+                )
+            )
+        )
+
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "older",
+                type: .promoteSucceeded,
+                timestamp: "2026-03-10T09:00:00Z",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.03",
+                status: .succeeded,
+                message: "Promote completed."
+            )
+        )
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "newer",
+                type: .rollbackBlocked,
+                timestamp: "2026-03-10T11:00:00Z",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.02",
+                status: .blocked,
+                message: "No safe rollback target."
+            )
+        )
+
+        let viewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: StubCatalogRepository(
+                catalog: MobilityDatasetCatalog(
+                    version: "1",
+                    defaultSource: .seoulCapitalSnapshot,
+                    datasets: [descriptor]
+                )
+            ),
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            activationHistoryStore: historyStore,
+            userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.history.\(UUID().uuidString)")!
+        )
+
+        await viewModel.load(source: .seoulCapitalSnapshot)
+
+        let controls = try #require(viewModel.operatorControls)
+        #expect(controls.recentHistory.count == 2)
+        #expect(controls.recentHistory[0].title == "Rollback Blocked")
+        #expect(controls.recentHistory[0].status == "Blocked")
+        #expect(controls.recentHistory[0].snapshotID == "seoul-2026.02")
+        #expect(controls.recentHistory[0].detail == "No safe rollback target.")
+        #expect(controls.recentHistory[1].title == "Promote Succeeded")
+        #expect(controls.recentHistory[1].status == "Succeeded")
+        #expect(controls.recentHistory[1].snapshotID == "seoul-2026.03")
+    }
+
+    @Test
+    func historyIsScopedToSelectedSource() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+
+        let descriptor = makeDescriptor(
+            source: .seoulCapitalSnapshot,
+            live: makeLiveMetadata(
+                source: .seoulCapitalSnapshot,
+                activation: DatasetActivationMetadata(
+                    activeSnapshotID: "seoul-2026.03",
+                    lastKnownGoodSnapshotID: "seoul-2026.02",
+                    latestCandidateSnapshotID: "seoul-2026.04",
+                    latestCandidateDatasetVersion: "2026.04",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    rollbackAvailable: true,
+                    latestActivationEventType: nil,
+                    latestActivationEventAt: nil,
+                    operatorActivationStatus: .activeRollbackReady,
+                    promoteRequiresConfirmation: true,
+                    demoteRequiresConfirmation: true,
+                    rollbackRequiresConfirmation: true
+                )
+            )
+        )
+
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "seoul",
+                type: .promoteSucceeded,
+                timestamp: "2026-03-10T10:00:00Z",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                status: .succeeded
+            )
+        )
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "national",
+                type: .rollbackSucceeded,
+                timestamp: "2026-03-10T11:00:00Z",
+                source: .koreaNational,
+                snapshotID: "national-2026.03",
+                status: .succeeded
+            )
+        )
+
+        let viewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: StubCatalogRepository(
+                catalog: MobilityDatasetCatalog(
+                    version: "1",
+                    defaultSource: .seoulCapitalSnapshot,
+                    datasets: [descriptor]
+                )
+            ),
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            activationHistoryStore: historyStore,
+            userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.history-scope.\(UUID().uuidString)")!
+        )
+
+        await viewModel.load(source: .seoulCapitalSnapshot)
+
+        let controls = try #require(viewModel.operatorControls)
+        #expect(controls.recentHistory.count == 1)
+        #expect(controls.recentHistory[0].snapshotID == "seoul-2026.04")
+        #expect(controls.recentHistory[0].title == "Promote Succeeded")
     }
 
     private func makeDataset(source: FlowDatasetSource) -> FlowDataset {
@@ -524,6 +696,51 @@ struct SettingsViewModelTests {
             isIngestionCandidate: true,
             indexedAt: indexedAt
         )
+    }
+
+    private func makeHistoryEvent(
+        eventID: String,
+        type: SnapshotActivationEventType,
+        timestamp: String,
+        source: FlowDatasetSource,
+        snapshotID: String?,
+        status: SnapshotActivationEventStatus,
+        message: String? = nil
+    ) -> SnapshotActivationHistoryEvent {
+        SnapshotActivationHistoryEvent(
+            eventID: eventID,
+            type: type,
+            timestamp: timestamp,
+            metadata: SnapshotActivationEventMetadata(
+                source: source,
+                snapshotID: snapshotID,
+                datasetVersion: snapshotID,
+                commandID: "cmd-\(eventID)",
+                commandAction: action(for: type),
+                trigger: .operatorManual,
+                requestedBy: nil,
+                note: nil,
+                validation: nil,
+                guardDecision: nil,
+                execution: nil
+            ),
+            result: SnapshotActivationEventResult(
+                status: status,
+                reasonCode: nil,
+                message: message
+            )
+        )
+    }
+
+    private func action(for type: SnapshotActivationEventType) -> SnapshotActivationCommand.Action {
+        switch type {
+        case .promoteRequested, .promoteSucceeded, .promoteBlocked, .promoteFailed:
+            return .promote
+        case .demoteRequested, .demoteSucceeded, .demoteBlocked, .demoteFailed:
+            return .demote
+        case .rollbackRequested, .rollbackSucceeded, .rollbackBlocked, .rollbackFailed:
+            return .rollback
+        }
     }
 }
 

@@ -37,6 +37,16 @@ struct OperatorControlsPanelState: Hashable {
     let promote: OperatorActionControl
     let demote: OperatorActionControl
     let rollback: OperatorActionControl
+    let recentHistory: [OperatorTimelineEntry]
+}
+
+struct OperatorTimelineEntry: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let timestamp: String
+    let snapshotID: String?
+    let status: String
+    let detail: String?
 }
 
 struct OperatorConfirmationPrompt: Identifiable, Hashable {
@@ -84,6 +94,7 @@ final class SettingsViewModel: ObservableObject {
     private let versionStore: DatasetVersionStoring
     private let activationPolicy: SnapshotActivationPolicying
     private let activationExecutor: SnapshotActivationExecuting
+    private let activationHistoryStore: SnapshotActivationHistoryStoring
     private let userDefaults: UserDefaults
 
     private let preferredSpatialLevelKey = "settings.preferred_spatial_level"
@@ -102,6 +113,7 @@ final class SettingsViewModel: ObservableObject {
             versionStore: MobilityRepositoryFactory.sharedVersionStore,
             historyStore: MobilityRepositoryFactory.sharedActivationHistoryStore
         ),
+        activationHistoryStore: SnapshotActivationHistoryStoring = MobilityRepositoryFactory.sharedActivationHistoryStore,
         userDefaults: UserDefaults = .standard
     ) {
         self.flowRepositoryBuilder = flowRepositoryBuilder
@@ -110,6 +122,7 @@ final class SettingsViewModel: ObservableObject {
         self.versionStore = versionStore
         self.activationPolicy = activationPolicy
         self.activationExecutor = activationExecutor
+        self.activationHistoryStore = activationHistoryStore
         self.userDefaults = userDefaults
 
         preferredSpatialLevelRaw = userDefaults.string(forKey: preferredSpatialLevelKey)
@@ -227,6 +240,13 @@ final class SettingsViewModel: ObservableObject {
         } else {
             nil
         }
+        let recentHistory = await activationHistoryStore.query(
+            SnapshotActivationHistoryQuery(
+                source: source,
+                limit: 5,
+                sortOrder: .newestFirst
+            )
+        )
 
         return OperatorControlsPanelState(
             source: source,
@@ -252,7 +272,8 @@ final class SettingsViewModel: ObservableObject {
                 action: .rollback,
                 detail: activation.lastKnownGoodSnapshotID.map { "Restore \($0)" } ?? "No rollback target",
                 decision: rollbackDecision
-            )
+            ),
+            recentHistory: recentHistory.map(makeTimelineEntry(from:))
         )
     }
 
@@ -352,6 +373,46 @@ final class SettingsViewModel: ObservableObject {
             return nil
         }
         return "\(type.replacingOccurrences(of: "_", with: " ")) at \(at)"
+    }
+
+    private func makeTimelineEntry(from event: SnapshotActivationHistoryEvent) -> OperatorTimelineEntry {
+        OperatorTimelineEntry(
+            id: event.eventID,
+            title: humanizedEventTitle(event.type),
+            timestamp: event.timestamp,
+            snapshotID: event.metadata.snapshotID
+                ?? event.metadata.guardDecision?.candidateSnapshotID
+                ?? event.metadata.guardDecision?.rollbackTargetSnapshotID
+                ?? event.metadata.execution?.resultingActiveSnapshotID,
+            status: humanizedEventStatus(event.result.status),
+            detail: event.result.message ?? humanizedReasonCode(event.result.reasonCode)
+        )
+    }
+
+    private func humanizedEventTitle(_ type: SnapshotActivationEventType) -> String {
+        type.rawValue
+            .replacingOccurrences(of: "([a-z])([A-Z])", with: "$1 $2", options: .regularExpression)
+            .capitalized
+    }
+
+    private func humanizedEventStatus(_ status: SnapshotActivationEventStatus) -> String {
+        switch status {
+        case .requested:
+            return "Requested"
+        case .succeeded:
+            return "Succeeded"
+        case .blocked:
+            return "Blocked"
+        case .failed:
+            return "Failed"
+        case .noOp:
+            return "No-op"
+        }
+    }
+
+    private func humanizedReasonCode(_ reasonCode: String?) -> String? {
+        guard let reasonCode, !reasonCode.isEmpty else { return nil }
+        return reasonCode.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
     private func actionControl(
