@@ -5,11 +5,25 @@ enum SnapshotActivationHistorySortOrder: String, Hashable {
     case oldestFirst
 }
 
+struct SnapshotActivationHistoryTimeRange: Hashable {
+    let from: Date?
+    let to: Date?
+
+    init(from: Date? = nil, to: Date? = nil) {
+        self.from = from
+        self.to = to
+    }
+}
+
 struct SnapshotActivationHistoryQuery: Hashable {
     let source: FlowDatasetSource?
     let commandID: String?
     let snapshotID: String?
+    let commandAction: SnapshotActivationCommand.Action?
     let eventType: SnapshotActivationEventType?
+    let resultStatus: SnapshotActivationEventStatus?
+    let timeRange: SnapshotActivationHistoryTimeRange?
+    let offset: Int
     let limit: Int?
     let sortOrder: SnapshotActivationHistorySortOrder
 
@@ -17,14 +31,22 @@ struct SnapshotActivationHistoryQuery: Hashable {
         source: FlowDatasetSource? = nil,
         commandID: String? = nil,
         snapshotID: String? = nil,
+        commandAction: SnapshotActivationCommand.Action? = nil,
         eventType: SnapshotActivationEventType? = nil,
+        resultStatus: SnapshotActivationEventStatus? = nil,
+        timeRange: SnapshotActivationHistoryTimeRange? = nil,
+        offset: Int = 0,
         limit: Int? = nil,
         sortOrder: SnapshotActivationHistorySortOrder = .newestFirst
     ) {
         self.source = source
         self.commandID = commandID
         self.snapshotID = snapshotID
+        self.commandAction = commandAction
         self.eventType = eventType
+        self.resultStatus = resultStatus
+        self.timeRange = timeRange
+        self.offset = max(0, offset)
         self.limit = limit
         self.sortOrder = sortOrder
     }
@@ -77,7 +99,11 @@ actor InMemorySnapshotActivationHistoryStore: SnapshotActivationHistoryStoring {
             source: query.source,
             commandID: query.commandID,
             snapshotID: query.snapshotID,
+            commandAction: query.commandAction,
             eventType: query.eventType,
+            resultStatus: query.resultStatus,
+            timeRange: query.timeRange,
+            offset: query.offset,
             limit: query.limit,
             sortOrder: query.sortOrder
         )
@@ -133,7 +159,11 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
             source: query.source,
             commandID: query.commandID,
             snapshotID: query.snapshotID,
+            commandAction: query.commandAction,
             eventType: query.eventType,
+            resultStatus: query.resultStatus,
+            timeRange: query.timeRange,
+            offset: query.offset,
             limit: query.limit,
             sortOrder: query.sortOrder
         )
@@ -337,7 +367,11 @@ private struct SnapshotActivationHistoryStorage: Codable {
         source: FlowDatasetSource? = nil,
         commandID: String? = nil,
         snapshotID: String? = nil,
+        commandAction: SnapshotActivationCommand.Action? = nil,
         eventType: SnapshotActivationEventType? = nil,
+        resultStatus: SnapshotActivationEventStatus? = nil,
+        timeRange: SnapshotActivationHistoryTimeRange? = nil,
+        offset: Int = 0,
         limit: Int? = nil,
         sortOrder: SnapshotActivationHistorySortOrder = .newestFirst
     ) -> [SnapshotActivationHistoryEvent] {
@@ -352,8 +386,26 @@ private struct SnapshotActivationHistoryStorage: Codable {
         if let snapshotID {
             entries = entries.filter { $0.event.metadata.snapshotID == snapshotID }
         }
+        if let commandAction {
+            entries = entries.filter { $0.event.metadata.commandAction == commandAction }
+        }
         if let eventType {
             entries = entries.filter { $0.event.type == eventType }
+        }
+        if let resultStatus {
+            entries = entries.filter { $0.event.result.status == resultStatus }
+        }
+        if let timeRange {
+            entries = entries.filter {
+                let eventDate = parseDate($0.event.timestamp)
+                if let from = timeRange.from, eventDate < from {
+                    return false
+                }
+                if let to = timeRange.to, eventDate > to {
+                    return false
+                }
+                return true
+            }
         }
 
         entries.sort { lhs, rhs in
@@ -374,10 +426,12 @@ private struct SnapshotActivationHistoryStorage: Codable {
         }
 
         let mapped = entries.map(\.event)
+        let clampedOffset = max(0, offset)
+        let offsetSlice = clampedOffset < mapped.count ? Array(mapped.dropFirst(clampedOffset)) : []
         if let limit, limit >= 0 {
-            return Array(mapped.prefix(limit))
+            return Array(offsetSlice.prefix(limit))
         }
-        return mapped
+        return offsetSlice
     }
 
     nonisolated func persistedEvents() -> [StoredEvent] {

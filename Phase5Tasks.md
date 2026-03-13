@@ -92,6 +92,8 @@ Design constraints:
 - Dependency: P5-001
 - Description: Extend history retrieval with paging/filter/query primitives suitable for operator browsing by source, event type, result status, and time range.
 - Short goal: Support durable history inspection without overloading the Settings timeline surface.
+- Status: Complete
+- Notes: Extended `SnapshotActivationHistoryQuery` with command-action, result-status, time-range, sort-order, offset, and limit semantics while preserving the existing store protocol and recent-activity consumers. Added persisted-history regression coverage for durable browsing after reload.
 
 ### M5-2 Persistent Refresh and Activation State
 
