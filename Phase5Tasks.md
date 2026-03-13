@@ -84,6 +84,8 @@ Design constraints:
 - Dependency: P5-001
 - Description: Define load/migration behavior between empty state, legacy in-memory behavior, and persisted event logs, including corruption-safe fallback semantics.
 - Short goal: Keep durable history safe and maintainable under upgrade and recovery scenarios.
+- Status: Completed (2026-03-13)
+- Notes: Added a versioned persistence envelope for activation history files, legacy-format migration from the initial raw-storage JSON shape, partial-entry recovery for malformed files, and corrupted-file backup/fallback behavior. The store now rewrites migrated or recovered history into the current format while preserving the existing query API and deterministic ordering semantics.
 
 ## P5-003 — Add activation history query/filter model for durable browsing
 - Priority: P1

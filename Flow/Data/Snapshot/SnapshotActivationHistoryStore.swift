@@ -92,7 +92,11 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
         fileURL: URL? = nil
     ) {
         self.fileURL = fileURL ?? Self.defaultFileURL(fileManager: .default)
-        self.storage = Self.loadStorage(from: self.fileURL)
+        let loadResult = Self.loadStorage(from: self.fileURL)
+        self.storage = loadResult.storage
+        if loadResult.shouldRewrite {
+            Self.persistStorage(loadResult.storage, to: self.fileURL)
+        }
     }
 
     func append(_ event: SnapshotActivationHistoryEvent) async {
@@ -136,6 +140,81 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
     }
 
     private func persist() {
+        Self.persistStorage(storage, to: fileURL)
+    }
+
+    nonisolated private static func defaultFileURL(fileManager: FileManager) -> URL {
+        let root = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+        return root
+            .appendingPathComponent("Flow", isDirectory: true)
+            .appendingPathComponent("SnapshotActivationHistory", isDirectory: true)
+            .appendingPathComponent("activation_history.json", isDirectory: false)
+    }
+
+    nonisolated private static func loadStorage(from fileURL: URL) -> SnapshotActivationHistoryLoadResult {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return .init(storage: SnapshotActivationHistoryStorage(), shouldRewrite: false)
+        }
+
+        do {
+            let data = try Data(contentsOf: fileURL)
+            if let envelope = try? JSONDecoder.historyStoreDecoder.decode(
+                SnapshotActivationHistoryPersistenceEnvelope.self,
+                from: data
+            ) {
+                let isCurrentVersion = envelope.formatVersion == SnapshotActivationHistoryPersistenceEnvelope.currentFormatVersion
+                let storage = SnapshotActivationHistoryStorage(
+                    storedEvents: envelope.events,
+                    sequenceCounter: envelope.sequenceCounter
+                )
+                return .init(storage: storage, shouldRewrite: !isCurrentVersion)
+            }
+
+            if let legacyStorage = try? JSONDecoder.historyStoreDecoder.decode(
+                SnapshotActivationHistoryStorage.self,
+                from: data
+            ) {
+                return .init(storage: legacyStorage, shouldRewrite: true)
+            }
+
+            let recovered = recoverStorage(from: data)
+            if recovered.recoveredEntryCount > 0 {
+                backupCorruptedFile(at: fileURL)
+                FlowLogger.log(
+                    level: .warning,
+                    message: "Recovered valid activation history subset from malformed persisted file.",
+                    metadata: [
+                        "path": fileURL.path,
+                        "recovered_entries": String(recovered.recoveredEntryCount)
+                    ]
+                )
+                return .init(storage: recovered.storage, shouldRewrite: true)
+            }
+
+            backupCorruptedFile(at: fileURL)
+            FlowLogger.log(
+                level: .error,
+                message: "Persisted activation history file was unreadable. Starting with empty history.",
+                metadata: [
+                    "path": fileURL.path
+                ]
+            )
+            return .init(storage: SnapshotActivationHistoryStorage(), shouldRewrite: true)
+        } catch {
+            FlowLogger.log(
+                level: .error,
+                message: "Failed to load persisted activation history store. Starting with empty history.",
+                metadata: [
+                    "path": fileURL.path,
+                    "error": String(describing: error)
+                ]
+            )
+            return .init(storage: SnapshotActivationHistoryStorage(), shouldRewrite: false)
+        }
+    }
+
+    nonisolated private static func persistStorage(_ storage: SnapshotActivationHistoryStorage, to fileURL: URL) {
         do {
             let parent = fileURL.deletingLastPathComponent()
             try FileManager.default.createDirectory(
@@ -143,7 +222,12 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
                 withIntermediateDirectories: true,
                 attributes: nil
             )
-            let data = try JSONEncoder.historyStoreEncoder.encode(storage)
+            let envelope = SnapshotActivationHistoryPersistenceEnvelope(
+                formatVersion: SnapshotActivationHistoryPersistenceEnvelope.currentFormatVersion,
+                sequenceCounter: storage.sequenceCounter,
+                events: storage.persistedEvents()
+            )
+            let data = try JSONEncoder.historyStoreEncoder.encode(envelope)
             try data.write(to: fileURL, options: [.atomic])
         } catch {
             FlowLogger.log(
@@ -157,34 +241,72 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
         }
     }
 
-    private static func defaultFileURL(fileManager: FileManager) -> URL {
-        let root = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-            ?? fileManager.temporaryDirectory
-        return root
-            .appendingPathComponent("Flow", isDirectory: true)
-            .appendingPathComponent("SnapshotActivationHistory", isDirectory: true)
-            .appendingPathComponent("activation_history.json", isDirectory: false)
-    }
-
-    private static func loadStorage(from fileURL: URL) -> SnapshotActivationHistoryStorage {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return SnapshotActivationHistoryStorage()
+    nonisolated private static func recoverStorage(from data: Data) -> SnapshotActivationHistoryRecoveryResult {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return .init(storage: SnapshotActivationHistoryStorage(), recoveredEntryCount: 0)
         }
 
+        if let events = root["events"] as? [Any] {
+            return recoveredStorage(fromEventObjects: events)
+        }
+
+        if let eventsByID = root["eventsByID"] as? [String: Any] {
+            return recoveredStorage(fromEventObjects: Array(eventsByID.values))
+        }
+
+        return .init(storage: SnapshotActivationHistoryStorage(), recoveredEntryCount: 0)
+    }
+
+    nonisolated private static func recoveredStorage(fromEventObjects objects: [Any]) -> SnapshotActivationHistoryRecoveryResult {
+        let recoveredEvents: [SnapshotActivationHistoryStorage.StoredEvent] = objects.compactMap { object in
+            guard JSONSerialization.isValidJSONObject(object),
+                  let data = try? JSONSerialization.data(withJSONObject: object) else {
+                return nil
+            }
+            return try? JSONDecoder.historyStoreDecoder.decode(
+                SnapshotActivationHistoryStorage.StoredEvent.self,
+                from: data
+            )
+        }
+
+        guard !recoveredEvents.isEmpty else {
+            return .init(storage: SnapshotActivationHistoryStorage(), recoveredEntryCount: 0)
+        }
+
+        let maxSequence = recoveredEvents.map(\.sequence).max() ?? recoveredEvents.count
+        let storage = SnapshotActivationHistoryStorage(
+            storedEvents: recoveredEvents,
+            sequenceCounter: maxSequence
+        )
+        return .init(storage: storage, recoveredEntryCount: recoveredEvents.count)
+    }
+
+    nonisolated private static func backupCorruptedFile(at fileURL: URL) {
+        let backupURL = fileURL
+            .deletingPathExtension()
+            .appendingPathExtension("corrupted.\(safeBackupTimestamp()).json")
+
         do {
-            let data = try Data(contentsOf: fileURL)
-            return try JSONDecoder.historyStoreDecoder.decode(SnapshotActivationHistoryStorage.self, from: data)
+            if FileManager.default.fileExists(atPath: backupURL.path) {
+                try FileManager.default.removeItem(at: backupURL)
+            }
+            try FileManager.default.moveItem(at: fileURL, to: backupURL)
         } catch {
             FlowLogger.log(
-                level: .error,
-                message: "Failed to load persisted activation history store. Starting with empty history.",
+                level: .warning,
+                message: "Failed to back up corrupted activation history file.",
                 metadata: [
                     "path": fileURL.path,
                     "error": String(describing: error)
                 ]
             )
-            return SnapshotActivationHistoryStorage()
         }
+    }
+
+    nonisolated private static func safeBackupTimestamp() -> String {
+        ISO8601DateFormatter()
+            .string(from: Date())
+            .replacingOccurrences(of: ":", with: "-")
     }
 }
 
@@ -195,9 +317,16 @@ private struct SnapshotActivationHistoryStorage: Codable {
     }
 
     private var eventsByID: [String: StoredEvent] = [:]
-    private var sequenceCounter: Int = 0
+    fileprivate var sequenceCounter: Int = 0
 
     nonisolated init() {}
+
+    nonisolated init(storedEvents: [StoredEvent], sequenceCounter: Int) {
+        self.sequenceCounter = sequenceCounter
+        for storedEvent in storedEvents.sorted(by: { $0.sequence < $1.sequence }) {
+            eventsByID[storedEvent.event.eventID] = storedEvent
+        }
+    }
 
     nonisolated mutating func append(_ event: SnapshotActivationHistoryEvent) {
         sequenceCounter += 1
@@ -251,6 +380,15 @@ private struct SnapshotActivationHistoryStorage: Codable {
         return mapped
     }
 
+    nonisolated func persistedEvents() -> [StoredEvent] {
+        Array(eventsByID.values).sorted { lhs, rhs in
+            if lhs.sequence != rhs.sequence {
+                return lhs.sequence < rhs.sequence
+            }
+            return lhs.event.eventID < rhs.event.eventID
+        }
+    }
+
     nonisolated private func parseDate(_ value: String) -> Date {
         if let date = Self.iso8601WithFractionalSeconds.date(from: value) {
             return date
@@ -272,6 +410,24 @@ private struct SnapshotActivationHistoryStorage: Codable {
         formatter.formatOptions = [.withInternetDateTime]
         return formatter
     }()
+}
+
+private struct SnapshotActivationHistoryPersistenceEnvelope: Codable {
+    static let currentFormatVersion = 2
+
+    let formatVersion: Int
+    let sequenceCounter: Int
+    let events: [SnapshotActivationHistoryStorage.StoredEvent]
+}
+
+private struct SnapshotActivationHistoryLoadResult {
+    let storage: SnapshotActivationHistoryStorage
+    let shouldRewrite: Bool
+}
+
+private struct SnapshotActivationHistoryRecoveryResult {
+    let storage: SnapshotActivationHistoryStorage
+    let recoveredEntryCount: Int
 }
 
 private extension JSONEncoder {

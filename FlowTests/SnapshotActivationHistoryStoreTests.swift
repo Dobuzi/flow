@@ -225,6 +225,106 @@ struct SnapshotActivationHistoryStoreTests {
         #expect(recent.map(\.eventID) == ["evt-2", "evt-1"])
     }
 
+    @Test
+    func persistentStoreMigratesLegacyRawStorageFormat() async throws {
+        let fileURL = temporaryHistoryFileURL(testName: #function)
+        let legacyEvent = makeRequestedEvent(
+            eventID: "evt-legacy",
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.05",
+            commandID: "cmd-legacy",
+            timestamp: "2026-03-10T07:00:00Z"
+        )
+        try writeLegacyStorageFile(
+            at: fileURL,
+            storedEvents: [
+                [
+                    "event": eventJSONObject(legacyEvent),
+                    "sequence": 1
+                ]
+            ],
+            sequenceCounter: 1
+        )
+
+        let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        let events = await reloaded.events()
+
+        #expect(events.map(\.eventID) == ["evt-legacy"])
+        #expect(await reloaded.events(commandID: "cmd-legacy").map(\.eventID) == ["evt-legacy"])
+
+        let persistedRoot = try persistedJSONObject(at: fileURL)
+        #expect((persistedRoot["formatVersion"] as? Int) == 2)
+    }
+
+    @Test
+    func persistentStoreRecoversValidSubsetFromMalformedEnvelopeEntries() async throws {
+        let fileURL = temporaryHistoryFileURL(testName: #function)
+        let validEvent = makeRequestedEvent(
+            eventID: "evt-valid",
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.06",
+            commandID: "cmd-valid",
+            timestamp: "2026-03-10T08:00:00Z"
+        )
+        let malformedEnvelope: [String: Any] = [
+            "formatVersion": 2,
+            "sequenceCounter": 3,
+            "events": [
+                [
+                    "event": eventJSONObject(validEvent),
+                    "sequence": 1
+                ],
+                [
+                    "event": ["bad": "shape"],
+                    "sequence": "oops"
+                ]
+            ]
+        ]
+        try writeJSONObject(malformedEnvelope, to: fileURL)
+
+        let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        let events = await reloaded.events()
+
+        #expect(events.map(\.eventID) == ["evt-valid"])
+        #expect(await reloaded.events(snapshotID: "seoul-2026.06").map(\.eventID) == ["evt-valid"])
+
+        let backupFiles = try corruptedBackups(for: fileURL)
+        #expect(backupFiles.count == 1)
+    }
+
+    @Test
+    func corruptedPersistedFileFallsBackToStableEmptyStateAndBacksUpOriginal() async throws {
+        let fileURL = temporaryHistoryFileURL(testName: #function)
+        let parent = fileURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(
+            at: parent,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
+        try Data("not-json".utf8).write(to: fileURL, options: [.atomic])
+
+        let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        let events = await reloaded.events()
+
+        #expect(events.isEmpty)
+
+        let backupFiles = try corruptedBackups(for: fileURL)
+        #expect(backupFiles.count == 1)
+
+        await reloaded.append(
+            makeRequestedEvent(
+                eventID: "evt-new",
+                source: .koreaNational,
+                snapshotID: "national-2026.03",
+                commandID: "cmd-new",
+                timestamp: "2026-03-10T09:00:00Z"
+            )
+        )
+
+        let persistedRoot = try persistedJSONObject(at: fileURL)
+        #expect((persistedRoot["formatVersion"] as? Int) == 2)
+    }
+
     private func makeRequestedEvent(
         eventID: String,
         source: FlowDatasetSource,
@@ -292,5 +392,53 @@ struct SnapshotActivationHistoryStoreTests {
             .appendingPathComponent("FlowTests", isDirectory: true)
             .appendingPathComponent("ActivationHistory", isDirectory: true)
             .appendingPathComponent("\(testName)-\(UUID().uuidString).json", isDirectory: false)
+    }
+
+    private func writeLegacyStorageFile(
+        at url: URL,
+        storedEvents: [[String: Any]],
+        sequenceCounter: Int
+    ) throws {
+        try writeJSONObject(
+            [
+                "eventsByID": Dictionary(
+                    uniqueKeysWithValues: storedEvents.enumerated().map { index, storedEvent in
+                        ("legacy-\(index)", storedEvent)
+                    }
+                ),
+                "sequenceCounter": sequenceCounter
+            ],
+            to: url
+        )
+    }
+
+    private func writeJSONObject(_ object: [String: Any], to url: URL) throws {
+        let parent = url.deletingLastPathComponent()
+        try FileManager.default.createDirectory(
+            at: parent,
+            withIntermediateDirectories: true,
+            attributes: nil
+        )
+        let data = try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys, .prettyPrinted])
+        try data.write(to: url, options: [.atomic])
+    }
+
+    private func eventJSONObject(_ event: SnapshotActivationHistoryEvent) -> [String: Any] {
+        let data = try! JSONEncoder().encode(event)
+        return try! JSONSerialization.jsonObject(with: data) as! [String: Any]
+    }
+
+    private func persistedJSONObject(at url: URL) throws -> [String: Any] {
+        let data = try Data(contentsOf: url)
+        return try JSONSerialization.jsonObject(with: data) as! [String: Any]
+    }
+
+    private func corruptedBackups(for originalURL: URL) throws -> [URL] {
+        let directory = originalURL.deletingLastPathComponent()
+        let base = originalURL.deletingPathExtension().lastPathComponent
+        return try FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil
+        ).filter { $0.lastPathComponent.hasPrefix("\(base).corrupted.") }
     }
 }
