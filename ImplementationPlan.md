@@ -363,9 +363,50 @@ Source isolation guarantees:
 - [x] Seoul live-capable semantics do not pollute unrelated sources.
 - [x] `koreaNational` remains isolated from Seoul-specific live refresh mechanics.
 
-## 14. Phase 4 Preview
-- Live activation rollout controls (operator-safe promotion/demotion of candidates).
-- Refresh/activation UI surfaces for status, eligibility, and manual control.
-- Source health observability (audit-friendly status timelines and failure diagnostics).
-- Operational safety tooling (guarded activation flows and explicit rollback actions).
-- Production-grade persistence and audit trail for snapshot/version/activation events.
+## 14. Phase 4 Completion Summary
+Phase 4 (operator-safe live activation rollout) is complete.
+
+Implemented outcomes:
+- Operator-safe activation command model implemented for promote, demote, and rollback workflows.
+- Guarded execution semantics implemented with validation, guard decisions, confirmation hardening, and explicit blocked/no-op/failed outcomes.
+- History/audit model and in-memory store implemented with deterministic ordering and source-scoped retrieval.
+- Operator metadata enrichment implemented for active snapshot, last-known-good, latest candidate, rollback readiness, and recent activation context.
+- Minimal operator controls UI implemented in Settings with action-specific confirmation flows and recent activity visibility.
+- Rollout-safety and cross-source regression protection implemented without changing the runtime data/query architecture.
+
+## 15. Phase 4 Rollout Readiness Checklist
+
+Architecture:
+- [x] Activation command / guard / execution boundaries remain intact.
+- [x] Runtime data/query architecture (`DTO -> Mapper -> DataSource -> Repository`) remains unchanged.
+- [x] Source scoping remains intact across activation state, history, metadata, and query resolution.
+
+Safety:
+- [x] Promote, demote, and rollback flows are guarded before mutation.
+- [x] Last-known-good preservation is verified for promote/rollback-safe transitions.
+- [x] Blocked, no-op, and failed actions do not mutate activation state incorrectly.
+- [x] Confirmation-required actions are explicit and action-specific.
+
+Operator UX:
+- [x] Live-capable sources expose operator controls and truthful activation metadata.
+- [x] Static sources do not show bogus activation controls or history.
+- [x] Action-specific confirmation flows are implemented for promote/demote/rollback.
+- [x] Recent activity visibility is source-scoped and deterministic.
+
+Auditability:
+- [x] Requested -> terminal event sequencing is consistent for successful, blocked, failed, and no-op flows.
+- [x] Recent history ordering is deterministic and matches operator recent-activity presentation.
+- [x] Source-scoped audit trail is preserved across mixed-source scenarios.
+
+Regression:
+- [x] Mixed-source activation safety tests are passing.
+- [x] Audit/history consistency tests are passing.
+- [x] `bundledSample`, `seoulCapitalSnapshot`, and `koreaNational` paths remain backward compatible.
+
+## 16. Phase 5 Preview
+- Richer operator dashboard for source health, activation state, and rollout context.
+- Activation approval workflow and stronger operator handoff controls.
+- Persistent audit/history storage beyond the current in-memory model.
+- Operational observability and telemetry for refresh/activation health.
+- Production-safe activation rollout controls and staged rollout policies.
+- Optional multi-operator workflow support.
