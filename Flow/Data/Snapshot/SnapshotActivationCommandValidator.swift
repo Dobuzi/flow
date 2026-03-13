@@ -39,12 +39,12 @@ struct SnapshotActivationCommandValidationResult: Hashable {
     }
 }
 
-enum SnapshotActivationCommandValidationIssueSeverity: String, Hashable {
+enum SnapshotActivationCommandValidationIssueSeverity: String, Codable, Hashable {
     case warning
     case error
 }
 
-enum SnapshotActivationCommandValidationIssueCode: String, Hashable {
+enum SnapshotActivationCommandValidationIssueCode: String, Codable, Hashable {
     case missingTargetReference
     case emptySnapshotID
     case emptyDatasetVersion
@@ -57,7 +57,7 @@ enum SnapshotActivationCommandValidationIssueCode: String, Hashable {
     case rollbackUnsupportedForStaticSource
 }
 
-struct SnapshotActivationCommandValidationIssueDetail: Hashable {
+struct SnapshotActivationCommandValidationIssueDetail: Codable, Hashable {
     let code: SnapshotActivationCommandValidationIssueCode
     let severity: SnapshotActivationCommandValidationIssueSeverity
     let message: String

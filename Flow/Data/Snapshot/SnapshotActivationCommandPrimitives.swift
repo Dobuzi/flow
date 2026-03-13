@@ -134,14 +134,14 @@ enum SnapshotActivationCommandValidationIssue: String, Hashable {
     case emptyDatasetVersion
 }
 
-enum SnapshotActivationExecutionStatus: String, Hashable {
+enum SnapshotActivationExecutionStatus: String, Codable, Hashable {
     case succeeded
     case blocked
     case failed
     case noOp
 }
 
-enum SnapshotActivationBlockReason: String, Hashable {
+enum SnapshotActivationBlockReason: String, Codable, Hashable {
     case commandInvalid
     case snapshotNotFound
     case snapshotNotEligible
@@ -154,7 +154,7 @@ enum SnapshotActivationBlockReason: String, Hashable {
     case policyRejected
 }
 
-enum SnapshotActivationFailureReason: String, Hashable {
+enum SnapshotActivationFailureReason: String, Codable, Hashable {
     case policyEvaluationFailed
     case stateMutationFailed
     case persistenceFailed

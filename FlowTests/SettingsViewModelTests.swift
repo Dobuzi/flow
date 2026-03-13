@@ -282,6 +282,77 @@ struct SettingsViewModelTests {
     }
 
     @Test
+    func recentActivityRemainsCompatibleWithPersistentHistoryStore() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = RecordingActivationExecutor()
+        let historyFileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("FlowTests", isDirectory: true)
+            .appendingPathComponent("SettingsPersistentHistory", isDirectory: true)
+            .appendingPathComponent("\(UUID().uuidString).json", isDirectory: false)
+        let historyStore = PersistentSnapshotActivationHistoryStore(fileURL: historyFileURL)
+
+        await historyStore.append(
+            makeHistoryEvent(
+                eventID: "evt-persisted-promote",
+                type: .promoteSucceeded,
+                timestamp: "2026-03-11T00:00:01Z",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.04",
+                status: .succeeded,
+                message: "Promotion completed."
+            )
+        )
+
+        let descriptor = makeDescriptor(
+            source: .seoulCapitalSnapshot,
+            live: makeLiveMetadata(
+                source: .seoulCapitalSnapshot,
+                activation: DatasetActivationMetadata(
+                    activeSnapshotID: "seoul-2026.04",
+                    lastKnownGoodSnapshotID: "seoul-2026.03",
+                    latestCandidateSnapshotID: "seoul-2026.04",
+                    latestCandidateDatasetVersion: "2026.04",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    rollbackAvailable: true,
+                    latestActivationEventType: "promote_succeeded",
+                    latestActivationEventAt: "2026-03-11T00:00:01Z",
+                    operatorActivationStatus: .activeRollbackReady,
+                    promoteRequiresConfirmation: false,
+                    demoteRequiresConfirmation: true,
+                    rollbackRequiresConfirmation: true
+                )
+            )
+        )
+
+        let viewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: StubCatalogRepository(
+                catalog: MobilityDatasetCatalog(
+                    version: "1",
+                    defaultSource: .seoulCapitalSnapshot,
+                    datasets: [descriptor]
+                )
+            ),
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            activationHistoryStore: PersistentSnapshotActivationHistoryStore(fileURL: historyFileURL),
+            userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.persistentHistory.\(UUID().uuidString)")!
+        )
+
+        await viewModel.load(source: .seoulCapitalSnapshot)
+
+        let controls = try #require(viewModel.operatorControls)
+        #expect(controls.recentHistory.count == 1)
+        #expect(controls.recentHistory[0].id == "evt-persisted-promote")
+        #expect(controls.recentHistory[0].title == "Promote Succeeded")
+        #expect(controls.recentHistory[0].status == "Succeeded")
+        #expect(controls.recentHistory[0].snapshotID == "seoul-2026.04")
+    }
+
+    @Test
     func blockedActionDoesNotExecute() async throws {
         let store = InMemoryDatasetVersionStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)

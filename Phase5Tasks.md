@@ -76,6 +76,8 @@ Design constraints:
 - Dependency: None
 - Description: Add a durable activation history store implementation that persists `SnapshotActivationHistoryEvent` records locally while preserving the current store interface.
 - Short goal: Make operator audit history survive app restarts without changing activation semantics.
+- Status: Completed (2026-03-13)
+- Notes: Added `PersistentSnapshotActivationHistoryStore`, a local file-backed JSON implementation that preserves the existing async query API, deterministic ordering, and source/command/snapshot/type filtering semantics. Wired the shared repository factory to the persistent store and added persistence/reload regression coverage plus recent-activity compatibility tests.
 
 ## P5-002 — Add activation history persistence migration and fallback strategy
 - Priority: P1

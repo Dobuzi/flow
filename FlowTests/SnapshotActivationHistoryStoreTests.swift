@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Flow
 
@@ -120,6 +121,110 @@ struct SnapshotActivationHistoryStoreTests {
         #expect(limited.map(\.eventID) == ["evt-3", "evt-2"])
     }
 
+    @Test
+    func persistentStorePersistsEventsAcrossReinitialization() async throws {
+        let fileURL = temporaryHistoryFileURL(testName: #function)
+        let store = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+
+        await store.append(makeRequestedEvent(
+            eventID: "evt-1",
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            commandID: "cmd-1",
+            timestamp: "2026-03-10T04:00:00Z"
+        ))
+        await store.append(makeRequestedEvent(
+            eventID: "evt-2",
+            source: .koreaNational,
+            snapshotID: "national-2026.01",
+            commandID: "cmd-2",
+            timestamp: "2026-03-10T04:00:01Z"
+        ))
+
+        let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        let events = await reloaded.events()
+        #expect(events.map(\.eventID) == ["evt-2", "evt-1"])
+
+        let latestSeoul = await reloaded.latestEvent(for: .seoulCapitalSnapshot)
+        #expect(latestSeoul?.eventID == "evt-1")
+    }
+
+    @Test
+    func persistentStorePreservesFilteringAndOrderingAfterReload() async throws {
+        let fileURL = temporaryHistoryFileURL(testName: #function)
+        let store = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        let timestamp = "2026-03-10T05:00:00Z"
+
+        await store.append(makeRequestedEvent(
+            eventID: "evt-1",
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.01",
+            commandID: "cmd-shared",
+            timestamp: timestamp
+        ))
+        await store.append(makeRequestedEvent(
+            eventID: "evt-2",
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.02",
+            commandID: "cmd-shared",
+            timestamp: timestamp
+        ))
+        await store.append(makeBlockedRollbackEvent(
+            eventID: "evt-3",
+            source: .seoulCapitalSnapshot,
+            commandID: "cmd-shared",
+            timestamp: "2026-03-10T05:00:01Z"
+        ))
+
+        let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+
+        let bySource = await reloaded.events(for: .seoulCapitalSnapshot)
+        #expect(bySource.map(\.eventID) == ["evt-3", "evt-2", "evt-1"])
+
+        let byCommand = await reloaded.events(commandID: "cmd-shared")
+        #expect(byCommand.map(\.eventID) == ["evt-3", "evt-2", "evt-1"])
+
+        let bySnapshot = await reloaded.events(snapshotID: "seoul-2026.02")
+        #expect(bySnapshot.map(\.eventID) == ["evt-2"])
+
+        let oldestFirst = await reloaded.query(
+            .init(source: .seoulCapitalSnapshot, sortOrder: .oldestFirst)
+        )
+        #expect(oldestFirst.map(\.eventID) == ["evt-1", "evt-2", "evt-3"])
+    }
+
+    @Test
+    func persistentStoreSupportsRecentTimelineQueriesAfterReload() async throws {
+        let fileURL = temporaryHistoryFileURL(testName: #function)
+        let store = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+
+        await store.append(makeRequestedEvent(
+            eventID: "evt-1",
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.01",
+            timestamp: "2026-03-10T06:00:00Z"
+        ))
+        await store.append(makeBlockedRollbackEvent(
+            eventID: "evt-2",
+            source: .seoulCapitalSnapshot,
+            commandID: "cmd-recent",
+            timestamp: "2026-03-10T06:00:01Z"
+        ))
+        await store.append(makeRequestedEvent(
+            eventID: "evt-3",
+            source: .koreaNational,
+            snapshotID: "national-2026.01",
+            timestamp: "2026-03-10T06:00:02Z"
+        ))
+
+        let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        let recent = await reloaded.query(
+            .init(source: .seoulCapitalSnapshot, limit: 2, sortOrder: .newestFirst)
+        )
+
+        #expect(recent.map(\.eventID) == ["evt-2", "evt-1"])
+    }
+
     private func makeRequestedEvent(
         eventID: String,
         source: FlowDatasetSource,
@@ -180,5 +285,12 @@ struct SnapshotActivationHistoryStoreTests {
             eventID: eventID,
             timestamp: timestamp
         )
+    }
+
+    private func temporaryHistoryFileURL(testName: String) -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("FlowTests", isDirectory: true)
+            .appendingPathComponent("ActivationHistory", isDirectory: true)
+            .appendingPathComponent("\(testName)-\(UUID().uuidString).json", isDirectory: false)
     }
 }

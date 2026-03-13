@@ -42,45 +42,90 @@ protocol SnapshotActivationHistoryStoring {
 }
 
 actor InMemorySnapshotActivationHistoryStore: SnapshotActivationHistoryStoring {
-    private struct StoredEvent {
-        let event: SnapshotActivationHistoryEvent
-        let sequence: Int
-    }
-
-    private var eventsByID: [String: StoredEvent] = [:]
-    private var sequenceCounter: Int = 0
+    private var storage = SnapshotActivationHistoryStorage()
 
     func append(_ event: SnapshotActivationHistoryEvent) async {
-        sequenceCounter += 1
-        eventsByID[event.eventID] = StoredEvent(event: event, sequence: sequenceCounter)
+        storage.append(event)
     }
 
     func events() async -> [SnapshotActivationHistoryEvent] {
-        applyFilters()
+        storage.filteredEvents()
     }
 
     func events(for source: FlowDatasetSource) async -> [SnapshotActivationHistoryEvent] {
-        applyFilters(source: source)
+        storage.filteredEvents(source: source)
     }
 
     func events(commandID: String) async -> [SnapshotActivationHistoryEvent] {
-        applyFilters(commandID: commandID)
+        storage.filteredEvents(commandID: commandID)
     }
 
     func events(snapshotID: String) async -> [SnapshotActivationHistoryEvent] {
-        applyFilters(snapshotID: snapshotID)
+        storage.filteredEvents(snapshotID: snapshotID)
     }
 
     func events(type: SnapshotActivationEventType) async -> [SnapshotActivationHistoryEvent] {
-        applyFilters(eventType: type)
+        storage.filteredEvents(eventType: type)
     }
 
     func latestEvent(for source: FlowDatasetSource) async -> SnapshotActivationHistoryEvent? {
-        applyFilters(source: source, limit: 1).first
+        storage.filteredEvents(source: source, limit: 1).first
     }
 
     func query(_ query: SnapshotActivationHistoryQuery) async -> [SnapshotActivationHistoryEvent] {
-        applyFilters(
+        storage.filteredEvents(
+            source: query.source,
+            commandID: query.commandID,
+            snapshotID: query.snapshotID,
+            eventType: query.eventType,
+            limit: query.limit,
+            sortOrder: query.sortOrder
+        )
+    }
+}
+
+actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring {
+    private let fileURL: URL
+    private var storage: SnapshotActivationHistoryStorage
+
+    init(
+        fileURL: URL? = nil
+    ) {
+        self.fileURL = fileURL ?? Self.defaultFileURL(fileManager: .default)
+        self.storage = Self.loadStorage(from: self.fileURL)
+    }
+
+    func append(_ event: SnapshotActivationHistoryEvent) async {
+        storage.append(event)
+        persist()
+    }
+
+    func events() async -> [SnapshotActivationHistoryEvent] {
+        storage.filteredEvents()
+    }
+
+    func events(for source: FlowDatasetSource) async -> [SnapshotActivationHistoryEvent] {
+        storage.filteredEvents(source: source)
+    }
+
+    func events(commandID: String) async -> [SnapshotActivationHistoryEvent] {
+        storage.filteredEvents(commandID: commandID)
+    }
+
+    func events(snapshotID: String) async -> [SnapshotActivationHistoryEvent] {
+        storage.filteredEvents(snapshotID: snapshotID)
+    }
+
+    func events(type: SnapshotActivationEventType) async -> [SnapshotActivationHistoryEvent] {
+        storage.filteredEvents(eventType: type)
+    }
+
+    func latestEvent(for source: FlowDatasetSource) async -> SnapshotActivationHistoryEvent? {
+        storage.filteredEvents(source: source, limit: 1).first
+    }
+
+    func query(_ query: SnapshotActivationHistoryQuery) async -> [SnapshotActivationHistoryEvent] {
+        storage.filteredEvents(
             source: query.source,
             commandID: query.commandID,
             snapshotID: query.snapshotID,
@@ -90,7 +135,76 @@ actor InMemorySnapshotActivationHistoryStore: SnapshotActivationHistoryStoring {
         )
     }
 
-    private func applyFilters(
+    private func persist() {
+        do {
+            let parent = fileURL.deletingLastPathComponent()
+            try FileManager.default.createDirectory(
+                at: parent,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+            let data = try JSONEncoder.historyStoreEncoder.encode(storage)
+            try data.write(to: fileURL, options: [.atomic])
+        } catch {
+            FlowLogger.log(
+                level: .error,
+                message: "Failed to persist activation history store.",
+                metadata: [
+                    "path": fileURL.path,
+                    "error": String(describing: error)
+                ]
+            )
+        }
+    }
+
+    private static func defaultFileURL(fileManager: FileManager) -> URL {
+        let root = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+        return root
+            .appendingPathComponent("Flow", isDirectory: true)
+            .appendingPathComponent("SnapshotActivationHistory", isDirectory: true)
+            .appendingPathComponent("activation_history.json", isDirectory: false)
+    }
+
+    private static func loadStorage(from fileURL: URL) -> SnapshotActivationHistoryStorage {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return SnapshotActivationHistoryStorage()
+        }
+
+        do {
+            let data = try Data(contentsOf: fileURL)
+            return try JSONDecoder.historyStoreDecoder.decode(SnapshotActivationHistoryStorage.self, from: data)
+        } catch {
+            FlowLogger.log(
+                level: .error,
+                message: "Failed to load persisted activation history store. Starting with empty history.",
+                metadata: [
+                    "path": fileURL.path,
+                    "error": String(describing: error)
+                ]
+            )
+            return SnapshotActivationHistoryStorage()
+        }
+    }
+}
+
+private struct SnapshotActivationHistoryStorage: Codable {
+    struct StoredEvent: Codable {
+        let event: SnapshotActivationHistoryEvent
+        let sequence: Int
+    }
+
+    private var eventsByID: [String: StoredEvent] = [:]
+    private var sequenceCounter: Int = 0
+
+    nonisolated init() {}
+
+    nonisolated mutating func append(_ event: SnapshotActivationHistoryEvent) {
+        sequenceCounter += 1
+        eventsByID[event.eventID] = StoredEvent(event: event, sequence: sequenceCounter)
+    }
+
+    nonisolated func filteredEvents(
         source: FlowDatasetSource? = nil,
         commandID: String? = nil,
         snapshotID: String? = nil,
@@ -137,7 +251,7 @@ actor InMemorySnapshotActivationHistoryStore: SnapshotActivationHistoryStoring {
         return mapped
     }
 
-    private func parseDate(_ value: String) -> Date {
+    nonisolated private func parseDate(_ value: String) -> Date {
         if let date = Self.iso8601WithFractionalSeconds.date(from: value) {
             return date
         }
@@ -158,4 +272,18 @@ actor InMemorySnapshotActivationHistoryStore: SnapshotActivationHistoryStoring {
         formatter.formatOptions = [.withInternetDateTime]
         return formatter
     }()
+}
+
+private extension JSONEncoder {
+    nonisolated static var historyStoreEncoder: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return encoder
+    }
+}
+
+private extension JSONDecoder {
+    nonisolated static var historyStoreDecoder: JSONDecoder {
+        JSONDecoder()
+    }
 }

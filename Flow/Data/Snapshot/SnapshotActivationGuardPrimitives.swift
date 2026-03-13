@@ -1,13 +1,13 @@
 import Foundation
 
-enum SnapshotActivationGuardStatus: String, Hashable {
+enum SnapshotActivationGuardStatus: String, Codable, Hashable {
     case allowed
     case blocked
     case noOp
     case requiresConfirmation
 }
 
-enum SnapshotActivationGuardReason: String, Hashable {
+enum SnapshotActivationGuardReason: String, Codable, Hashable {
     case staticSource
     case commandInvalid
     case targetSnapshotNotFound

@@ -1,6 +1,6 @@
 import Foundation
 
-enum SnapshotActivationEventType: String, Hashable {
+enum SnapshotActivationEventType: String, Codable, Hashable {
     case promoteRequested
     case promoteSucceeded
     case promoteBlocked
@@ -15,14 +15,14 @@ enum SnapshotActivationEventType: String, Hashable {
     case rollbackFailed
 }
 
-enum SnapshotActivationEventTrigger: String, Hashable {
+enum SnapshotActivationEventTrigger: String, Codable, Hashable {
     case operatorManual
     case operatorConfirmed
     case recoveryRollback
     case system
 }
 
-enum SnapshotActivationEventStatus: String, Hashable {
+enum SnapshotActivationEventStatus: String, Codable, Hashable {
     case requested
     case succeeded
     case blocked
@@ -30,12 +30,12 @@ enum SnapshotActivationEventStatus: String, Hashable {
     case noOp
 }
 
-struct SnapshotActivationEventValidationSummary: Hashable {
+struct SnapshotActivationEventValidationSummary: Codable, Hashable {
     let isValid: Bool
     let issueCodes: [SnapshotActivationCommandValidationIssueCode]
 }
 
-struct SnapshotActivationEventGuardSummary: Hashable {
+struct SnapshotActivationEventGuardSummary: Codable, Hashable {
     let status: SnapshotActivationGuardStatus
     let reasons: [SnapshotActivationGuardReason]
     let details: [String]
@@ -44,7 +44,7 @@ struct SnapshotActivationEventGuardSummary: Hashable {
     let rollbackTargetSnapshotID: String?
 }
 
-struct SnapshotActivationEventExecutionSummary: Hashable {
+struct SnapshotActivationEventExecutionSummary: Codable, Hashable {
     let status: SnapshotActivationExecutionStatus
     let blockReason: SnapshotActivationBlockReason?
     let failureReason: SnapshotActivationFailureReason?
@@ -53,13 +53,13 @@ struct SnapshotActivationEventExecutionSummary: Hashable {
     let resultingActiveSnapshotID: String?
 }
 
-struct SnapshotActivationEventResult: Hashable {
+struct SnapshotActivationEventResult: Codable, Hashable {
     let status: SnapshotActivationEventStatus
     let reasonCode: String?
     let message: String?
 }
 
-struct SnapshotActivationEventMetadata: Hashable {
+struct SnapshotActivationEventMetadata: Codable, Hashable {
     let source: FlowDatasetSource
     let snapshotID: String?
     let datasetVersion: String?
@@ -73,7 +73,7 @@ struct SnapshotActivationEventMetadata: Hashable {
     let execution: SnapshotActivationEventExecutionSummary?
 }
 
-struct SnapshotActivationHistoryEvent: Hashable {
+struct SnapshotActivationHistoryEvent: Codable, Hashable {
     let eventID: String
     let type: SnapshotActivationEventType
     let timestamp: String
