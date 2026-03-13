@@ -289,7 +289,7 @@ final class MapDashboardViewModel: ObservableObject {
                 await cacheDataSource.setFlows(queryResult.flows, for: cacheKey)
                 return queryResult.flows
             } catch {
-                FlowLogger.nonFatalError(
+                _ = FlowLogger.nonFatalError(
                     scope: .dataLoad,
                     userMessage: "National query path failed. Falling back to baseline flow pipeline.",
                     underlying: error

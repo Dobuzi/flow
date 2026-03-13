@@ -2,7 +2,6 @@ import Foundation
 import Testing
 @testable import Flow
 
-@MainActor
 private final class RecordingQueryAdapter: MobilityQuerying {
     private(set) var executedQueries: [MobilityQuery] = []
 

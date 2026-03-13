@@ -1,0 +1,30 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/NationalRenderGuardrailPolicyTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRenderGuardrailPolicyTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRenderGuardrailPolicyTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRenderGuardrailPolicyTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRenderGuardrailPolicyTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRenderGuardrailPolicyTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/NationalRepositoryFactoryFallbackTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRepositoryFactoryFallbackTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRepositoryFactoryFallbackTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRepositoryFactoryFallbackTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRepositoryFactoryFallbackTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/NationalRepositoryFactoryFallbackTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SeoulCapitalDataSourceIntegrationTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SeoulCapitalExternalDatasetAdapterTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.swiftdeps"
+  }
+}

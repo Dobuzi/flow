@@ -1,0 +1,9 @@
+{
+  "datasetId": "seoul-capital-living-mobility",
+  "version": "2025.01.snapshot1",
+  "source": "Seoul Open Data Plaza (snapshot)",
+  "generatedAt": "2025-01-31T23:59:59+09:00",
+  "coverageStart": "2025-01-01",
+  "coverageEnd": "2025-01-31",
+  "schemaVersion": "1.0.0"
+}

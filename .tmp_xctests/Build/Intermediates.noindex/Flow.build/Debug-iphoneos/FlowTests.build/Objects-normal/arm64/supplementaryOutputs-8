@@ -1,0 +1,30 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/SeoulCapitalMobilityMapperTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SettingsViewModelTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SnapshotActivationCommandPrimitivesTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SnapshotActivationCommandValidatorTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandValidatorTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandValidatorTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandValidatorTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandValidatorTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandValidatorTests.swiftdeps"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityDatasetCatalogBootstrapTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityQueryAdapterTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityQueryResultTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityQueryTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryTests.swiftdeps"
+  }
+}

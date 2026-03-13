@@ -1,0 +1,37 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetRefreshSchedulerTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetSchemaValidatorTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetVersionStoreTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DefaultSnapshotMaterializerTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/ExternalDatasetAdapterContractTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ExternalDatasetAdapterContractTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ExternalDatasetAdapterContractTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ExternalDatasetAdapterContractTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ExternalDatasetAdapterContractTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_xctests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ExternalDatasetAdapterContractTests.swiftdeps"
+  }
+}

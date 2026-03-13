@@ -23,7 +23,6 @@ private struct StubLocationRepository: LocationRepository {
     }
 }
 
-@MainActor
 private final class StubMobilityQueryAdapter: MobilityQuerying {
     var result: Result<MobilityQueryResult, Error>
 

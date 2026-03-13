@@ -1,0 +1,16 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Core/UI/SourceStatusBanner.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%@ status: %@",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 19
+        }
+      }
+    ]
+  },
+  "version": 1
+}

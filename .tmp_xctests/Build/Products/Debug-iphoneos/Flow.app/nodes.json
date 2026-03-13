@@ -1,0 +1,32 @@
+[
+  {
+    "id": "KR-11",
+    "nameKo": "서울",
+    "nameEn": "Seoul",
+    "lat": 37.5665,
+    "lon": 126.9780,
+    "regionCode": "11",
+    "regionType": "city",
+    "importanceRank": 1
+  },
+  {
+    "id": "KR-26",
+    "nameKo": "부산",
+    "nameEn": "Busan",
+    "lat": 35.1796,
+    "lon": 129.0756,
+    "regionCode": "26",
+    "regionType": "city",
+    "importanceRank": 2
+  },
+  {
+    "id": "KR-27",
+    "nameKo": "대구",
+    "nameEn": "Daegu",
+    "lat": 35.8714,
+    "lon": 128.6014,
+    "regionCode": "27",
+    "regionType": "city",
+    "importanceRank": 3
+  }
+]

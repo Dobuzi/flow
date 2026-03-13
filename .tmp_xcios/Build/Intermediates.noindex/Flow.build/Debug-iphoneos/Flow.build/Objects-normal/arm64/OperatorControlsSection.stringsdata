@@ -1,0 +1,88 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/Settings/OperatorControlsSection.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Operator Controls",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 12
+        }
+      },
+      {
+        "comment": "",
+        "key": "Status",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 13
+        }
+      },
+      {
+        "comment": "",
+        "key": "Active Snapshot",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 14
+        }
+      },
+      {
+        "comment": "",
+        "key": "Last Known Good",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 15
+        }
+      },
+      {
+        "comment": "",
+        "key": "Latest Candidate",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 16
+        }
+      },
+      {
+        "comment": "",
+        "key": "Candidate Compatibility",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 18
+        }
+      },
+      {
+        "comment": "",
+        "key": "Candidate Eligible",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 21
+        }
+      },
+      {
+        "comment": "",
+        "key": "Rollback Available",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 23
+        }
+      },
+      {
+        "comment": "",
+        "key": "Latest Activation Event",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 25
+        }
+      },
+      {
+        "comment": "",
+        "key": "Recent Activity",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 34
+        }
+      }
+    ]
+  },
+  "version": 1
+}

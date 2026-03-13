@@ -1,0 +1,62 @@
+[
+  {
+    "nodeId": "11",
+    "nameKo": "서울특별시",
+    "nameEn": "Seoul",
+    "lat": 37.5665,
+    "lon": 126.9780,
+    "regionCode": "11",
+    "regionType": "province",
+    "importanceRank": 1
+  },
+  {
+    "nodeId": "26",
+    "nameKo": "부산광역시",
+    "nameEn": "Busan",
+    "lat": 35.1796,
+    "lon": 129.0756,
+    "regionCode": "26",
+    "regionType": "province",
+    "importanceRank": 2
+  },
+  {
+    "nodeId": "27",
+    "nameKo": "대구광역시",
+    "nameEn": "Daegu",
+    "lat": 35.8722,
+    "lon": 128.6025,
+    "regionCode": "27",
+    "regionType": "province",
+    "importanceRank": 3
+  },
+  {
+    "nodeId": "28",
+    "nameKo": "인천광역시",
+    "nameEn": "Incheon",
+    "lat": 37.4563,
+    "lon": 126.7052,
+    "regionCode": "28",
+    "regionType": "province",
+    "importanceRank": 4
+  },
+  {
+    "nodeId": "44",
+    "nameKo": "충청남도",
+    "nameEn": "Chungcheongnam-do",
+    "lat": 36.6588,
+    "lon": 126.6728,
+    "regionCode": "44",
+    "regionType": "province",
+    "importanceRank": 5
+  },
+  {
+    "nodeId": "50",
+    "nameKo": "제주특별자치도",
+    "nameEn": "Jeju",
+    "lat": 33.4996,
+    "lon": 126.5312,
+    "regionCode": "50",
+    "regionType": "province",
+    "importanceRank": 6
+  }
+]
