@@ -90,6 +90,7 @@ struct SettingsViewModelTests {
         #expect(controls.demote.availability == OperatorActionAvailability.blocked)
         #expect(controls.rollback.availability == OperatorActionAvailability.blocked)
         #expect(controls.recentHistory.isEmpty)
+        #expect(controls.timelineHistory.isEmpty)
     }
 
     @Test
@@ -592,8 +593,10 @@ struct SettingsViewModelTests {
 
         let controls = try #require(viewModel.operatorControls)
         #expect(controls.recentHistory.count == 2)
+        #expect(controls.timelineHistory.count == 2)
         #expect(controls.recentHistory[0].title == "Rollback Blocked")
         #expect(controls.recentHistory[0].status == "Blocked")
+        #expect(controls.recentHistory[0].sourceTitle == FlowDatasetSource.seoulCapitalSnapshot.title)
         #expect(controls.recentHistory[0].snapshotID == "seoul-2026.02")
         #expect(controls.recentHistory[0].detail == "No safe rollback target.")
         #expect(controls.recentHistory[1].title == "Promote Succeeded")
@@ -671,6 +674,7 @@ struct SettingsViewModelTests {
 
         let controls = try #require(viewModel.operatorControls)
         #expect(controls.recentHistory.count == 1)
+        #expect(controls.timelineHistory.count == 1)
         #expect(controls.recentHistory[0].snapshotID == "seoul-2026.04")
         #expect(controls.recentHistory[0].title == "Promote Succeeded")
     }
@@ -767,6 +771,7 @@ struct SettingsViewModelTests {
 
         let controls = try #require(viewModel.operatorControls)
         #expect(controls.recentHistory.count == 4)
+        #expect(controls.timelineHistory.count == 4)
         #expect(controls.recentHistory.map(\.id) == ["evt-noop", "evt-succeeded", "evt-blocked", "evt-requested"])
         #expect(controls.recentHistory.map(\.status) == ["No-op", "Succeeded", "Blocked", "Requested"])
         #expect(controls.recentHistory[0].title == "Demote Blocked")
@@ -775,6 +780,73 @@ struct SettingsViewModelTests {
         #expect(controls.recentHistory[2].title == "Rollback Blocked")
         #expect(controls.recentHistory[2].detail == "No safe rollback target.")
         #expect(controls.recentHistory[3].title == "Promote Requested")
+    }
+
+    @Test
+    func timelinePreservesNewestFirstOrderingBeyondCompactRecentActivityLimit() async throws {
+        let store = InMemoryDatasetVersionStore()
+        let policy = DefaultSnapshotActivationPolicy(versionStore: store)
+        let executor = RecordingActivationExecutor()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+
+        let descriptor = makeDescriptor(
+            source: .seoulCapitalSnapshot,
+            live: makeLiveMetadata(
+                source: .seoulCapitalSnapshot,
+                activation: DatasetActivationMetadata(
+                    activeSnapshotID: "seoul-2026.03",
+                    lastKnownGoodSnapshotID: "seoul-2026.02",
+                    latestCandidateSnapshotID: "seoul-2026.04",
+                    latestCandidateDatasetVersion: "2026.04",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    rollbackAvailable: true,
+                    latestActivationEventType: "promote_succeeded",
+                    latestActivationEventAt: "2026-03-12T12:06:00Z",
+                    operatorActivationStatus: .activeRollbackReady,
+                    promoteRequiresConfirmation: true,
+                    demoteRequiresConfirmation: true,
+                    rollbackRequiresConfirmation: true
+                )
+            )
+        )
+
+        for index in 1...6 {
+            await historyStore.append(
+                makeHistoryEvent(
+                    eventID: "evt-\(index)",
+                    type: .promoteSucceeded,
+                    timestamp: String(format: "2026-03-12T12:%02d:00Z", index),
+                    source: .seoulCapitalSnapshot,
+                    snapshotID: "seoul-2026.0\(index)",
+                    status: .succeeded
+                )
+            )
+        }
+
+        let viewModel = SettingsViewModel(
+            flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
+            catalogRepository: StubCatalogRepository(
+                catalog: MobilityDatasetCatalog(
+                    version: "1",
+                    defaultSource: .seoulCapitalSnapshot,
+                    datasets: [descriptor]
+                )
+            ),
+            versionStore: store,
+            activationPolicy: policy,
+            activationExecutor: executor,
+            activationHistoryStore: historyStore,
+            userDefaults: UserDefaults(suiteName: "SettingsViewModelTests.timeline-limit.\(UUID().uuidString)")!
+        )
+
+        await viewModel.load(source: .seoulCapitalSnapshot)
+
+        let controls = try #require(viewModel.operatorControls)
+        #expect(controls.recentHistory.count == 5)
+        #expect(controls.timelineHistory.count == 6)
+        #expect(controls.recentHistory.map(\.id) == ["evt-6", "evt-5", "evt-4", "evt-3", "evt-2"])
+        #expect(controls.timelineHistory.map(\.id) == ["evt-6", "evt-5", "evt-4", "evt-3", "evt-2", "evt-1"])
     }
 
     private func makeDataset(source: FlowDatasetSource) -> FlowDataset {

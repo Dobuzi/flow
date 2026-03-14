@@ -67,6 +67,22 @@ struct OperatorControlsSection: View {
                 .padding(.vertical, 4)
             }
 
+            if !controls.timelineHistory.isEmpty {
+                NavigationLink {
+                    ActivationTimelineView(
+                        sourceTitle: controls.source.title,
+                        entries: controls.timelineHistory
+                    )
+                } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Open Activation Timeline")
+                        Text("\(controls.timelineHistory.count) events")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
             if let activationFeedback {
                 Text(activationFeedback)
                     .font(.caption)

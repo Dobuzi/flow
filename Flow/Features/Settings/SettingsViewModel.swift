@@ -38,10 +38,12 @@ struct OperatorControlsPanelState: Hashable {
     let demote: OperatorActionControl
     let rollback: OperatorActionControl
     let recentHistory: [OperatorTimelineEntry]
+    let timelineHistory: [OperatorTimelineEntry]
 }
 
 struct OperatorTimelineEntry: Identifiable, Hashable {
     let id: String
+    let sourceTitle: String
     let title: String
     let timestamp: String
     let snapshotID: String?
@@ -240,13 +242,14 @@ final class SettingsViewModel: ObservableObject {
         } else {
             nil
         }
-        let recentHistory = await activationHistoryStore.query(
+        let timelineHistory = await activationHistoryStore.query(
             SnapshotActivationHistoryQuery(
                 source: source,
-                limit: 5,
+                limit: 50,
                 sortOrder: .newestFirst
             )
         )
+        let mappedTimelineHistory = timelineHistory.map(makeTimelineEntry(from:))
 
         return OperatorControlsPanelState(
             source: source,
@@ -273,7 +276,8 @@ final class SettingsViewModel: ObservableObject {
                 detail: activation.lastKnownGoodSnapshotID.map { "Restore \($0)" } ?? "No rollback target",
                 decision: rollbackDecision
             ),
-            recentHistory: recentHistory.map(makeTimelineEntry(from:))
+            recentHistory: Array(mappedTimelineHistory.prefix(5)),
+            timelineHistory: mappedTimelineHistory
         )
     }
 
@@ -378,6 +382,7 @@ final class SettingsViewModel: ObservableObject {
     private func makeTimelineEntry(from event: SnapshotActivationHistoryEvent) -> OperatorTimelineEntry {
         OperatorTimelineEntry(
             id: event.eventID,
+            sourceTitle: event.metadata.source.title,
             title: humanizedEventTitle(event.type),
             timestamp: event.timestamp,
             snapshotID: event.metadata.snapshotID
