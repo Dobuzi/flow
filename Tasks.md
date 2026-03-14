@@ -524,6 +524,7 @@ If architecture-impacting changes are needed, update `Design.md` first (per Sect
 11. Phase 2 (`P2-001` → `P2-015`) nationwide baseline vertical slice (completed; tracked in `Phase2Tasks.md`)
 12. Phase 3 (`P3-001` → `P3-015`) live ingestion platform foundation (completed; tracked in `Phase3Tasks.md`)
 13. Phase 4 (`P4-001` → `P4-018`) operator-safe activation rollout layer (completed; tracked in `Phase4Tasks.md`)
+14. Phase 5 (`P5-001` → `P5-019`) operational maturity and persistent rollout infrastructure (in progress; tracked in `Phase5Tasks.md`)
 
 Blocking dependencies:
 - Renderer work requires data/repository core (T-005/T-009).
@@ -592,6 +593,14 @@ Risk mitigation rules:
   - operator activation metadata enrichment for catalog/source state
   - minimal operator controls UI with action-specific confirmation flows and recent activity visibility
   - cross-source activation safety regression coverage and audit/history consistency regression protection
+
+## 6.4 Phase 5 Status Sync (2026-03-14)
+- Source of truth: `Phase5Tasks.md`
+- Status: `P5-001` through `P5-003` and `P5-019` completed
+- Completed capability set:
+  - persistent activation history storage with local durability, migration, and fallback resilience
+  - durable activation history browsing/filter query semantics for future operator audit surfaces
+  - dataset activation timeline view integrated into operator controls with source-scoped newest-first history
 
 ## 7. Suggested Initial Sprint (Vertical Slice)
 

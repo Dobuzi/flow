@@ -135,6 +135,23 @@ Design constraints:
 - Description: Add a focused history browsing interface that allows operators to inspect persisted activation events by source and filter criteria.
 - Short goal: Turn the timeline from a recent-activity snippet into a usable audit surface.
 
+## P5-019 — Dataset activation timeline view
+- Priority: P1
+- Dependency: Phase 4 activation history primitives
+- Complexity: Medium
+- Description: Introduce an operator-facing dataset activation timeline view that surfaces activation history events in a clearer chronological list.
+- Short goal: Make recent activation lifecycle history easier to inspect than the compact recent-activity panel.
+- Status: Completed (2026-03-14)
+- Deliverable: `ActivationTimelineView` integrated with operator controls and backed by `SnapshotActivationHistoryStore`.
+- Definition of Done:
+  - Timeline displays activation history events newest-first.
+  - Source-scoped activation history is respected.
+  - Static/non-live sources do not show timeline UI.
+  - Promote / demote / rollback / failed / blocked events are visible.
+  - Existing Recent Activity compact panel remains intact.
+  - No architecture changes are introduced.
+- Notes: Added `ActivationTimelineView` plus `SettingsViewModel` `timelineHistory` integration and operator-controls navigation into the full source timeline.
+
 ### M5-4 Source Health and Telemetry
 
 ## P5-010 — Introduce activation and refresh telemetry/metrics primitives
@@ -211,9 +228,10 @@ Design constraints:
 13. P5-014
 14. P5-015
 15. P5-009
-16. P5-016
-17. P5-017
-18. P5-018
+16. P5-019
+17. P5-016
+18. P5-017
+19. P5-018
 
 ## 9. Parallelization Opportunities
 - Track A (durability foundation): P5-001, P5-004, and early P5-005 design can begin in parallel once storage conventions are aligned.
