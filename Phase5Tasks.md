@@ -152,6 +152,23 @@ Design constraints:
   - No architecture changes are introduced.
 - Notes: Added `ActivationTimelineView` plus `SettingsViewModel` `timelineHistory` integration and operator-controls navigation into the full source timeline.
 
+## P5-020 — Activation timeline filtering and browsing refinements
+- Priority: P1
+- Dependency: P5-003, P5-019
+- Complexity: Medium
+- Description: Refine the activation timeline with lightweight filtering and browsing controls so operators can inspect persisted source-scoped history more effectively.
+- Short goal: Make the timeline usable for day-to-day operator browsing without expanding into a full dashboard.
+- Status: Completed (2026-03-14)
+- Deliverable: Filterable `ActivationTimelineView` with deterministic load-more browsing backed by existing history query semantics.
+- Definition of Done:
+  - Timeline keeps newest-first ordering under filters.
+  - Source-scoped activation history remains intact.
+  - Static/non-live sources do not show timeline UI.
+  - Operators can narrow timeline entries by action and status.
+  - Operators can browse beyond the default visible window with deterministic expansion.
+  - Existing Recent Activity compact panel remains intact.
+- Notes: Added action/status filters and load-more browsing in `ActivationTimelineView`, expanded the bounded timeline history window fetched for operator controls, and added pure regression coverage for filtering/order/load-more behavior.
+
 ### M5-4 Source Health and Telemetry
 
 ## P5-010 — Introduce activation and refresh telemetry/metrics primitives
@@ -229,9 +246,10 @@ Design constraints:
 14. P5-015
 15. P5-009
 16. P5-019
-17. P5-016
-18. P5-017
-19. P5-018
+17. P5-020
+18. P5-016
+19. P5-017
+20. P5-018
 
 ## 9. Parallelization Opportunities
 - Track A (durability foundation): P5-001, P5-004, and early P5-005 design can begin in parallel once storage conventions are aligned.

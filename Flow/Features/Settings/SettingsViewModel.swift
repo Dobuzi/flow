@@ -44,6 +44,9 @@ struct OperatorControlsPanelState: Hashable {
 struct OperatorTimelineEntry: Identifiable, Hashable {
     let id: String
     let sourceTitle: String
+    let eventType: SnapshotActivationEventType
+    let commandAction: SnapshotActivationCommand.Action
+    let resultStatus: SnapshotActivationEventStatus
     let title: String
     let timestamp: String
     let snapshotID: String?
@@ -245,7 +248,7 @@ final class SettingsViewModel: ObservableObject {
         let timelineHistory = await activationHistoryStore.query(
             SnapshotActivationHistoryQuery(
                 source: source,
-                limit: 50,
+                limit: 200,
                 sortOrder: .newestFirst
             )
         )
@@ -383,6 +386,9 @@ final class SettingsViewModel: ObservableObject {
         OperatorTimelineEntry(
             id: event.eventID,
             sourceTitle: event.metadata.source.title,
+            eventType: event.type,
+            commandAction: event.metadata.commandAction,
+            resultStatus: event.result.status,
             title: humanizedEventTitle(event.type),
             timestamp: event.timestamp,
             snapshotID: event.metadata.snapshotID
