@@ -144,6 +144,8 @@ Design constraints:
 - Dependency: P5-003, P5-008
 - Description: Add a focused history browsing interface that allows operators to inspect persisted activation events by source and filter criteria.
 - Short goal: Turn the timeline from a recent-activity snippet into a usable audit surface.
+- Status: Completed (2026-03-15)
+- Notes: Added `OperatorHistoryBrowserView` as a dedicated activation audit surface reachable from the operator dashboard. The browser is backed directly by `SnapshotActivationHistoryStore` query semantics with source/action/status filters, newest-first query-backed paging, shared event-to-row presentation mapping, and safe empty-state behavior for static or history-free sources.
 
 ## P5-019 — Dataset activation timeline view
 - Priority: P1

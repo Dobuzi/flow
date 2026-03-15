@@ -204,6 +204,19 @@ struct OperatorDashboardView: View {
     var body: some View {
         List {
             if let summary = viewModel.dashboard {
+                Section("Audit") {
+                    NavigationLink {
+                        OperatorHistoryBrowserView()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Open Activation Audit")
+                            Text("Browse source-scoped activation history")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
                 if let banner = OperatorDashboardPresentation.bootstrapBanner(from: summary.bootstrapStatus) {
                     Section("Startup Recovery") {
                         VStack(alignment: .leading, spacing: 6) {

@@ -41,19 +41,6 @@ struct OperatorControlsPanelState: Hashable {
     let timelineHistory: [OperatorTimelineEntry]
 }
 
-struct OperatorTimelineEntry: Identifiable, Hashable {
-    let id: String
-    let sourceTitle: String
-    let eventType: SnapshotActivationEventType
-    let commandAction: SnapshotActivationCommand.Action
-    let resultStatus: SnapshotActivationEventStatus
-    let title: String
-    let timestamp: String
-    let snapshotID: String?
-    let status: String
-    let detail: String?
-}
-
 struct OperatorConfirmationPrompt: Identifiable, Hashable {
     let command: SnapshotActivationCommand
     let title: String
@@ -252,7 +239,7 @@ final class SettingsViewModel: ObservableObject {
                 sortOrder: .newestFirst
             )
         )
-        let mappedTimelineHistory = timelineHistory.map(makeTimelineEntry(from:))
+        let mappedTimelineHistory = timelineHistory.map(OperatorHistoryPresentation.timelineEntry(from:))
 
         return OperatorControlsPanelState(
             source: source,
@@ -380,50 +367,6 @@ final class SettingsViewModel: ObservableObject {
             return nil
         }
         return "\(type.replacingOccurrences(of: "_", with: " ")) at \(at)"
-    }
-
-    private func makeTimelineEntry(from event: SnapshotActivationHistoryEvent) -> OperatorTimelineEntry {
-        OperatorTimelineEntry(
-            id: event.eventID,
-            sourceTitle: event.metadata.source.title,
-            eventType: event.type,
-            commandAction: event.metadata.commandAction,
-            resultStatus: event.result.status,
-            title: humanizedEventTitle(event.type),
-            timestamp: event.timestamp,
-            snapshotID: event.metadata.snapshotID
-                ?? event.metadata.guardDecision?.candidateSnapshotID
-                ?? event.metadata.guardDecision?.rollbackTargetSnapshotID
-                ?? event.metadata.execution?.resultingActiveSnapshotID,
-            status: humanizedEventStatus(event.result.status),
-            detail: event.result.message ?? humanizedReasonCode(event.result.reasonCode)
-        )
-    }
-
-    private func humanizedEventTitle(_ type: SnapshotActivationEventType) -> String {
-        type.rawValue
-            .replacingOccurrences(of: "([a-z])([A-Z])", with: "$1 $2", options: .regularExpression)
-            .capitalized
-    }
-
-    private func humanizedEventStatus(_ status: SnapshotActivationEventStatus) -> String {
-        switch status {
-        case .requested:
-            return "Requested"
-        case .succeeded:
-            return "Succeeded"
-        case .blocked:
-            return "Blocked"
-        case .failed:
-            return "Failed"
-        case .noOp:
-            return "No-op"
-        }
-    }
-
-    private func humanizedReasonCode(_ reasonCode: String?) -> String? {
-        guard let reasonCode, !reasonCode.isEmpty else { return nil }
-        return reasonCode.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
     private func actionControl(
