@@ -3,11 +3,13 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var store: AppStore
     @StateObject private var viewModel = SettingsViewModel()
+    @StateObject private var operatorDashboardViewModel = OperatorDashboardViewModel()
 
     var body: some View {
         NavigationStack {
             List {
                 datasetSection
+                operatorDashboardSection
                 operatorControlsSection
                 cacheSection
                 visualizationSection
@@ -16,10 +18,17 @@ struct SettingsView: View {
         }
         .task {
             await viewModel.load(source: store.state.selectedDatasetSource)
+            await operatorDashboardViewModel.load()
             applyPreferredSpatialLevel()
         }
             .onChange(of: store.state.selectedDatasetSource) { _, value in
-            Task { await viewModel.load(source: value) }
+            Task {
+                await viewModel.load(source: value)
+                await operatorDashboardViewModel.load()
+            }
+        }
+        .onChange(of: viewModel.operatorControls) { _, _ in
+            Task { await operatorDashboardViewModel.load() }
         }
         .alert(
             viewModel.confirmationPrompt?.title ?? "Confirm Action",
@@ -93,6 +102,10 @@ struct SettingsView: View {
                 Task { await viewModel.clearCache() }
             }
         }
+    }
+
+    private var operatorDashboardSection: some View {
+        OperatorDashboardSection(viewModel: operatorDashboardViewModel)
     }
 
     private var operatorControlsSection: some View {

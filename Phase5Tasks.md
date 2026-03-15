@@ -128,12 +128,16 @@ Design constraints:
 - Dependency: P5-003, P5-004, P5-005, P5-006
 - Description: Build a dashboard-focused projection/view-model layer that summarizes source health, candidates, active state, rollback readiness, and recent operations.
 - Short goal: Provide a single operator-facing summary model without duplicating source-state logic in the UI.
+- Status: Completed (2026-03-15)
+- Notes: Added `OperatorSourceSummary`, `OperatorDashboardSummary`, and `OperatorDashboardViewModel` as a read-only summary layer over the enriched catalog and bootstrap status. The new view model preserves catalog ordering, keeps static sources free of bogus live/operator state, and surfaces live-capable activation/refresh/readiness semantics without changing existing settings/operator-control flows.
 
 ## P5-008 — Add minimal operator dashboard UI for source status and candidate readiness
 - Priority: P1
 - Dependency: P5-007
 - Description: Introduce a compact dashboard surface showing per-source status, active/candidate state, refresh health, and readiness summaries.
 - Short goal: Make operator visibility broader than the Settings control panel without broad UI redesign.
+- Status: Completed (2026-03-15)
+- Notes: Added a low-risk Settings-integrated operator dashboard entry point plus a dedicated `OperatorDashboardView` with compact per-source cards. The UI is backed directly by `OperatorDashboardViewModel`, preserves source-scoped catalog ordering, keeps static sources truthful, and surfaces live-capable candidate readiness, refresh health, rollback availability, and activation status without altering operator workflows.
 
 ## P5-009 — Add audit/history browsing UI with filtering and source scoping
 - Priority: P1
