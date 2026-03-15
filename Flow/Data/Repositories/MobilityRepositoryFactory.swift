@@ -2,18 +2,19 @@ import Foundation
 
 enum MobilityRepositoryFactory {
     static let sharedVersionStore: DatasetVersionStoring = InMemoryDatasetVersionStore()
-    static let sharedActivationStateStore: SnapshotActivationStateStoring = PersistentSnapshotActivationStateStore()
-    static let sharedActivationPolicy: SnapshotActivationPolicying = DefaultSnapshotActivationPolicy(
-        versionStore: sharedVersionStore,
-        stateStore: sharedActivationStateStore
-    )
-    static let sharedActivationHistoryStore: SnapshotActivationHistoryStoring = PersistentSnapshotActivationHistoryStore()
-    static let sharedRefreshStateStore: DatasetRefreshStateStoring = PersistentDatasetRefreshStateStore()
-    static let sharedActivationStateProjector: SnapshotActivationStateProjecting = DefaultSnapshotActivationStateProjector(
-        activationPolicy: sharedActivationPolicy,
-        historyStore: sharedActivationHistoryStore,
+    private static let sharedOperatorStateBootstrap = PersistentOperatorStateBootstrap(
         versionStore: sharedVersionStore
-    )
+    ).bootstrap()
+    static let sharedActivationStateStore: SnapshotActivationStateStoring = sharedOperatorStateBootstrap.activationStateStore
+    static let sharedActivationPolicy: SnapshotActivationPolicying = sharedOperatorStateBootstrap.activationPolicy
+    static let sharedActivationHistoryStore: SnapshotActivationHistoryStoring = sharedOperatorStateBootstrap.activationHistoryStore
+    static let sharedRefreshStateStore: DatasetRefreshStateStoring = sharedOperatorStateBootstrap.refreshStateStore
+    static let sharedActivationStateProjector: SnapshotActivationStateProjecting = sharedOperatorStateBootstrap.activationStateProjector
+    static let sharedOperatorStateBootstrapStatus: PersistentOperatorStateBootstrapStatus = sharedOperatorStateBootstrap.status
+
+    static func bootstrapPersistentOperatorState() {
+        _ = sharedOperatorStateBootstrapStatus
+    }
 
     static var nationalDataSourceBuilder: () -> NationalBaselineMobilityDataSource = {
         SafeNationalBaselineMobilityDataSource(

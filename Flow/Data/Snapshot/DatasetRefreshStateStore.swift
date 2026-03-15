@@ -33,11 +33,13 @@ actor InMemoryDatasetRefreshStateStore: DatasetRefreshStateStoring {
 actor PersistentDatasetRefreshStateStore: DatasetRefreshStateStoring {
     private let fileURL: URL
     private var storage: DatasetRefreshStateStorage
+    nonisolated let restorationDisposition: PersistentStoreRestoreDisposition
 
     init(fileURL: URL? = nil) {
         self.fileURL = fileURL ?? Self.defaultFileURL(fileManager: .default)
         let loadResult = Self.loadStorage(from: self.fileURL)
         self.storage = loadResult.storage
+        self.restorationDisposition = loadResult.disposition
         if loadResult.shouldRewrite {
             Self.persistStorage(loadResult.storage, to: self.fileURL)
         }
@@ -67,7 +69,11 @@ actor PersistentDatasetRefreshStateStore: DatasetRefreshStateStoring {
 
     nonisolated private static func loadStorage(from fileURL: URL) -> DatasetRefreshStateLoadResult {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return .init(storage: DatasetRefreshStateStorage(), shouldRewrite: false)
+            return .init(
+                storage: DatasetRefreshStateStorage(),
+                shouldRewrite: false,
+                disposition: .empty
+            )
         }
 
         do {
@@ -79,7 +85,8 @@ actor PersistentDatasetRefreshStateStore: DatasetRefreshStateStoring {
                 let storage = DatasetRefreshStateStorage(states: envelope.states)
                 return .init(
                     storage: storage,
-                    shouldRewrite: envelope.formatVersion != DatasetRefreshStatePersistenceEnvelope.currentFormatVersion
+                    shouldRewrite: envelope.formatVersion != DatasetRefreshStatePersistenceEnvelope.currentFormatVersion,
+                    disposition: envelope.formatVersion == DatasetRefreshStatePersistenceEnvelope.currentFormatVersion ? .current : .migrated
                 )
             }
 
@@ -89,7 +96,8 @@ actor PersistentDatasetRefreshStateStore: DatasetRefreshStateStoring {
             ) {
                 return .init(
                     storage: DatasetRefreshStateStorage(states: legacyStates),
-                    shouldRewrite: true
+                    shouldRewrite: true,
+                    disposition: .migrated
                 )
             }
 
@@ -104,7 +112,11 @@ actor PersistentDatasetRefreshStateStore: DatasetRefreshStateStoring {
                         "recovered_entries": String(recovered.recoveredEntryCount)
                     ]
                 )
-                return .init(storage: recovered.storage, shouldRewrite: true)
+                return .init(
+                    storage: recovered.storage,
+                    shouldRewrite: true,
+                    disposition: .recoveredPartial
+                )
             }
 
             backupCorruptedFile(at: fileURL)
@@ -115,7 +127,11 @@ actor PersistentDatasetRefreshStateStore: DatasetRefreshStateStoring {
                     "path": fileURL.path
                 ]
             )
-            return .init(storage: DatasetRefreshStateStorage(), shouldRewrite: true)
+            return .init(
+                storage: DatasetRefreshStateStorage(),
+                shouldRewrite: true,
+                disposition: .resetCorrupted
+            )
         } catch {
             FlowLogger.log(
                 level: .error,
@@ -125,7 +141,11 @@ actor PersistentDatasetRefreshStateStore: DatasetRefreshStateStoring {
                     "error": String(describing: error)
                 ]
             )
-            return .init(storage: DatasetRefreshStateStorage(), shouldRewrite: false)
+            return .init(
+                storage: DatasetRefreshStateStorage(),
+                shouldRewrite: false,
+                disposition: .resetCorrupted
+            )
         }
     }
 
@@ -307,6 +327,7 @@ private struct DatasetRefreshStatePersistenceEnvelope: Codable, Hashable {
 private struct DatasetRefreshStateLoadResult {
     let storage: DatasetRefreshStateStorage
     let shouldRewrite: Bool
+    let disposition: PersistentStoreRestoreDisposition
 }
 
 private struct DatasetRefreshStateRecoveryResult {

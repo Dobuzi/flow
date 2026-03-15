@@ -142,6 +142,7 @@ struct SnapshotActivationHistoryStoreTests {
         ))
 
         let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        #expect(reloaded.restorationDisposition == .current)
         let events = await reloaded.events()
         #expect(events.map(\.eventID) == ["evt-2", "evt-1"])
 
@@ -177,6 +178,7 @@ struct SnapshotActivationHistoryStoreTests {
         ))
 
         let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        #expect(reloaded.restorationDisposition == .current)
 
         let bySource = await reloaded.events(for: .seoulCapitalSnapshot)
         #expect(bySource.map(\.eventID) == ["evt-3", "evt-2", "evt-1"])
@@ -221,6 +223,7 @@ struct SnapshotActivationHistoryStoreTests {
         ))
 
         let reloaded = PersistentSnapshotActivationHistoryStore(fileURL: fileURL)
+        #expect(reloaded.restorationDisposition == .current)
         let recent = await reloaded.query(
             .init(source: .seoulCapitalSnapshot, limit: 2, sortOrder: .newestFirst)
         )

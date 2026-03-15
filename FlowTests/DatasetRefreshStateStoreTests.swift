@@ -25,6 +25,7 @@ struct DatasetRefreshStateStoreTests {
         )
 
         let reloaded = PersistentDatasetRefreshStateStore(fileURL: fileURL)
+        #expect(reloaded.restorationDisposition == .current)
         let state = await reloaded.state(for: .seoulCapitalSnapshot)
 
         #expect(state?.lastRefreshAttemptAt == "2026-03-14T01:00:00Z")
@@ -74,6 +75,7 @@ struct DatasetRefreshStateStoreTests {
         )
 
         let reloaded = PersistentDatasetRefreshStateStore(fileURL: fileURL)
+        #expect(reloaded.restorationDisposition == .current)
         let seoul = await reloaded.state(for: .seoulCapitalSnapshot)
         let national = await reloaded.state(for: .koreaNational)
         let bundled = await reloaded.state(for: .bundledSample)
@@ -101,6 +103,7 @@ struct DatasetRefreshStateStoreTests {
         try Data("not-json".utf8).write(to: fileURL)
 
         let reloaded = PersistentDatasetRefreshStateStore(fileURL: fileURL)
+        #expect(reloaded.restorationDisposition == .resetCorrupted)
         let state = await reloaded.state(for: .seoulCapitalSnapshot)
 
         #expect(state == nil)

@@ -34,7 +34,11 @@ struct SnapshotActivationStateStoreTests {
 
         let reloadedPolicy = DefaultSnapshotActivationPolicy(
             versionStore: versionStore,
-            stateStore: PersistentSnapshotActivationStateStore(fileURL: fileURL),
+            stateStore: {
+                let reloadedStore = PersistentSnapshotActivationStateStore(fileURL: fileURL)
+                #expect(reloadedStore.restorationDisposition == .current)
+                return reloadedStore
+            }(),
             nowProvider: { "2026-03-14T03:00:00Z" }
         )
         let state = await reloadedPolicy.currentState(for: .seoulCapitalSnapshot)
@@ -73,7 +77,11 @@ struct SnapshotActivationStateStoreTests {
 
         let reloadedPolicy = DefaultSnapshotActivationPolicy(
             versionStore: versionStore,
-            stateStore: PersistentSnapshotActivationStateStore(fileURL: fileURL),
+            stateStore: {
+                let reloadedStore = PersistentSnapshotActivationStateStore(fileURL: fileURL)
+                #expect(reloadedStore.restorationDisposition == .current)
+                return reloadedStore
+            }(),
             nowProvider: { "2026-03-14T03:00:00Z" }
         )
 
@@ -97,6 +105,7 @@ struct SnapshotActivationStateStoreTests {
         try Data("not-json".utf8).write(to: fileURL)
 
         let store = PersistentSnapshotActivationStateStore(fileURL: fileURL)
+        #expect(store.restorationDisposition == .resetCorrupted)
         let state = await store.state(for: .seoulCapitalSnapshot)
 
         #expect(state == nil)
@@ -137,7 +146,11 @@ struct SnapshotActivationStateStoreTests {
 
         let reloadedPolicy = DefaultSnapshotActivationPolicy(
             versionStore: versionStore,
-            stateStore: PersistentSnapshotActivationStateStore(fileURL: fileURL),
+            stateStore: {
+                let reloadedStore = PersistentSnapshotActivationStateStore(fileURL: fileURL)
+                #expect(reloadedStore.restorationDisposition == .current)
+                return reloadedStore
+            }(),
             nowProvider: { "2026-03-14T03:00:00Z" }
         )
         let historyStore = InMemorySnapshotActivationHistoryStore()

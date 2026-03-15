@@ -113,6 +113,7 @@ actor InMemorySnapshotActivationHistoryStore: SnapshotActivationHistoryStoring {
 actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring {
     private let fileURL: URL
     private var storage: SnapshotActivationHistoryStorage
+    nonisolated let restorationDisposition: PersistentStoreRestoreDisposition
 
     init(
         fileURL: URL? = nil
@@ -120,6 +121,7 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
         self.fileURL = fileURL ?? Self.defaultFileURL(fileManager: .default)
         let loadResult = Self.loadStorage(from: self.fileURL)
         self.storage = loadResult.storage
+        self.restorationDisposition = loadResult.disposition
         if loadResult.shouldRewrite {
             Self.persistStorage(loadResult.storage, to: self.fileURL)
         }
@@ -184,7 +186,11 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
 
     nonisolated private static func loadStorage(from fileURL: URL) -> SnapshotActivationHistoryLoadResult {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return .init(storage: SnapshotActivationHistoryStorage(), shouldRewrite: false)
+            return .init(
+                storage: SnapshotActivationHistoryStorage(),
+                shouldRewrite: false,
+                disposition: .empty
+            )
         }
 
         do {
@@ -198,14 +204,22 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
                     storedEvents: envelope.events,
                     sequenceCounter: envelope.sequenceCounter
                 )
-                return .init(storage: storage, shouldRewrite: !isCurrentVersion)
+                return .init(
+                    storage: storage,
+                    shouldRewrite: !isCurrentVersion,
+                    disposition: isCurrentVersion ? .current : .migrated
+                )
             }
 
             if let legacyStorage = try? JSONDecoder.historyStoreDecoder.decode(
                 SnapshotActivationHistoryStorage.self,
                 from: data
             ) {
-                return .init(storage: legacyStorage, shouldRewrite: true)
+                return .init(
+                    storage: legacyStorage,
+                    shouldRewrite: true,
+                    disposition: .migrated
+                )
             }
 
             let recovered = recoverStorage(from: data)
@@ -219,7 +233,11 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
                         "recovered_entries": String(recovered.recoveredEntryCount)
                     ]
                 )
-                return .init(storage: recovered.storage, shouldRewrite: true)
+                return .init(
+                    storage: recovered.storage,
+                    shouldRewrite: true,
+                    disposition: .recoveredPartial
+                )
             }
 
             backupCorruptedFile(at: fileURL)
@@ -230,7 +248,11 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
                     "path": fileURL.path
                 ]
             )
-            return .init(storage: SnapshotActivationHistoryStorage(), shouldRewrite: true)
+            return .init(
+                storage: SnapshotActivationHistoryStorage(),
+                shouldRewrite: true,
+                disposition: .resetCorrupted
+            )
         } catch {
             FlowLogger.log(
                 level: .error,
@@ -240,7 +262,11 @@ actor PersistentSnapshotActivationHistoryStore: SnapshotActivationHistoryStoring
                     "error": String(describing: error)
                 ]
             )
-            return .init(storage: SnapshotActivationHistoryStorage(), shouldRewrite: false)
+            return .init(
+                storage: SnapshotActivationHistoryStorage(),
+                shouldRewrite: false,
+                disposition: .resetCorrupted
+            )
         }
     }
 
@@ -477,6 +503,7 @@ private struct SnapshotActivationHistoryPersistenceEnvelope: Codable {
 private struct SnapshotActivationHistoryLoadResult {
     let storage: SnapshotActivationHistoryStorage
     let shouldRewrite: Bool
+    let disposition: PersistentStoreRestoreDisposition
 }
 
 private struct SnapshotActivationHistoryRecoveryResult {

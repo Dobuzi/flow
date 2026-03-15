@@ -20,11 +20,13 @@ actor InMemorySnapshotActivationStateStore: SnapshotActivationStateStoring {
 actor PersistentSnapshotActivationStateStore: SnapshotActivationStateStoring {
     private let fileURL: URL
     private var storage: SnapshotActivationStateStorage
+    nonisolated let restorationDisposition: PersistentStoreRestoreDisposition
 
     init(fileURL: URL? = nil) {
         self.fileURL = fileURL ?? Self.defaultFileURL(fileManager: .default)
         let loadResult = Self.loadStorage(from: self.fileURL)
         self.storage = loadResult.storage
+        self.restorationDisposition = loadResult.disposition
         if loadResult.shouldRewrite {
             Self.persistStorage(loadResult.storage, to: self.fileURL)
         }
@@ -54,7 +56,11 @@ actor PersistentSnapshotActivationStateStore: SnapshotActivationStateStoring {
 
     nonisolated private static func loadStorage(from fileURL: URL) -> SnapshotActivationStateLoadResult {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return .init(storage: SnapshotActivationStateStorage(), shouldRewrite: false)
+            return .init(
+                storage: SnapshotActivationStateStorage(),
+                shouldRewrite: false,
+                disposition: .empty
+            )
         }
 
         do {
@@ -66,7 +72,8 @@ actor PersistentSnapshotActivationStateStore: SnapshotActivationStateStoring {
                 let storage = SnapshotActivationStateStorage(states: envelope.states)
                 return .init(
                     storage: storage,
-                    shouldRewrite: envelope.formatVersion != SnapshotActivationStatePersistenceEnvelope.currentFormatVersion
+                    shouldRewrite: envelope.formatVersion != SnapshotActivationStatePersistenceEnvelope.currentFormatVersion,
+                    disposition: envelope.formatVersion == SnapshotActivationStatePersistenceEnvelope.currentFormatVersion ? .current : .migrated
                 )
             }
 
@@ -76,7 +83,8 @@ actor PersistentSnapshotActivationStateStore: SnapshotActivationStateStoring {
             ) {
                 return .init(
                     storage: SnapshotActivationStateStorage(states: legacyStates),
-                    shouldRewrite: true
+                    shouldRewrite: true,
+                    disposition: .migrated
                 )
             }
 
@@ -91,7 +99,11 @@ actor PersistentSnapshotActivationStateStore: SnapshotActivationStateStoring {
                         "recovered_entries": String(recovered.recoveredEntryCount)
                     ]
                 )
-                return .init(storage: recovered.storage, shouldRewrite: true)
+                return .init(
+                    storage: recovered.storage,
+                    shouldRewrite: true,
+                    disposition: .recoveredPartial
+                )
             }
 
             backupCorruptedFile(at: fileURL)
@@ -102,7 +114,11 @@ actor PersistentSnapshotActivationStateStore: SnapshotActivationStateStoring {
                     "path": fileURL.path
                 ]
             )
-            return .init(storage: SnapshotActivationStateStorage(), shouldRewrite: true)
+            return .init(
+                storage: SnapshotActivationStateStorage(),
+                shouldRewrite: true,
+                disposition: .resetCorrupted
+            )
         } catch {
             FlowLogger.log(
                 level: .error,
@@ -112,7 +128,11 @@ actor PersistentSnapshotActivationStateStore: SnapshotActivationStateStoring {
                     "error": String(describing: error)
                 ]
             )
-            return .init(storage: SnapshotActivationStateStorage(), shouldRewrite: false)
+            return .init(
+                storage: SnapshotActivationStateStorage(),
+                shouldRewrite: false,
+                disposition: .resetCorrupted
+            )
         }
     }
 
@@ -241,6 +261,7 @@ private struct SnapshotActivationStatePersistenceEnvelope: Codable, Hashable {
 private struct SnapshotActivationStateLoadResult {
     let storage: SnapshotActivationStateStorage
     let shouldRewrite: Bool
+    let disposition: PersistentStoreRestoreDisposition
 }
 
 private struct SnapshotActivationStateRecoveryResult {

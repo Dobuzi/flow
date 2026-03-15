@@ -118,6 +118,8 @@ Design constraints:
 - Dependency: P5-004, P5-005
 - Description: Define startup loading, validation, and recovery behavior for persisted refresh and activation state, including stale/corrupt-state handling.
 - Short goal: Ensure operator-visible state is durable but never trusted blindly.
+- Status: Completed (2026-03-15)
+- Notes: Added `PersistentOperatorStateBootstrap` to restore persistent activation state, refresh state, and activation history in a deterministic startup order before wiring policy/projector consumers. Shared factory bootstrap now exposes explicit restore dispositions and preserves degraded recovery when one persisted store is missing or corrupt.
 
 ### M5-3 Operator Dashboard
 

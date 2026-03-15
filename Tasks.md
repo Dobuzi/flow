@@ -594,14 +594,15 @@ Risk mitigation rules:
   - minimal operator controls UI with action-specific confirmation flows and recent activity visibility
   - cross-source activation safety regression coverage and audit/history consistency regression protection
 
-## 6.4 Phase 5 Status Sync (2026-03-14)
+## 6.4 Phase 5 Status Sync (2026-03-15)
 - Source of truth: `Phase5Tasks.md`
-- Status: `P5-001` through `P5-005`, `P5-019`, and `P5-020` completed
+- Status: `P5-001` through `P5-006`, `P5-019`, and `P5-020` completed
 - Completed capability set:
   - persistent activation history storage with local durability, migration, and fallback resilience
   - durable activation history browsing/filter query semantics for future operator audit surfaces
   - persistent refresh state storage across launches with safe fallback and metadata-enrichment compatibility
   - persistent activation state storage across launches for active snapshot and last-known-good continuity
+  - persistent operator-state bootstrap/recovery ordering across activation state, refresh state, and activation history
   - dataset activation timeline view integrated into operator controls with source-scoped newest-first history
   - activation timeline action/status filtering and deterministic load-more browsing refinements
 
