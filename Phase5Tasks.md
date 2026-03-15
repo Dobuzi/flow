@@ -102,6 +102,8 @@ Design constraints:
 - Dependency: None
 - Description: Replace or augment the current refresh-state store with a persistent local-backed implementation while preserving source-scoped semantics.
 - Short goal: Keep refresh attempts, outcomes, and candidate readiness visible after restart.
+- Status: Completed (2026-03-14)
+- Notes: Added `PersistentDatasetRefreshStateStore`, a file-backed JSON refresh-state store with a versioned envelope, safe empty-state fallback, corrupted-file backup behavior, and source-scoped persistence of attempt/success/failure/trigger/candidate metadata. Wired the shared repository factory to the persistent store and added persistence plus metadata-enrichment compatibility coverage.
 
 ## P5-005 — Persist activation state snapshots and last-known-good pointers
 - Priority: P0

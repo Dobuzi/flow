@@ -6,7 +6,7 @@ enum MobilityRepositoryFactory {
         versionStore: sharedVersionStore
     )
     static let sharedActivationHistoryStore: SnapshotActivationHistoryStoring = PersistentSnapshotActivationHistoryStore()
-    static let sharedRefreshStateStore: DatasetRefreshStateStoring = InMemoryDatasetRefreshStateStore()
+    static let sharedRefreshStateStore: DatasetRefreshStateStoring = PersistentDatasetRefreshStateStore()
     static let sharedActivationStateProjector: SnapshotActivationStateProjecting = DefaultSnapshotActivationStateProjector(
         activationPolicy: sharedActivationPolicy,
         historyStore: sharedActivationHistoryStore,
