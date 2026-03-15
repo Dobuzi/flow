@@ -188,6 +188,8 @@ Design constraints:
 - Dependency: P5-004, P5-005
 - Description: Add structured local telemetry events/metrics for refresh attempts, activation actions, failures, blocked actions, and rollback usage.
 - Short goal: Create a consistent operational metrics vocabulary before adding richer health UI.
+- Status: Completed (2026-03-15)
+- Notes: Added `OperatorActivationMetrics`, `OperatorRefreshMetrics`, `OperatorSourceMetrics`, and `OperatorMetricsCollector` as deterministic local read models derived from persisted activation history and refresh state. The operator dashboard summary layer now carries source-scoped metrics for activation result counts, rollback request usage, latest activation timestamp, latest refresh outcome counts, latest refresh timestamp, and latest refresh latency when the retained refresh state makes it derivable.
 
 ## P5-011 — Add source health state model and operational status aggregation
 - Priority: P0

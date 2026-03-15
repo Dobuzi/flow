@@ -22,7 +22,25 @@ struct OperatorDashboardViewTests {
                         rollbackAvailable: true,
                         operatorActivationStatus: .activeRollbackReady,
                         readiness: .ready,
-                        syncState: .ready
+                        syncState: .ready,
+                        metrics: OperatorSourceMetrics(
+                            activation: .init(
+                                requestedCount: 1,
+                                succeededCount: 1,
+                                blockedCount: 0,
+                                failedCount: 0,
+                                noOpCount: 0,
+                                rollbackRequestedCount: 1,
+                                latestEventAt: "2026-03-15T08:05:00Z"
+                            ),
+                            refresh: .init(
+                                attemptCount: 1,
+                                succeededCount: 1,
+                                failedCount: 0,
+                                latestRefreshAt: "2026-03-15T08:00:00Z",
+                                latestRefreshLatencySeconds: 90
+                            )
+                        )
                     )
                 )
             ],

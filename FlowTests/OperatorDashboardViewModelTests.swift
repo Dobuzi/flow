@@ -57,7 +57,9 @@ struct OperatorDashboardViewModelTests {
 
         let viewModel = OperatorDashboardViewModel(
             catalogRepository: repository,
-            bootstrapStatus: bootstrapStatus
+            bootstrapStatus: bootstrapStatus,
+            activationHistoryStore: historyStore,
+            refreshStateStore: refreshStateStore
         )
         await viewModel.load()
 
@@ -75,6 +77,10 @@ struct OperatorDashboardViewModelTests {
         #expect(live.lastRefreshAt == "2026-03-15T01:01:00Z")
         #expect(live.rollbackAvailable == false)
         #expect(live.operatorActivationStatus == .active)
+        #expect(live.metrics.activation.succeededCount == 0)
+        #expect(live.metrics.refresh.attemptCount == 1)
+        #expect(live.metrics.refresh.succeededCount == 1)
+        #expect(live.metrics.refresh.latestRefreshLatencySeconds == 60)
         #expect(dashboard.bootstrapStatus == bootstrapStatus)
     }
 
@@ -165,7 +171,37 @@ struct OperatorDashboardViewModelTests {
             )
         )
 
-        let viewModel = OperatorDashboardViewModel(catalogRepository: repository)
+        await historyStore.append(
+            SnapshotActivationHistoryEvent(
+                eventID: "national-blocked",
+                type: .promoteBlocked,
+                timestamp: "2026-03-15T03:01:30Z",
+                metadata: .init(
+                    source: .koreaNational,
+                    snapshotID: "national-2026.05",
+                    datasetVersion: "2026.05",
+                    commandID: "national-blocked",
+                    commandAction: .promote,
+                    trigger: .operatorManual,
+                    requestedBy: "tester",
+                    note: nil,
+                    validation: nil,
+                    guardDecision: nil,
+                    execution: nil
+                ),
+                result: .init(
+                    status: .blocked,
+                    reasonCode: "candidate_incompatible",
+                    message: nil
+                )
+            )
+        )
+
+        let viewModel = OperatorDashboardViewModel(
+            catalogRepository: repository,
+            activationHistoryStore: historyStore,
+            refreshStateStore: refreshStateStore
+        )
         await viewModel.load()
 
         let dashboard = try #require(viewModel.dashboard)
@@ -175,11 +211,15 @@ struct OperatorDashboardViewModelTests {
         #expect(seoul.liveSummary?.activeSnapshotID == "seoul-2026.04")
         #expect(seoul.liveSummary?.lastRefreshOutcome == .success)
         #expect(seoul.liveSummary?.latestCandidateSnapshotID == "seoul-2026.04")
+        #expect(seoul.liveSummary?.metrics.refresh.succeededCount == 1)
+        #expect(seoul.liveSummary?.metrics.activation.blockedCount == 0)
 
         #expect(national.liveSummary?.activeSnapshotID == nil)
         #expect(national.liveSummary?.lastRefreshOutcome == .failed)
         #expect(national.liveSummary?.lastRefreshAt == "2026-03-15T03:01:00Z")
         #expect(national.liveSummary?.latestCandidateSnapshotID == nil)
+        #expect(national.liveSummary?.metrics.refresh.failedCount == 1)
+        #expect(national.liveSummary?.metrics.activation.blockedCount == 1)
     }
 
     @Test

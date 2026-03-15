@@ -13,6 +13,7 @@ struct OperatorSourceLiveSummary: Hashable {
     let operatorActivationStatus: DatasetOperatorActivationStatus
     let readiness: DatasetRefreshReadiness
     let syncState: DatasetSyncState
+    let metrics: OperatorSourceMetrics
 }
 
 struct OperatorSourceSummary: Identifiable, Hashable {
@@ -47,21 +48,39 @@ final class OperatorDashboardViewModel: ObservableObject {
 
     private let catalogRepository: MobilityCatalogRepository
     private let bootstrapStatus: PersistentOperatorStateBootstrapStatus?
+    private let metricsCollector: OperatorMetricsCollector
 
     init(
         catalogRepository: MobilityCatalogRepository = MobilityRepositoryFactory.liveAwareCatalogRepository(),
-        bootstrapStatus: PersistentOperatorStateBootstrapStatus? = MobilityRepositoryFactory.sharedOperatorStateBootstrapStatus
+        bootstrapStatus: PersistentOperatorStateBootstrapStatus? = MobilityRepositoryFactory.sharedOperatorStateBootstrapStatus,
+        activationHistoryStore: SnapshotActivationHistoryStoring? = MobilityRepositoryFactory.sharedActivationHistoryStore,
+        refreshStateStore: DatasetRefreshStateStoring? = MobilityRepositoryFactory.sharedRefreshStateStore
     ) {
         self.catalogRepository = catalogRepository
         self.bootstrapStatus = bootstrapStatus
+        self.metricsCollector = OperatorMetricsCollector(
+            activationHistoryStore: activationHistoryStore,
+            refreshStateStore: refreshStateStore
+        )
     }
 
     func load() async {
         do {
             let catalog = try await catalogRepository.fetchCatalog()
+            var sources: [OperatorSourceSummary] = []
+            sources.reserveCapacity(catalog.datasets.count)
+
+            for descriptor in catalog.datasets {
+                let metrics = await metricsCollector.metrics(
+                    for: descriptor.source,
+                    isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true
+                )
+                sources.append(Self.makeSourceSummary(from: descriptor, metrics: metrics))
+            }
+
             dashboard = OperatorDashboardSummary(
                 catalogVersion: catalog.version,
-                sources: catalog.datasets.map(Self.makeSourceSummary(from:)),
+                sources: sources,
                 bootstrapStatus: bootstrapStatus
             )
             loadError = nil
@@ -75,7 +94,10 @@ final class OperatorDashboardViewModel: ObservableObject {
         }
     }
 
-    private static func makeSourceSummary(from descriptor: MobilityDatasetDescriptor) -> OperatorSourceSummary {
+    private static func makeSourceSummary(
+        from descriptor: MobilityDatasetDescriptor,
+        metrics: OperatorSourceMetrics?
+    ) -> OperatorSourceSummary {
         let liveSummary: OperatorSourceLiveSummary?
         if let live = descriptor.liveMetadata, live.supportsLiveRefresh {
             liveSummary = OperatorSourceLiveSummary(
@@ -89,7 +111,25 @@ final class OperatorDashboardViewModel: ObservableObject {
                 rollbackAvailable: live.activationMetadata?.rollbackAvailable ?? false,
                 operatorActivationStatus: live.activationMetadata?.operatorActivationStatus ?? .noHistory,
                 readiness: live.readiness,
-                syncState: live.syncState
+                syncState: live.syncState,
+                metrics: metrics ?? OperatorSourceMetrics(
+                    activation: .init(
+                        requestedCount: 0,
+                        succeededCount: 0,
+                        blockedCount: 0,
+                        failedCount: 0,
+                        noOpCount: 0,
+                        rollbackRequestedCount: 0,
+                        latestEventAt: nil
+                    ),
+                    refresh: .init(
+                        attemptCount: 0,
+                        succeededCount: 0,
+                        failedCount: 0,
+                        latestRefreshAt: nil,
+                        latestRefreshLatencySeconds: nil
+                    )
+                )
             )
         } else {
             liveSummary = nil
