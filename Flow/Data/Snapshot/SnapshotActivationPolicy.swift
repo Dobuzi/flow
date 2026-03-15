@@ -1,6 +1,6 @@
 import Foundation
 
-struct SnapshotActivationState: Hashable {
+struct SnapshotActivationState: Codable, Hashable {
     let source: FlowDatasetSource
     let activeSnapshotID: String?
     let lastKnownGoodSnapshotID: String?
@@ -51,19 +51,21 @@ protocol SnapshotActivationPolicying {
 
 actor DefaultSnapshotActivationPolicy: SnapshotActivationPolicying {
     private let versionStore: DatasetVersionStoring
-    private var stateBySource: [FlowDatasetSource: SnapshotActivationState] = [:]
+    private let stateStore: SnapshotActivationStateStoring
     private let nowProvider: () -> String
 
     init(
         versionStore: DatasetVersionStoring,
+        stateStore: SnapshotActivationStateStoring = InMemorySnapshotActivationStateStore(),
         nowProvider: @escaping () -> String = { ISO8601DateFormatter().string(from: Date()) }
     ) {
         self.versionStore = versionStore
+        self.stateStore = stateStore
         self.nowProvider = nowProvider
     }
 
     func currentState(for source: FlowDatasetSource) async -> SnapshotActivationState {
-        if let state = stateBySource[source] {
+        if let state = await stateStore.state(for: source) {
             return state
         }
         return SnapshotActivationState(
@@ -172,7 +174,7 @@ actor DefaultSnapshotActivationPolicy: SnapshotActivationPolicying {
             lastKnownGoodSnapshotID: lastKnownGood,
             updatedAt: nowProvider()
         )
-        stateBySource[source] = next
+        await stateStore.setState(next)
         return next
     }
 
@@ -223,7 +225,7 @@ actor DefaultSnapshotActivationPolicy: SnapshotActivationPolicying {
             lastKnownGoodSnapshotID: previous.activeSnapshotID,
             updatedAt: nowProvider()
         )
-        stateBySource[source] = next
+        await stateStore.setState(next)
         return next
     }
 

@@ -2,8 +2,10 @@ import Foundation
 
 enum MobilityRepositoryFactory {
     static let sharedVersionStore: DatasetVersionStoring = InMemoryDatasetVersionStore()
+    static let sharedActivationStateStore: SnapshotActivationStateStoring = PersistentSnapshotActivationStateStore()
     static let sharedActivationPolicy: SnapshotActivationPolicying = DefaultSnapshotActivationPolicy(
-        versionStore: sharedVersionStore
+        versionStore: sharedVersionStore,
+        stateStore: sharedActivationStateStore
     )
     static let sharedActivationHistoryStore: SnapshotActivationHistoryStoring = PersistentSnapshotActivationHistoryStore()
     static let sharedRefreshStateStore: DatasetRefreshStateStoring = PersistentDatasetRefreshStateStore()

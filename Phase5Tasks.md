@@ -110,6 +110,8 @@ Design constraints:
 - Dependency: P5-001
 - Description: Add durable storage for active snapshot, last-known-good, and related source-scoped activation state used by policy/projection layers.
 - Short goal: Preserve guarded rollout state across launches without changing runtime resolution contracts.
+- Status: Completed (2026-03-15)
+- Notes: Added `PersistentSnapshotActivationStateStore`, moved `DefaultSnapshotActivationPolicy` onto an injected activation-state store seam, and wired the shared factory to the persistent implementation. Activation state now restores active snapshot and last-known-good pointers across launches with corrupted-file fallback and policy/projector/catalog compatibility coverage.
 
 ## P5-006 — Add persistent operator state bootstrap and recovery flow
 - Priority: P1
