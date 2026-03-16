@@ -24,6 +24,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
     let healthSummary: OperatorSourceHealthSummary
     let approvalSummary: OperatorApprovalSummary?
     let rolloutReadinessSummary: OperatorRolloutReadinessSummary?
+    let rolloutPreflight: RolloutPreflightResult?
 
     init(
         source: FlowDatasetSource,
@@ -32,7 +33,8 @@ struct OperatorSourceSummary: Identifiable, Hashable {
         liveSummary: OperatorSourceLiveSummary?,
         healthSummary: OperatorSourceHealthSummary,
         approvalSummary: OperatorApprovalSummary? = nil,
-        rolloutReadinessSummary: OperatorRolloutReadinessSummary? = nil
+        rolloutReadinessSummary: OperatorRolloutReadinessSummary? = nil,
+        rolloutPreflight: RolloutPreflightResult? = nil
     ) {
         self.source = source
         self.displayName = displayName
@@ -41,6 +43,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
         self.healthSummary = healthSummary
         self.approvalSummary = approvalSummary
         self.rolloutReadinessSummary = rolloutReadinessSummary
+        self.rolloutPreflight = rolloutPreflight
     }
 
     var id: FlowDatasetSource {
@@ -72,6 +75,7 @@ final class OperatorDashboardViewModel: ObservableObject {
     private let metricsCollector: OperatorMetricsCollector
     private let healthAggregator: OperatorHealthAggregator
     private let approvalReadinessResolver = OperatorApprovalReadinessResolver()
+    private let rolloutPreflightEvaluator = RolloutPreflightEvaluator()
 
     init(
         catalogRepository: MobilityCatalogRepository = MobilityRepositoryFactory.liveAwareCatalogRepository(),
@@ -158,7 +162,7 @@ final class OperatorDashboardViewModel: ObservableObject {
             healthSummary: healthSummary
         )
 
-        return OperatorSourceSummary(
+        let summary = OperatorSourceSummary(
             source: descriptor.source,
             displayName: descriptor.displayName,
             isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
@@ -166,6 +170,17 @@ final class OperatorDashboardViewModel: ObservableObject {
             healthSummary: healthSummary,
             approvalSummary: approvalSummary,
             rolloutReadinessSummary: rolloutReadinessSummary
+        )
+
+        return OperatorSourceSummary(
+            source: summary.source,
+            displayName: summary.displayName,
+            isLiveCapable: summary.isLiveCapable,
+            liveSummary: summary.liveSummary,
+            healthSummary: summary.healthSummary,
+            approvalSummary: summary.approvalSummary,
+            rolloutReadinessSummary: summary.rolloutReadinessSummary,
+            rolloutPreflight: rolloutPreflightEvaluator.evaluate(summary)
         )
     }
 

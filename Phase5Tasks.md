@@ -230,6 +230,8 @@ Design constraints:
 - Dependency: P5-011, P5-013
 - Description: Create a source-scoped rollout checklist/preflight model that summarizes persistence, candidate readiness, rollback safety, and health signals before promote execution.
 - Short goal: Make rollout decisions more systematic and less ad hoc.
+- Status: Completed (2026-03-16)
+- Notes: Added `RolloutChecklistItem`, `RolloutPreflightResult`, and `RolloutPreflightEvaluator` over existing health, approval, rollout-readiness, and live metadata signals. Operator dashboard summaries now carry source-scoped preflight results and surface compact recommendation and note rows without changing current activation executor behavior.
 
 ### M5-6 Operational Regression Hardening
 

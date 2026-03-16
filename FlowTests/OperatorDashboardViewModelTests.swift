@@ -86,6 +86,8 @@ struct OperatorDashboardViewModelTests {
         #expect(seoul.approvalSummary?.approvalState == .approved)
         #expect(seoul.approvalSummary?.directExecutionCompatible == true)
         #expect(seoul.rolloutReadinessSummary?.state == .immediateReady)
+        #expect(seoul.rolloutPreflight?.recommendation == .immediate)
+        #expect(seoul.rolloutPreflight?.blockingReasons.isEmpty == true)
         #expect(dashboard.bootstrapStatus == bootstrapStatus)
     }
 
@@ -108,6 +110,7 @@ struct OperatorDashboardViewModelTests {
         #expect(bundled.healthSummary.operationalStatus == .staticBaseline)
         #expect(bundled.approvalSummary == nil)
         #expect(bundled.rolloutReadinessSummary?.state == .staticBaseline)
+        #expect(bundled.rolloutPreflight?.recommendation == .notApplicable)
     }
 
     @Test
@@ -225,6 +228,7 @@ struct OperatorDashboardViewModelTests {
         #expect(seoul.healthSummary.state == .healthy)
         #expect(seoul.approvalSummary?.approvalState == .approved)
         #expect(seoul.rolloutReadinessSummary?.state == .immediateReady)
+        #expect(seoul.rolloutPreflight?.recommendation == .immediate)
 
         #expect(national.liveSummary?.activeSnapshotID == nil)
         #expect(national.liveSummary?.lastRefreshOutcome == .failed)
@@ -235,6 +239,8 @@ struct OperatorDashboardViewModelTests {
         #expect(national.healthSummary.state == .degraded)
         #expect(national.approvalSummary?.approvalState == .awaitingApproval)
         #expect(national.rolloutReadinessSummary?.state == .notReady)
+        #expect(national.rolloutPreflight?.recommendation == .blocked)
+        #expect(national.rolloutPreflight?.warningReasons.contains("Pending validation") == true)
     }
 
     @Test
@@ -259,6 +265,7 @@ struct OperatorDashboardViewModelTests {
         #expect(dashboard.liveSources.allSatisfy { $0.healthSummary.state == .recoveryNeeded })
         #expect(dashboard.liveSources.allSatisfy { $0.approvalSummary?.approvalState == .awaitingApproval })
         #expect(dashboard.liveSources.allSatisfy { $0.rolloutReadinessSummary?.state == .blocked })
+        #expect(dashboard.liveSources.allSatisfy { $0.rolloutPreflight?.recommendation == .blocked })
         #expect(dashboard.sources.map(\.source) == [.bundledSample, .seoulCapitalSnapshot, .koreaNational])
         #expect(dashboard.liveSources.map(\.source) == [.seoulCapitalSnapshot, .koreaNational])
         #expect(dashboard.staticSources.map(\.source) == [.bundledSample])

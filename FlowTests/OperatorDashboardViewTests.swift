@@ -58,6 +58,21 @@ struct OperatorDashboardViewTests {
                         state: .stagedEligible,
                         summary: "Rollback-prepared rollout available",
                         blockedReason: nil
+                    ),
+                    rolloutPreflight: RolloutPreflightResult(
+                        source: .seoulCapitalSnapshot,
+                        overallReady: true,
+                        checklistItems: [
+                            RolloutChecklistItem(
+                                kind: .candidateCompatibility,
+                                title: "Candidate compatibility",
+                                status: .passed,
+                                detail: "Candidate is compatible"
+                            )
+                        ],
+                        blockingReasons: [],
+                        warningReasons: [],
+                        recommendation: .staged
                     )
                 )
             ],
@@ -83,6 +98,8 @@ struct OperatorDashboardViewTests {
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Last Refresh", value: "Success")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Rollback Available", value: "Yes")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Rollback-prepared rollout available")))
+        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Preflight", value: "Staged")))
+        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Preflight Notes", value: "Candidate is compatible")))
     }
 
     @Test
@@ -149,6 +166,21 @@ struct OperatorDashboardViewTests {
                     state: .blocked,
                     summary: "Candidate blocked",
                     blockedReason: "Candidate incompatible"
+                ),
+                rolloutPreflight: RolloutPreflightResult(
+                    source: .koreaNational,
+                    overallReady: false,
+                    checklistItems: [
+                        RolloutChecklistItem(
+                            kind: .candidateCompatibility,
+                            title: "Candidate compatibility",
+                            status: .blocked,
+                            detail: "Candidate is incompatible"
+                        )
+                    ],
+                    blockingReasons: ["Candidate is incompatible"],
+                    warningReasons: [],
+                    recommendation: .blocked
                 )
             )
         )
@@ -188,6 +220,21 @@ struct OperatorDashboardViewTests {
                     state: .blocked,
                     summary: "Review recovered state before rollout",
                     blockedReason: "Startup recovery degraded"
+                ),
+                rolloutPreflight: RolloutPreflightResult(
+                    source: .seoulCapitalSnapshot,
+                    overallReady: false,
+                    checklistItems: [
+                        RolloutChecklistItem(
+                            kind: .bootstrapRecovery,
+                            title: "Bootstrap recovery",
+                            status: .blocked,
+                            detail: "Recovered operator state should be reviewed"
+                        )
+                    ],
+                    blockingReasons: ["Recovered operator state should be reviewed"],
+                    warningReasons: [],
+                    recommendation: .blocked
                 )
             )
         )
@@ -198,12 +245,16 @@ struct OperatorDashboardViewTests {
         #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Proposed")))
         #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Rollout Readiness", value: "Blocked")))
         #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Candidate incompatible")))
+        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Preflight", value: "Blocked")))
+        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Preflight Notes", value: "Candidate is incompatible")))
 
         #expect(recovery.healthBadge == OperatorDashboardHealthBadgeModel(title: "Recovery Needed", tone: .warning))
         #expect(recovery.statusSummary == "Recovered state needs review")
         #expect(recovery.reasonSummary == "Startup recovery degraded")
         #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Awaiting Approval")))
         #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Startup recovery degraded")))
+        #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Preflight", value: "Blocked")))
+        #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Preflight Notes", value: "Recovered operator state should be reviewed")))
     }
 
     @Test

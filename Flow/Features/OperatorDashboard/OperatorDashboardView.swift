@@ -84,10 +84,12 @@ enum OperatorDashboardPresentation {
             OperatorDashboardCardRow(label: "Approval Detail", value: source.approvalSummary?.decisionSummary ?? "Not applicable"),
             OperatorDashboardCardRow(label: "Rollout Mode", value: rolloutModeTitle(source.approvalSummary?.rolloutMode)),
             OperatorDashboardCardRow(label: "Rollout Readiness", value: rolloutReadinessTitle(source.rolloutReadinessSummary)),
+            OperatorDashboardCardRow(label: "Preflight", value: preflightRecommendationTitle(source.rolloutPreflight)),
             OperatorDashboardCardRow(label: "Last Refresh", value: refreshOutcomeTitle(live.lastRefreshOutcome)),
             OperatorDashboardCardRow(label: "Last Refresh At", value: live.lastRefreshAt ?? "Unknown"),
             OperatorDashboardCardRow(label: "Rollback Available", value: live.rollbackAvailable ? "Yes" : "No"),
             OperatorDashboardCardRow(label: "Rollout Reason", value: source.rolloutReadinessSummary?.blockedReason ?? source.rolloutReadinessSummary?.summary ?? "None"),
+            OperatorDashboardCardRow(label: "Preflight Notes", value: preflightNotes(source.rolloutPreflight)),
             OperatorDashboardCardRow(label: "Readiness", value: readinessTitle(live.readiness)),
             OperatorDashboardCardRow(label: "Sync State", value: syncStateTitle(live.syncState))
         ]
@@ -269,6 +271,31 @@ enum OperatorDashboardPresentation {
         case .notReady:
             return "Not Ready"
         }
+    }
+
+    private static func preflightRecommendationTitle(_ result: RolloutPreflightResult?) -> String {
+        guard let result else { return "Not applicable" }
+        switch result.recommendation {
+        case .immediate:
+            return "Immediate"
+        case .staged:
+            return "Staged"
+        case .blocked:
+            return "Blocked"
+        case .notApplicable:
+            return "Not applicable"
+        }
+    }
+
+    private static func preflightNotes(_ result: RolloutPreflightResult?) -> String {
+        guard let result else { return "Not applicable" }
+        if let firstBlocker = result.blockingReasons.first {
+            return firstBlocker
+        }
+        if let firstWarning = result.warningReasons.first {
+            return firstWarning
+        }
+        return result.checklistItems.first(where: { $0.status == .passed })?.detail ?? "None"
     }
 
     private static func readinessTitle(_ readiness: DatasetRefreshReadiness) -> String {
