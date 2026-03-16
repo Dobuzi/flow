@@ -83,6 +83,9 @@ struct OperatorDashboardViewModelTests {
         #expect(live.metrics.refresh.latestRefreshLatencySeconds == 60)
         #expect(seoul.healthSummary.state == .healthy)
         #expect(seoul.healthSummary.operationalStatus == .active)
+        #expect(seoul.approvalSummary?.approvalState == .approved)
+        #expect(seoul.approvalSummary?.directExecutionCompatible == true)
+        #expect(seoul.rolloutReadinessSummary?.state == .immediateReady)
         #expect(dashboard.bootstrapStatus == bootstrapStatus)
     }
 
@@ -103,6 +106,8 @@ struct OperatorDashboardViewModelTests {
         #expect(bundled.liveSummary == nil)
         #expect(bundled.healthSummary.state == .static)
         #expect(bundled.healthSummary.operationalStatus == .staticBaseline)
+        #expect(bundled.approvalSummary == nil)
+        #expect(bundled.rolloutReadinessSummary?.state == .staticBaseline)
     }
 
     @Test
@@ -218,6 +223,8 @@ struct OperatorDashboardViewModelTests {
         #expect(seoul.liveSummary?.metrics.refresh.succeededCount == 1)
         #expect(seoul.liveSummary?.metrics.activation.blockedCount == 0)
         #expect(seoul.healthSummary.state == .healthy)
+        #expect(seoul.approvalSummary?.approvalState == .approved)
+        #expect(seoul.rolloutReadinessSummary?.state == .immediateReady)
 
         #expect(national.liveSummary?.activeSnapshotID == nil)
         #expect(national.liveSummary?.lastRefreshOutcome == .failed)
@@ -226,6 +233,8 @@ struct OperatorDashboardViewModelTests {
         #expect(national.liveSummary?.metrics.refresh.failedCount == 1)
         #expect(national.liveSummary?.metrics.activation.blockedCount == 1)
         #expect(national.healthSummary.state == .degraded)
+        #expect(national.approvalSummary?.approvalState == .awaitingApproval)
+        #expect(national.rolloutReadinessSummary?.state == .notReady)
     }
 
     @Test
@@ -248,6 +257,8 @@ struct OperatorDashboardViewModelTests {
         #expect(dashboard.bootstrapStatus == bootstrapStatus)
         #expect(dashboard.bootstrapStatus?.isDegraded == true)
         #expect(dashboard.liveSources.allSatisfy { $0.healthSummary.state == .recoveryNeeded })
+        #expect(dashboard.liveSources.allSatisfy { $0.approvalSummary?.approvalState == .awaitingApproval })
+        #expect(dashboard.liveSources.allSatisfy { $0.rolloutReadinessSummary?.state == .blocked })
         #expect(dashboard.sources.map(\.source) == [.bundledSample, .seoulCapitalSnapshot, .koreaNational])
         #expect(dashboard.liveSources.map(\.source) == [.seoulCapitalSnapshot, .koreaNational])
         #expect(dashboard.staticSources.map(\.source) == [.bundledSample])

@@ -22,6 +22,26 @@ struct OperatorSourceSummary: Identifiable, Hashable {
     let isLiveCapable: Bool
     let liveSummary: OperatorSourceLiveSummary?
     let healthSummary: OperatorSourceHealthSummary
+    let approvalSummary: OperatorApprovalSummary?
+    let rolloutReadinessSummary: OperatorRolloutReadinessSummary?
+
+    init(
+        source: FlowDatasetSource,
+        displayName: String,
+        isLiveCapable: Bool,
+        liveSummary: OperatorSourceLiveSummary?,
+        healthSummary: OperatorSourceHealthSummary,
+        approvalSummary: OperatorApprovalSummary? = nil,
+        rolloutReadinessSummary: OperatorRolloutReadinessSummary? = nil
+    ) {
+        self.source = source
+        self.displayName = displayName
+        self.isLiveCapable = isLiveCapable
+        self.liveSummary = liveSummary
+        self.healthSummary = healthSummary
+        self.approvalSummary = approvalSummary
+        self.rolloutReadinessSummary = rolloutReadinessSummary
+    }
 
     var id: FlowDatasetSource {
         source
@@ -51,6 +71,7 @@ final class OperatorDashboardViewModel: ObservableObject {
     private let bootstrapStatus: PersistentOperatorStateBootstrapStatus?
     private let metricsCollector: OperatorMetricsCollector
     private let healthAggregator: OperatorHealthAggregator
+    private let approvalReadinessResolver = OperatorApprovalReadinessResolver()
 
     init(
         catalogRepository: MobilityCatalogRepository = MobilityRepositoryFactory.liveAwareCatalogRepository(),
@@ -121,16 +142,30 @@ final class OperatorDashboardViewModel: ObservableObject {
             liveSummary = nil
         }
 
+        let healthSummary = healthAggregator.summary(
+            for: descriptor.source,
+            isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
+            liveSummary: liveSummary
+        )
+        let approvalSummary = approvalReadinessResolver.approvalSummary(
+            isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
+            liveSummary: liveSummary,
+            healthSummary: healthSummary
+        )
+        let rolloutReadinessSummary = approvalReadinessResolver.rolloutReadinessSummary(
+            isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
+            liveSummary: liveSummary,
+            healthSummary: healthSummary
+        )
+
         return OperatorSourceSummary(
             source: descriptor.source,
             displayName: descriptor.displayName,
             isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
             liveSummary: liveSummary,
-            healthSummary: healthAggregator.summary(
-                for: descriptor.source,
-                isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
-                liveSummary: liveSummary
-            )
+            healthSummary: healthSummary,
+            approvalSummary: approvalSummary,
+            rolloutReadinessSummary: rolloutReadinessSummary
         )
     }
 

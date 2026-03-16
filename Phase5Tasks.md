@@ -222,6 +222,8 @@ Design constraints:
 - Dependency: P5-013, P5-008
 - Description: Surface approval state, pending actions, rollout readiness, and unresolved blockers in operator-facing dashboard metadata.
 - Short goal: Make approval and readiness visible before any future broader rollout controls are added.
+- Status: Completed (2026-03-16)
+- Notes: Added source-scoped `OperatorApprovalSummary` and `OperatorRolloutReadinessSummary` read models plus `OperatorApprovalReadinessResolver` over existing health and live metadata. Operator dashboard cards now surface approval state, approval detail, rollout mode, rollout readiness, and blocked reason without changing current executor semantics or introducing a full approval workflow.
 
 ## P5-015 — Add rollout checklist model and preflight evaluation service
 - Priority: P1

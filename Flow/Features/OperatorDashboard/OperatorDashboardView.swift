@@ -80,9 +80,14 @@ enum OperatorDashboardPresentation {
             OperatorDashboardCardRow(label: "Latest Candidate", value: live.latestCandidateSnapshotID ?? "None"),
             OperatorDashboardCardRow(label: "Candidate Compatibility", value: compatibilityTitle(live.latestCandidateCompatibility)),
             OperatorDashboardCardRow(label: "Candidate Ready", value: eligibilityTitle(live.latestCandidateEligibleForActivation)),
+            OperatorDashboardCardRow(label: "Approval", value: approvalStateTitle(source.approvalSummary)),
+            OperatorDashboardCardRow(label: "Approval Detail", value: source.approvalSummary?.decisionSummary ?? "Not applicable"),
+            OperatorDashboardCardRow(label: "Rollout Mode", value: rolloutModeTitle(source.approvalSummary?.rolloutMode)),
+            OperatorDashboardCardRow(label: "Rollout Readiness", value: rolloutReadinessTitle(source.rolloutReadinessSummary)),
             OperatorDashboardCardRow(label: "Last Refresh", value: refreshOutcomeTitle(live.lastRefreshOutcome)),
             OperatorDashboardCardRow(label: "Last Refresh At", value: live.lastRefreshAt ?? "Unknown"),
             OperatorDashboardCardRow(label: "Rollback Available", value: live.rollbackAvailable ? "Yes" : "No"),
+            OperatorDashboardCardRow(label: "Rollout Reason", value: source.rolloutReadinessSummary?.blockedReason ?? source.rolloutReadinessSummary?.summary ?? "None"),
             OperatorDashboardCardRow(label: "Readiness", value: readinessTitle(live.readiness)),
             OperatorDashboardCardRow(label: "Sync State", value: syncStateTitle(live.syncState))
         ]
@@ -211,6 +216,58 @@ enum OperatorDashboardPresentation {
             return "Skipped"
         case .failed:
             return "Failed"
+        }
+    }
+
+    private static func approvalStateTitle(_ summary: OperatorApprovalSummary?) -> String {
+        guard let summary else { return "Not applicable" }
+        switch summary.approvalState {
+        case .proposed:
+            return "Proposed"
+        case .awaitingApproval:
+            return "Awaiting Approval"
+        case .approved:
+            return "Approved"
+        case .rejected:
+            return "Rejected"
+        case .cancelled:
+            return "Cancelled"
+        case .executed:
+            return "Executed"
+        case .executionBlocked:
+            return "Execution Blocked"
+        case .executionFailed:
+            return "Execution Failed"
+        }
+    }
+
+    private static func rolloutModeTitle(_ mode: StagedRolloutMode?) -> String {
+        guard let mode else { return "Not applicable" }
+        switch mode {
+        case .immediate:
+            return "Immediate"
+        case .staged:
+            return "Staged"
+        case .rollbackPrepared:
+            return "Rollback Prepared"
+        case .dryRun:
+            return "Dry Run"
+        }
+    }
+
+    private static func rolloutReadinessTitle(_ summary: OperatorRolloutReadinessSummary?) -> String {
+        guard let summary else { return "Not applicable" }
+        switch summary.state {
+        case .staticBaseline:
+            return "Static baseline"
+        case .immediateReady:
+            return "Immediate Ready"
+        case .stagedEligible:
+            return "Staged Eligible"
+        case .blocked:
+            return "Blocked"
+        case .notReady:
+            return "Not Ready"
         }
     }
 
