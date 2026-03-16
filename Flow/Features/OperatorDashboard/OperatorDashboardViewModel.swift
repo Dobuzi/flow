@@ -21,6 +21,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
     let displayName: String
     let isLiveCapable: Bool
     let liveSummary: OperatorSourceLiveSummary?
+    let healthSummary: OperatorSourceHealthSummary
 
     var id: FlowDatasetSource {
         source
@@ -49,6 +50,7 @@ final class OperatorDashboardViewModel: ObservableObject {
     private let catalogRepository: MobilityCatalogRepository
     private let bootstrapStatus: PersistentOperatorStateBootstrapStatus?
     private let metricsCollector: OperatorMetricsCollector
+    private let healthAggregator: OperatorHealthAggregator
 
     init(
         catalogRepository: MobilityCatalogRepository = MobilityRepositoryFactory.liveAwareCatalogRepository(),
@@ -62,6 +64,7 @@ final class OperatorDashboardViewModel: ObservableObject {
             activationHistoryStore: activationHistoryStore,
             refreshStateStore: refreshStateStore
         )
+        self.healthAggregator = OperatorHealthAggregator(bootstrapStatus: bootstrapStatus)
     }
 
     func load() async {
@@ -75,7 +78,7 @@ final class OperatorDashboardViewModel: ObservableObject {
                     for: descriptor.source,
                     isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true
                 )
-                sources.append(Self.makeSourceSummary(from: descriptor, metrics: metrics))
+                sources.append(makeSourceSummary(from: descriptor, metrics: metrics))
             }
 
             dashboard = OperatorDashboardSummary(
@@ -94,7 +97,7 @@ final class OperatorDashboardViewModel: ObservableObject {
         }
     }
 
-    private static func makeSourceSummary(
+    private func makeSourceSummary(
         from descriptor: MobilityDatasetDescriptor,
         metrics: OperatorSourceMetrics?
     ) -> OperatorSourceSummary {
@@ -112,24 +115,7 @@ final class OperatorDashboardViewModel: ObservableObject {
                 operatorActivationStatus: live.activationMetadata?.operatorActivationStatus ?? .noHistory,
                 readiness: live.readiness,
                 syncState: live.syncState,
-                metrics: metrics ?? OperatorSourceMetrics(
-                    activation: .init(
-                        requestedCount: 0,
-                        succeededCount: 0,
-                        blockedCount: 0,
-                        failedCount: 0,
-                        noOpCount: 0,
-                        rollbackRequestedCount: 0,
-                        latestEventAt: nil
-                    ),
-                    refresh: .init(
-                        attemptCount: 0,
-                        succeededCount: 0,
-                        failedCount: 0,
-                        latestRefreshAt: nil,
-                        latestRefreshLatencySeconds: nil
-                    )
-                )
+                metrics: metrics ?? .empty
             )
         } else {
             liveSummary = nil
@@ -139,11 +125,16 @@ final class OperatorDashboardViewModel: ObservableObject {
             source: descriptor.source,
             displayName: descriptor.displayName,
             isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
-            liveSummary: liveSummary
+            liveSummary: liveSummary,
+            healthSummary: healthAggregator.summary(
+                for: descriptor.source,
+                isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
+                liveSummary: liveSummary
+            )
         )
     }
 
-    private static func resolvedLastRefreshTimestamp(from live: DatasetLiveMetadata) -> String? {
+    private func resolvedLastRefreshTimestamp(from live: DatasetLiveMetadata) -> String? {
         live.lastRefreshFailedAt
             ?? live.lastSuccessfulRefreshAt
             ?? live.lastRefreshAttemptAt

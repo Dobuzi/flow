@@ -81,6 +81,8 @@ struct OperatorDashboardViewModelTests {
         #expect(live.metrics.refresh.attemptCount == 1)
         #expect(live.metrics.refresh.succeededCount == 1)
         #expect(live.metrics.refresh.latestRefreshLatencySeconds == 60)
+        #expect(seoul.healthSummary.state == .healthy)
+        #expect(seoul.healthSummary.operationalStatus == .active)
         #expect(dashboard.bootstrapStatus == bootstrapStatus)
     }
 
@@ -99,6 +101,8 @@ struct OperatorDashboardViewModelTests {
 
         #expect(bundled.isLiveCapable == false)
         #expect(bundled.liveSummary == nil)
+        #expect(bundled.healthSummary.state == .static)
+        #expect(bundled.healthSummary.operationalStatus == .staticBaseline)
     }
 
     @Test
@@ -213,6 +217,7 @@ struct OperatorDashboardViewModelTests {
         #expect(seoul.liveSummary?.latestCandidateSnapshotID == "seoul-2026.04")
         #expect(seoul.liveSummary?.metrics.refresh.succeededCount == 1)
         #expect(seoul.liveSummary?.metrics.activation.blockedCount == 0)
+        #expect(seoul.healthSummary.state == .healthy)
 
         #expect(national.liveSummary?.activeSnapshotID == nil)
         #expect(national.liveSummary?.lastRefreshOutcome == .failed)
@@ -220,6 +225,7 @@ struct OperatorDashboardViewModelTests {
         #expect(national.liveSummary?.latestCandidateSnapshotID == nil)
         #expect(national.liveSummary?.metrics.refresh.failedCount == 1)
         #expect(national.liveSummary?.metrics.activation.blockedCount == 1)
+        #expect(national.healthSummary.state == .degraded)
     }
 
     @Test
@@ -241,6 +247,7 @@ struct OperatorDashboardViewModelTests {
 
         #expect(dashboard.bootstrapStatus == bootstrapStatus)
         #expect(dashboard.bootstrapStatus?.isDegraded == true)
+        #expect(dashboard.liveSources.allSatisfy { $0.healthSummary.state == .recoveryNeeded })
         #expect(dashboard.sources.map(\.source) == [.bundledSample, .seoulCapitalSnapshot, .koreaNational])
         #expect(dashboard.liveSources.map(\.source) == [.seoulCapitalSnapshot, .koreaNational])
         #expect(dashboard.staticSources.map(\.source) == [.bundledSample])

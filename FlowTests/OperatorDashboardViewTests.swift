@@ -41,6 +41,12 @@ struct OperatorDashboardViewTests {
                                 latestRefreshLatencySeconds: 90
                             )
                         )
+                    ),
+                    healthSummary: OperatorSourceHealthSummary(
+                        state: .healthy,
+                        operationalStatus: .rollbackReady,
+                        reasons: [.rollbackReady, .active],
+                        latestObservedAt: "2026-03-15T08:05:00Z"
                     )
                 )
             ],
@@ -68,7 +74,13 @@ struct OperatorDashboardViewTests {
                 source: .bundledSample,
                 displayName: "Bundled Sample",
                 isLiveCapable: false,
-                liveSummary: nil
+                liveSummary: nil,
+                healthSummary: OperatorSourceHealthSummary(
+                    state: .static,
+                    operationalStatus: .staticBaseline,
+                    reasons: [.staticSource],
+                    latestObservedAt: nil
+                )
             )
         )
 
@@ -85,9 +97,9 @@ struct OperatorDashboardViewTests {
         let summary = OperatorDashboardSummary(
             catalogVersion: "2026.03",
             sources: [
-                OperatorSourceSummary(source: .bundledSample, displayName: "Bundled Sample", isLiveCapable: false, liveSummary: nil),
-                OperatorSourceSummary(source: .seoulCapitalSnapshot, displayName: "Seoul Capital Area", isLiveCapable: true, liveSummary: nil),
-                OperatorSourceSummary(source: .koreaNational, displayName: "Korea National", isLiveCapable: true, liveSummary: nil)
+                OperatorSourceSummary(source: .bundledSample, displayName: "Bundled Sample", isLiveCapable: false, liveSummary: nil, healthSummary: OperatorSourceHealthSummary(state: .static, operationalStatus: .staticBaseline, reasons: [.staticSource], latestObservedAt: nil)),
+                OperatorSourceSummary(source: .seoulCapitalSnapshot, displayName: "Seoul Capital Area", isLiveCapable: true, liveSummary: nil, healthSummary: OperatorSourceHealthSummary(state: .healthy, operationalStatus: .inactive, reasons: [.inactive], latestObservedAt: nil)),
+                OperatorSourceSummary(source: .koreaNational, displayName: "Korea National", isLiveCapable: true, liveSummary: nil, healthSummary: OperatorSourceHealthSummary(state: .healthy, operationalStatus: .inactive, reasons: [.inactive], latestObservedAt: nil))
             ],
             bootstrapStatus: nil
         )

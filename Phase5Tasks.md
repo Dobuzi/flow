@@ -196,6 +196,8 @@ Design constraints:
 - Dependency: P5-010
 - Description: Derive source-scoped health summaries from refresh state, activation outcomes, compatibility/readiness state, and telemetry signals.
 - Short goal: Expose trustworthy health/readiness status for each dataset source.
+- Status: Completed (2026-03-16)
+- Notes: Added `OperatorSourceHealthState`, `OperatorOperationalStatus`, `OperatorSourceHealthReason`, `OperatorSourceHealthSummary`, and `OperatorHealthAggregator` as a local aggregation layer over existing operator summaries, metrics, and bootstrap status. Source summaries now carry deterministic health state derived from sync state, refresh outcome, candidate compatibility/eligibility, readiness, rollback availability, activation status, and degraded bootstrap recovery without changing runtime or policy semantics.
 
 ## P5-012 — Surface telemetry-backed health indicators in operator UI
 - Priority: P1

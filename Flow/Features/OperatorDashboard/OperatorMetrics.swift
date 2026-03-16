@@ -8,6 +8,16 @@ struct OperatorActivationMetrics: Hashable {
     let noOpCount: Int
     let rollbackRequestedCount: Int
     let latestEventAt: String?
+
+    static let empty = OperatorActivationMetrics(
+        requestedCount: 0,
+        succeededCount: 0,
+        blockedCount: 0,
+        failedCount: 0,
+        noOpCount: 0,
+        rollbackRequestedCount: 0,
+        latestEventAt: nil
+    )
 }
 
 struct OperatorRefreshMetrics: Hashable {
@@ -16,11 +26,24 @@ struct OperatorRefreshMetrics: Hashable {
     let failedCount: Int
     let latestRefreshAt: String?
     let latestRefreshLatencySeconds: TimeInterval?
+
+    static let empty = OperatorRefreshMetrics(
+        attemptCount: 0,
+        succeededCount: 0,
+        failedCount: 0,
+        latestRefreshAt: nil,
+        latestRefreshLatencySeconds: nil
+    )
 }
 
 struct OperatorSourceMetrics: Hashable {
     let activation: OperatorActivationMetrics
     let refresh: OperatorRefreshMetrics
+
+    static let empty = OperatorSourceMetrics(
+        activation: .empty,
+        refresh: .empty
+    )
 }
 
 struct OperatorMetricsCollector {
@@ -52,15 +75,7 @@ struct OperatorMetricsCollector {
 
     private func activationMetrics(for source: FlowDatasetSource) async -> OperatorActivationMetrics {
         guard let activationHistoryStore else {
-            return .init(
-                requestedCount: 0,
-                succeededCount: 0,
-                blockedCount: 0,
-                failedCount: 0,
-                noOpCount: 0,
-                rollbackRequestedCount: 0,
-                latestEventAt: nil
-            )
+            return .empty
         }
 
         let events = await activationHistoryStore.query(
@@ -86,13 +101,7 @@ struct OperatorMetricsCollector {
     private func refreshMetrics(for source: FlowDatasetSource) async -> OperatorRefreshMetrics {
         guard let refreshStateStore,
               let state = await refreshStateStore.state(for: source) else {
-            return .init(
-                attemptCount: 0,
-                succeededCount: 0,
-                failedCount: 0,
-                latestRefreshAt: nil,
-                latestRefreshLatencySeconds: nil
-            )
+            return .empty
         }
 
         let latestRefreshAt = resolvedLatestRefreshTimestamp(from: state)
