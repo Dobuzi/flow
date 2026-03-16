@@ -214,6 +214,8 @@ Design constraints:
 - Dependency: P5-005, P5-007
 - Description: Add models for approval-needed, approved, rejected, staged, and completed rollout states without redesigning current executor semantics.
 - Short goal: Introduce a safer pre-execution workflow for future production-style rollout control.
+- Status: Completed (2026-03-16)
+- Notes: Added approval-state and rollout scaffolding primitives with `ActivationApprovalState`, `ActivationApprovalDecision`, `StagedRolloutMode`, `ActivationProposal`, and `ActivationRolloutCommand`. Existing `SnapshotActivationCommand` flows now have compatibility adapters for proposed and direct-execution rollout scaffolds without changing current executor, guard, history, or runtime dataset switching behavior.
 
 ## P5-014 — Add operator-visible approval and rollout readiness state
 - Priority: P1
