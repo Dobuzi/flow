@@ -596,7 +596,7 @@ Risk mitigation rules:
 
 ## 6.4 Phase 5 Status Sync (2026-03-16)
 - Source of truth: `Phase5Tasks.md`
-- Status: `P5-001` through `P5-017`, `P5-019`, and `P5-020` completed
+- Status: `P5-001` through `P5-020` completed
 - Completed capability set:
   - persistent activation history storage with local durability, migration, and fallback resilience
   - durable activation history browsing/filter query semantics for future operator audit surfaces
@@ -617,6 +617,7 @@ Risk mitigation rules:
   - operator-visible approval state and rollout readiness summaries surfaced in dashboard read models and source cards
   - dataset activation timeline view integrated into operator controls with source-scoped newest-first history
   - activation timeline action/status filtering and deterministic load-more browsing refinements
+  - Phase 5 closeout/readiness review and operational handoff baseline documenting delivered capabilities, known limitations, and future-phase handoff guidance
 
 ## 7. Suggested Initial Sprint (Vertical Slice)
 

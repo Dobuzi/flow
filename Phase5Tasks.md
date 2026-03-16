@@ -256,6 +256,8 @@ Design constraints:
 - Dependency: P5-016, P5-017
 - Description: Synchronize Phase 5 docs/status and produce an operational readiness checklist summarizing persistence, health, approval, and regression outcomes.
 - Short goal: Close Phase 5 with a clear durability and rollout-readiness baseline.
+- Status: Completed (2026-03-16)
+- Notes: Phase 5 documentation is now synchronized around persistent operator state, dashboard/operator visibility, approval/readiness/preflight modeling, and regression hardening. Added a Phase 5 completion summary, readiness review, known limitations, and an operational handoff checklist to establish a clean baseline for future rollout and observability work without changing runtime behavior.
 
 ## 8. Execution Order
 1. P5-001
@@ -303,7 +305,73 @@ Mitigations:
 - Keep dashboard additions compact and projection-driven.
 - Maintain cross-source regression coverage for all persistence and operator-state changes.
 
-## 11. Recommended First Implementation Slice
+## 11. Phase 5 Completion Summary
+Phase 5 is complete.
+
+Delivered capability set:
+- durable operator-state persistence for activation history, refresh state, and activation state
+- deterministic bootstrap/recovery flow across persisted operator stores
+- operator dashboard summary/view-model layer and compact operator dashboard UI
+- dedicated activation timeline and audit/history browsing surfaces with filtering and bounded browsing
+- source-scoped activation and refresh telemetry/metrics primitives
+- source health aggregation and telemetry-backed health indicators in operator UI
+- approval/readiness scaffolding and operator-visible rollout readiness summaries
+- rollout checklist and preflight evaluation read models
+- persistence and operator-layer regression protection across restart, recovery, and source-isolation scenarios
+
+Backward-compatible source support preserved:
+- `bundledSample`
+- `seoulCapitalSnapshot`
+- `koreaNational`
+
+## 12. Readiness Review
+Architecture readiness:
+- Ready. Phase 5 extends existing snapshot/version/activation seams without changing runtime repository resolution or activation-policy semantics.
+
+Persistence readiness:
+- Ready. Activation history, refresh state, and activation state are persisted locally with corruption-safe fallback and deterministic bootstrap ordering.
+
+Operator visibility readiness:
+- Ready. Dashboard, timeline, and audit/history browser all derive from source-scoped persisted/operator state rather than ad hoc UI recomputation.
+
+Rollout-readiness modeling:
+- Ready as a read-model foundation. Approval, readiness, and preflight semantics are represented, but execution workflows remain intentionally unchanged.
+
+Regression protection:
+- Stronger than earlier phases. Persistence, dashboard, metrics, approval/readiness, and preflight paths now have dedicated regression coverage, including degraded recovery and cross-source isolation scenarios.
+
+Environment readiness:
+- Flow-side build/test sanity is in place.
+- Full simulator-execution confidence still depends on host CoreSimulator stability; no Flow-side simulator regression is currently documented as outstanding.
+
+## 13. Operational Handoff Checklist
+- [x] Persistent activation history store is wired and survives restart.
+- [x] Persistent refresh-state store is wired and survives restart.
+- [x] Persistent activation-state store is wired and preserves active/last-known-good continuity.
+- [x] Bootstrap/recovery restores operator state deterministically and degrades safely on missing/corrupt stores.
+- [x] Source-scoped safety is preserved across `bundledSample`, `seoulCapitalSnapshot`, and `koreaNational`.
+- [x] Operator dashboard summaries remain truthful for static, healthy, degraded, blocked, and recovery-needed cases.
+- [x] Timeline and audit/history browsing are backed by durable source-scoped history.
+- [x] Approval/readiness and rollout preflight remain read-model only and do not change current execution semantics.
+- [x] Persistence and operator-layer regressions are covered for restart, corruption fallback, mixed-source isolation, and degraded recovery propagation.
+- [x] No known Flow-side simulator regression is documented as outstanding; simulator execution remains host-environment dependent.
+
+## 14. Known Limitations / Risks
+- Metrics remain local read models; there is no backend telemetry pipeline or alerting.
+- Approval/readiness is modeled and surfaced, but there is no full approval workflow UI, RBAC, or backend approval service.
+- Staged rollout is scaffolded and evaluated, but there is no automatic staged-rollout executor or orchestration engine.
+- Operator dashboard and audit UI are intentionally compact; they are not a full observability/admin console.
+- Simulator-backed runtime validation still depends on host Xcode/CoreSimulator health even when Flow build/test status is clean.
+
+## 15. Phase 6 Preview
+High-level next directions:
+- approval workflow UI and operator action review surfaces
+- staged rollout execution/orchestration over the existing approval and preflight models
+- richer observability and alerting beyond local metrics/read models
+- operator handoff/report export or operational summary generation
+- stronger production-safe rollout automation guardrails
+
+## 16. Recommended First Implementation Slice
 `P5-001 — Introduce persistent activation history storage abstraction and first concrete local-backed implementation.`
 
 Rationale:

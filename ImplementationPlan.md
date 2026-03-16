@@ -410,3 +410,23 @@ Regression:
 - Operational observability and telemetry for refresh/activation health.
 - Production-safe activation rollout controls and staged rollout policies.
 - Optional multi-operator workflow support.
+
+## 17. Phase 5 Completion Summary
+Phase 5 (operational maturity and persistent rollout infrastructure) is complete.
+
+Implemented outcomes:
+- Persistent operator state completed for activation history, refresh state, and activation state with deterministic bootstrap/recovery behavior.
+- Operator dashboard summary/view-model and compact operator dashboard UI completed for source-scoped operational visibility.
+- Dedicated activation timeline and audit/history browsing completed with filtering, newest-first ordering, and bounded browsing.
+- Local activation/refresh telemetry, source health aggregation, approval/readiness summaries, and rollout preflight modeling completed as read-model foundations.
+- Persistence and operator-layer regression protection completed across restart, recovery, source isolation, dashboard coherence, telemetry isolation, and approval/preflight truthfulness.
+
+Readiness note:
+- Flow-side build and targeted test coverage support a Phase 5 closeout baseline.
+- Simulator-backed runtime validation remains dependent on host CoreSimulator/Xcode environment stability.
+
+## 18. Phase 6 Preview
+- Approval workflow UI and operator review flows over the existing approval/readiness models.
+- Staged rollout execution/orchestration over the current scaffold and preflight semantics.
+- Richer observability and alerting beyond local metrics/read models.
+- Operator handoff/report export and production-safe rollout automation guardrails.
