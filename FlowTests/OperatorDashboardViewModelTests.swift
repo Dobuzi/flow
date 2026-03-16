@@ -400,6 +400,192 @@ struct OperatorDashboardViewModelTests {
         #expect(national.rolloutPreflight?.recommendation == .blocked)
     }
 
+    @Test
+    @MainActor
+    func keepsDashboardMetricsHealthApprovalAndPreflightCoherentPerSource() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        let refreshStateStore = InMemoryDatasetRefreshStateStore()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.05",
+            datasetVersion: "2026.05",
+            indexedAt: "2026-03-16T02:00:00Z"
+        )
+        await seedVersion(
+            store: versionStore,
+            source: .koreaNational,
+            snapshotID: "national-2026.06",
+            datasetVersion: "2026.06",
+            indexedAt: "2026-03-16T02:10:00Z"
+        )
+
+        await refreshStateStore.record(
+            DatasetRefreshResult(
+                source: .seoulCapitalSnapshot,
+                trigger: .manual,
+                status: .succeeded,
+                startedAt: "2026-03-16T02:00:00Z",
+                finishedAt: "2026-03-16T02:02:00Z",
+                storedSnapshotID: "seoul-2026.05",
+                storedDatasetVersion: "2026.05",
+                compatibilityClassification: .compatible,
+                eligibleForActivation: true,
+                didStoreCandidate: true,
+                error: nil
+            )
+        )
+        await refreshStateStore.record(
+            DatasetRefreshResult(
+                source: .koreaNational,
+                trigger: .periodic,
+                status: .failed,
+                startedAt: "2026-03-16T02:10:00Z",
+                finishedAt: "2026-03-16T02:11:00Z",
+                storedSnapshotID: nil,
+                storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
+                didStoreCandidate: false,
+                error: .ingestionFailed(.adapterFailure(.networkUnavailable))
+            )
+        )
+
+        let policy = DefaultSnapshotActivationPolicy(versionStore: versionStore)
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.05")
+
+        await historyStore.append(
+            SnapshotActivationHistoryEvent(
+                eventID: "seoul-promote-requested",
+                type: .promoteRequested,
+                timestamp: "2026-03-16T02:02:30Z",
+                metadata: .init(
+                    source: .seoulCapitalSnapshot,
+                    snapshotID: "seoul-2026.05",
+                    datasetVersion: "2026.05",
+                    commandID: "seoul-promote-requested",
+                    commandAction: .promote,
+                    trigger: .operatorManual,
+                    requestedBy: nil,
+                    note: nil,
+                    validation: nil,
+                    guardDecision: nil,
+                    execution: nil
+                ),
+                result: .init(
+                    status: .requested,
+                    reasonCode: nil,
+                    message: nil
+                )
+            )
+        )
+        await historyStore.append(
+            SnapshotActivationHistoryEvent(
+                eventID: "seoul-promote-succeeded",
+                type: .promoteSucceeded,
+                timestamp: "2026-03-16T02:03:00Z",
+                metadata: .init(
+                    source: .seoulCapitalSnapshot,
+                    snapshotID: "seoul-2026.05",
+                    datasetVersion: "2026.05",
+                    commandID: "seoul-promote-succeeded",
+                    commandAction: .promote,
+                    trigger: .operatorConfirmed,
+                    requestedBy: nil,
+                    note: nil,
+                    validation: nil,
+                    guardDecision: nil,
+                    execution: nil
+                ),
+                result: .init(
+                    status: .succeeded,
+                    reasonCode: nil,
+                    message: nil
+                )
+            )
+        )
+        await historyStore.append(
+            SnapshotActivationHistoryEvent(
+                eventID: "national-promote-blocked",
+                type: .promoteBlocked,
+                timestamp: "2026-03-16T02:11:30Z",
+                metadata: .init(
+                    source: .koreaNational,
+                    snapshotID: "national-2026.06",
+                    datasetVersion: "2026.06",
+                    commandID: "national-promote-blocked",
+                    commandAction: .promote,
+                    trigger: .operatorManual,
+                    requestedBy: nil,
+                    note: nil,
+                    validation: nil,
+                    guardDecision: nil,
+                    execution: nil
+                ),
+                result: .init(
+                    status: .blocked,
+                    reasonCode: "candidate_incompatible",
+                    message: nil
+                )
+            )
+        )
+
+        let repository = LocalMobilityCatalogRepository(
+            liveMetadataEnricher: CatalogLiveMetadataEnricher(
+                versionStore: versionStore,
+                activationPolicy: policy,
+                refreshStateStore: refreshStateStore,
+                activationStateProjector: DefaultSnapshotActivationStateProjector(
+                    activationPolicy: policy,
+                    historyStore: historyStore,
+                    versionStore: versionStore,
+                    nowProvider: { "2026-03-16T02:12:00Z" }
+                )
+            )
+        )
+
+        let viewModel = OperatorDashboardViewModel(
+            catalogRepository: repository,
+            activationHistoryStore: historyStore,
+            refreshStateStore: refreshStateStore
+        )
+        await viewModel.load()
+
+        let dashboard = try #require(viewModel.dashboard)
+        let seoul = try #require(dashboard.sources.first(where: { $0.source == .seoulCapitalSnapshot }))
+        let national = try #require(dashboard.sources.first(where: { $0.source == .koreaNational }))
+        let bundled = try #require(dashboard.sources.first(where: { $0.source == .bundledSample }))
+
+        #expect(dashboard.sources.map(\.source) == [.bundledSample, .seoulCapitalSnapshot, .koreaNational])
+
+        #expect(seoul.liveSummary?.metrics.activation.requestedCount == 1)
+        #expect(seoul.liveSummary?.metrics.activation.succeededCount == 1)
+        #expect(seoul.liveSummary?.metrics.refresh.succeededCount == 1)
+        #expect(seoul.healthSummary.state == .healthy)
+        #expect(seoul.approvalSummary?.approvalState == .approved)
+        #expect(seoul.approvalSummary?.directExecutionCompatible == true)
+        #expect(seoul.rolloutReadinessSummary?.state == .immediateReady)
+        #expect(seoul.rolloutPreflight?.recommendation == .immediate)
+        #expect(seoul.rolloutPreflight?.blockingReasons.isEmpty == true)
+
+        #expect(national.liveSummary?.metrics.activation.requestedCount == 0)
+        #expect(national.liveSummary?.metrics.activation.blockedCount == 1)
+        #expect(national.liveSummary?.metrics.refresh.failedCount == 1)
+        #expect(national.healthSummary.state == .degraded)
+        #expect(national.approvalSummary?.approvalState == .awaitingApproval)
+        #expect(national.approvalSummary?.directExecutionCompatible == false)
+        #expect(national.rolloutReadinessSummary?.state == .notReady)
+        #expect(national.rolloutPreflight?.recommendation == .blocked)
+        #expect(national.rolloutPreflight?.warningReasons.contains("Pending validation") == true)
+
+        #expect(bundled.liveSummary == nil)
+        #expect(bundled.healthSummary.state == .static)
+        #expect(bundled.approvalSummary == nil)
+        #expect(bundled.rolloutPreflight?.recommendation == .notApplicable)
+    }
+
     private func seedVersion(
         store: InMemoryDatasetVersionStore,
         source: FlowDatasetSource,

@@ -136,4 +136,82 @@ struct OperatorApprovalReadinessTests {
         #expect(readiness.state == .staticBaseline)
         #expect(readiness.summary == "Static baseline dataset")
     }
+
+    @Test
+    func resolvesSyncFailureAndMissingCandidateTruthfully() throws {
+        let syncFailedLiveSummary = OperatorSourceLiveSummary(
+            activeSnapshotID: "national-2026.03",
+            lastKnownGoodSnapshotID: "national-2026.02",
+            latestCandidateSnapshotID: "national-2026.04",
+            latestCandidateCompatibility: .compatible,
+            latestCandidateEligibleForActivation: true,
+            lastRefreshOutcome: .failed,
+            lastRefreshAt: "2026-03-16T07:00:00Z",
+            rollbackAvailable: true,
+            operatorActivationStatus: .attentionRequired,
+            readiness: .ready,
+            syncState: .failed,
+            metrics: .empty
+        )
+        let syncFailedHealthSummary = OperatorSourceHealthSummary(
+            state: .unavailable,
+            operationalStatus: .unavailable,
+            reasons: [.syncFailed],
+            latestObservedAt: "2026-03-16T07:00:00Z"
+        )
+
+        let syncFailedApproval = try #require(resolver.approvalSummary(
+            isLiveCapable: true,
+            liveSummary: syncFailedLiveSummary,
+            healthSummary: syncFailedHealthSummary
+        ))
+        let syncFailedReadiness = resolver.rolloutReadinessSummary(
+            isLiveCapable: true,
+            liveSummary: syncFailedLiveSummary,
+            healthSummary: syncFailedHealthSummary
+        )
+
+        #expect(syncFailedApproval.approvalState == .proposed)
+        #expect(syncFailedApproval.directExecutionCompatible == false)
+        #expect(syncFailedApproval.rolloutMode == .staged)
+        #expect(syncFailedReadiness.state == .blocked)
+        #expect(syncFailedReadiness.blockedReason == "Sync failed")
+
+        let noCandidateLiveSummary = OperatorSourceLiveSummary(
+            activeSnapshotID: "seoul-2026.03",
+            lastKnownGoodSnapshotID: "seoul-2026.02",
+            latestCandidateSnapshotID: nil,
+            latestCandidateCompatibility: nil,
+            latestCandidateEligibleForActivation: nil,
+            lastRefreshOutcome: .success,
+            lastRefreshAt: "2026-03-16T07:10:00Z",
+            rollbackAvailable: true,
+            operatorActivationStatus: .activeRollbackReady,
+            readiness: .ready,
+            syncState: .ready,
+            metrics: .empty
+        )
+        let noCandidateHealthSummary = OperatorSourceHealthSummary(
+            state: .healthy,
+            operationalStatus: .rollbackReady,
+            reasons: [.active, .rollbackReady],
+            latestObservedAt: "2026-03-16T07:10:00Z"
+        )
+
+        let noCandidateApproval = try #require(resolver.approvalSummary(
+            isLiveCapable: true,
+            liveSummary: noCandidateLiveSummary,
+            healthSummary: noCandidateHealthSummary
+        ))
+        let noCandidateReadiness = resolver.rolloutReadinessSummary(
+            isLiveCapable: true,
+            liveSummary: noCandidateLiveSummary,
+            healthSummary: noCandidateHealthSummary
+        )
+
+        #expect(noCandidateApproval.approvalState == .awaitingApproval)
+        #expect(noCandidateApproval.directExecutionCompatible == false)
+        #expect(noCandidateReadiness.state == .notReady)
+        #expect(noCandidateReadiness.summary == "No candidate snapshot available")
+    }
 }

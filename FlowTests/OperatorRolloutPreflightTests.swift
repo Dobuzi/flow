@@ -189,4 +189,59 @@ struct OperatorRolloutPreflightTests {
             )
         ])
     }
+
+    @Test
+    func keepsRecoveryDegradedPreflightAlignedWithApprovalAndReadiness() throws {
+        let result = evaluator.evaluate(
+            OperatorSourceSummary(
+                source: .seoulCapitalSnapshot,
+                displayName: "Seoul Capital Area",
+                isLiveCapable: true,
+                liveSummary: OperatorSourceLiveSummary(
+                    activeSnapshotID: "seoul-2026.03",
+                    lastKnownGoodSnapshotID: "seoul-2026.02",
+                    latestCandidateSnapshotID: "seoul-2026.04",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    lastRefreshOutcome: .success,
+                    lastRefreshAt: "2026-03-16T09:30:00Z",
+                    rollbackAvailable: true,
+                    operatorActivationStatus: .activeRollbackReady,
+                    readiness: .ready,
+                    syncState: .ready,
+                    metrics: .empty
+                ),
+                healthSummary: OperatorSourceHealthSummary(
+                    state: .recoveryNeeded,
+                    operationalStatus: .recoveryNeeded,
+                    reasons: [.bootstrapDegraded],
+                    latestObservedAt: "2026-03-16T09:30:00Z"
+                ),
+                approvalSummary: OperatorApprovalSummary(
+                    approvalState: .awaitingApproval,
+                    decisionSummary: "Recovered state should be reviewed",
+                    rolloutMode: .staged,
+                    directExecutionCompatible: false
+                ),
+                rolloutReadinessSummary: OperatorRolloutReadinessSummary(
+                    state: .blocked,
+                    summary: "Review recovered state before rollout",
+                    blockedReason: "Startup recovery degraded"
+                )
+            )
+        )
+
+        let bootstrapItem = try #require(result.checklistItems.first(where: { $0.kind == .bootstrapRecovery }))
+        let approvalItem = try #require(result.checklistItems.first(where: { $0.kind == .approvalCompatibility }))
+        let readinessItem = try #require(result.checklistItems.first(where: { $0.kind == .rolloutReadiness }))
+
+        #expect(result.overallReady == false)
+        #expect(result.recommendation == .blocked)
+        #expect(bootstrapItem.status == .blocked)
+        #expect(approvalItem.status == .warning)
+        #expect(readinessItem.status == .blocked)
+        #expect(result.blockingReasons.contains("Recovered operator state should be reviewed"))
+        #expect(result.blockingReasons.contains("Startup recovery degraded"))
+        #expect(result.warningReasons.contains("Recovered state should be reviewed"))
+    }
 }

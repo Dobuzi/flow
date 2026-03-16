@@ -596,7 +596,7 @@ Risk mitigation rules:
 
 ## 6.4 Phase 5 Status Sync (2026-03-16)
 - Source of truth: `Phase5Tasks.md`
-- Status: `P5-001` through `P5-016`, `P5-019`, and `P5-020` completed
+- Status: `P5-001` through `P5-017`, `P5-019`, and `P5-020` completed
 - Completed capability set:
   - persistent activation history storage with local durability, migration, and fallback resilience
   - durable activation history browsing/filter query semantics for future operator audit surfaces
@@ -606,6 +606,7 @@ Risk mitigation rules:
   - operator dashboard summary/view-model foundation over source-scoped persisted activation and refresh metadata
   - rollout checklist and preflight evaluation over existing approval, readiness, health, and rollback safety signals
   - scenario-based persistence regression coverage for activation state, refresh state, bootstrap recovery, and downstream dashboard truthfulness after reload
+  - scenario-based operator regression coverage for dashboard summary coherence, telemetry isolation, approval/readiness truthfulness, and rollout preflight alignment
   - telemetry-backed source health aggregation over activation, refresh, compatibility, and bootstrap signals
   - compact operator dashboard health badges and concise reason summaries for static and live-capable sources
   - minimal operator dashboard UI in Settings with per-source source-status and candidate-readiness cards

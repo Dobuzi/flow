@@ -248,6 +248,8 @@ Design constraints:
 - Dependency: P5-008, P5-009, P5-010, P5-011, P5-014, P5-015
 - Description: Add cross-layer regression tests covering operator dashboard state, audit browsing, health indicators, and approval/readiness semantics.
 - Short goal: Protect operator-facing operational maturity features from drift.
+- Status: Completed (2026-03-16)
+- Notes: Added scenario-based regression coverage for mixed-source dashboard summary coherence, source-scoped activation/refresh telemetry isolation, approval/readiness truthfulness under sync-failed and no-candidate cases, and rollout preflight alignment under degraded recovery state. The operator-facing read-model layer is now covered for healthy, blocked, recovery-degraded, and static-source combinations without production-code changes.
 
 ## P5-018 — Phase 5 closeout, readiness review, and operational handoff checklist
 - Priority: P1

@@ -161,6 +161,99 @@ struct OperatorMetricsCollectorTests {
         #expect(bundledMetrics == nil)
     }
 
+    @Test
+    func keepsMixedSourceActivationAndRefreshMetricsIsolated() async throws {
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let refreshStateStore = InMemoryDatasetRefreshStateStore()
+        let collector = OperatorMetricsCollector(
+            activationHistoryStore: historyStore,
+            refreshStateStore: refreshStateStore
+        )
+
+        await historyStore.append(
+            makeHistoryEvent(
+                id: "seoul-requested",
+                source: .seoulCapitalSnapshot,
+                action: .promote,
+                type: .promoteRequested,
+                status: .requested,
+                timestamp: "2026-03-16T01:00:00Z"
+            )
+        )
+        await historyStore.append(
+            makeHistoryEvent(
+                id: "seoul-succeeded",
+                source: .seoulCapitalSnapshot,
+                action: .promote,
+                type: .promoteSucceeded,
+                status: .succeeded,
+                timestamp: "2026-03-16T01:01:00Z"
+            )
+        )
+        await historyStore.append(
+            makeHistoryEvent(
+                id: "national-blocked",
+                source: .koreaNational,
+                action: .promote,
+                type: .promoteBlocked,
+                status: .blocked,
+                timestamp: "2026-03-16T01:02:00Z"
+            )
+        )
+
+        await refreshStateStore.record(
+            DatasetRefreshResult(
+                source: .seoulCapitalSnapshot,
+                trigger: .manual,
+                status: .succeeded,
+                startedAt: "2026-03-16T01:10:00Z",
+                finishedAt: "2026-03-16T01:12:00Z",
+                storedSnapshotID: "seoul-2026.05",
+                storedDatasetVersion: "2026.05",
+                compatibilityClassification: .compatible,
+                eligibleForActivation: true,
+                didStoreCandidate: true,
+                error: nil
+            )
+        )
+        await refreshStateStore.record(
+            DatasetRefreshResult(
+                source: .koreaNational,
+                trigger: .periodic,
+                status: .failed,
+                startedAt: "2026-03-16T01:20:00Z",
+                finishedAt: "2026-03-16T01:21:00Z",
+                storedSnapshotID: nil,
+                storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
+                didStoreCandidate: false,
+                error: .ingestionFailed(.adapterFailure(.networkUnavailable))
+            )
+        )
+
+        let seoul = try #require(await collector.metrics(for: .seoulCapitalSnapshot, isLiveCapable: true))
+        let national = try #require(await collector.metrics(for: .koreaNational, isLiveCapable: true))
+
+        #expect(seoul.activation.requestedCount == 1)
+        #expect(seoul.activation.succeededCount == 1)
+        #expect(seoul.activation.blockedCount == 0)
+        #expect(seoul.activation.latestEventAt == "2026-03-16T01:01:00Z")
+        #expect(seoul.refresh.succeededCount == 1)
+        #expect(seoul.refresh.failedCount == 0)
+        #expect(seoul.refresh.latestRefreshAt == "2026-03-16T01:12:00Z")
+        #expect(seoul.refresh.latestRefreshLatencySeconds == 120)
+
+        #expect(national.activation.requestedCount == 0)
+        #expect(national.activation.succeededCount == 0)
+        #expect(national.activation.blockedCount == 1)
+        #expect(national.activation.latestEventAt == "2026-03-16T01:02:00Z")
+        #expect(national.refresh.succeededCount == 0)
+        #expect(national.refresh.failedCount == 1)
+        #expect(national.refresh.latestRefreshAt == "2026-03-16T01:21:00Z")
+        #expect(national.refresh.latestRefreshLatencySeconds == 60)
+    }
+
     private func makeHistoryEvent(
         id: String,
         source: FlowDatasetSource,
