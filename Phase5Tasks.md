@@ -240,6 +240,8 @@ Design constraints:
 - Dependency: P5-001, P5-004, P5-005, P5-006
 - Description: Add regression coverage for restart durability, persistence corruption handling, and source-scoped state restoration.
 - Short goal: Prove local durability without breaking existing static or live-capable behavior.
+- Status: Completed (2026-03-16)
+- Notes: Strengthened scenario-based persistence regression coverage for missing activation-state files, corrupt refresh-state files, bootstrap recovery stability, source-scoped isolation after reload, and downstream dashboard truthfulness after persistent bootstrap.
 
 ## P5-017 — Add dashboard, telemetry, and approval-state regression suite
 - Priority: P1

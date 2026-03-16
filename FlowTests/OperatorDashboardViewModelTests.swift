@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Flow
 
@@ -271,6 +272,134 @@ struct OperatorDashboardViewModelTests {
         #expect(dashboard.staticSources.map(\.source) == [.bundledSample])
     }
 
+    @Test
+    @MainActor
+    func buildsTruthfulDashboardSummariesAfterPersistentBootstrapReload() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.04",
+            datasetVersion: "2026.04",
+            indexedAt: "2026-03-16T01:00:00Z"
+        )
+        await seedVersion(
+            store: versionStore,
+            source: .koreaNational,
+            snapshotID: "national-2026.05",
+            datasetVersion: "2026.05",
+            indexedAt: "2026-03-16T01:10:00Z"
+        )
+
+        let files = makeBootstrapFileURLs(testName: #function)
+        let refreshStore = PersistentDatasetRefreshStateStore(fileURL: files.refresh)
+        await refreshStore.record(
+            DatasetRefreshResult(
+                source: .seoulCapitalSnapshot,
+                trigger: .manual,
+                status: .succeeded,
+                startedAt: "2026-03-16T01:00:00Z",
+                finishedAt: "2026-03-16T01:01:00Z",
+                storedSnapshotID: "seoul-2026.04",
+                storedDatasetVersion: "2026.04",
+                compatibilityClassification: .compatible,
+                eligibleForActivation: true,
+                didStoreCandidate: true,
+                error: nil
+            )
+        )
+        await refreshStore.record(
+            DatasetRefreshResult(
+                source: .koreaNational,
+                trigger: .periodic,
+                status: .failed,
+                startedAt: "2026-03-16T01:10:00Z",
+                finishedAt: "2026-03-16T01:11:00Z",
+                storedSnapshotID: nil,
+                storedDatasetVersion: nil,
+                compatibilityClassification: nil,
+                eligibleForActivation: nil,
+                didStoreCandidate: false,
+                error: .ingestionFailed(.adapterFailure(.networkUnavailable))
+            )
+        )
+
+        let activationStateStore = PersistentSnapshotActivationStateStore(fileURL: files.activationState)
+        let policy = DefaultSnapshotActivationPolicy(
+            versionStore: versionStore,
+            stateStore: activationStateStore,
+            nowProvider: { "2026-03-16T01:12:00Z" }
+        )
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.04")
+
+        let historyStore = PersistentSnapshotActivationHistoryStore(fileURL: files.history)
+        await historyStore.append(
+            SnapshotActivationHistoryEvent(
+                eventID: "national-persisted-blocked",
+                type: .promoteBlocked,
+                timestamp: "2026-03-16T01:11:30Z",
+                metadata: .init(
+                    source: .koreaNational,
+                    snapshotID: "national-2026.05",
+                    datasetVersion: "2026.05",
+                    commandID: "national-persisted-blocked",
+                    commandAction: .promote,
+                    trigger: .operatorManual,
+                    requestedBy: nil,
+                    note: nil,
+                    validation: nil,
+                    guardDecision: nil,
+                    execution: nil
+                ),
+                result: .init(
+                    status: .blocked,
+                    reasonCode: "candidate_incompatible",
+                    message: nil
+                )
+            )
+        )
+
+        let bootstrap = PersistentOperatorStateBootstrap(
+            versionStore: versionStore,
+            activationStateFileURL: files.activationState,
+            refreshStateFileURL: files.refresh,
+            activationHistoryFileURL: files.history
+        ).bootstrap()
+
+        let repository = LocalMobilityCatalogRepository(
+            liveMetadataEnricher: CatalogLiveMetadataEnricher(
+                versionStore: versionStore,
+                activationPolicy: bootstrap.activationPolicy,
+                refreshStateStore: bootstrap.refreshStateStore,
+                activationStateProjector: bootstrap.activationStateProjector
+            )
+        )
+
+        let viewModel = OperatorDashboardViewModel(
+            catalogRepository: repository,
+            bootstrapStatus: bootstrap.status,
+            activationHistoryStore: bootstrap.activationHistoryStore,
+            refreshStateStore: bootstrap.refreshStateStore
+        )
+        await viewModel.load()
+
+        let dashboard = try #require(viewModel.dashboard)
+        let seoul = try #require(dashboard.sources.first(where: { $0.source == .seoulCapitalSnapshot }))
+        let national = try #require(dashboard.sources.first(where: { $0.source == .koreaNational }))
+
+        #expect(dashboard.bootstrapStatus == bootstrap.status)
+        #expect(seoul.liveSummary?.activeSnapshotID == "seoul-2026.04")
+        #expect(seoul.liveSummary?.latestCandidateSnapshotID == "seoul-2026.04")
+        #expect(seoul.liveSummary?.lastRefreshOutcome == .success)
+        #expect(seoul.rolloutPreflight?.recommendation == .immediate)
+
+        #expect(national.liveSummary?.activeSnapshotID == nil)
+        #expect(national.liveSummary?.latestCandidateSnapshotID == nil)
+        #expect(national.liveSummary?.lastRefreshOutcome == .failed)
+        #expect(national.approvalSummary?.approvalState == .awaitingApproval)
+        #expect(national.rolloutPreflight?.recommendation == .blocked)
+    }
+
     private func seedVersion(
         store: InMemoryDatasetVersionStore,
         source: FlowDatasetSource,
@@ -306,6 +435,20 @@ struct OperatorDashboardViewModelTests {
             compatibilityClassification: .compatible,
             isIngestionCandidate: true,
             indexedAt: indexedAt
+        )
+    }
+
+    private func makeBootstrapFileURLs(testName: String) -> (activationState: URL, refresh: URL, history: URL) {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("FlowTests", isDirectory: true)
+            .appendingPathComponent("OperatorDashboardViewModel", isDirectory: true)
+            .appendingPathComponent(testName, isDirectory: true)
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+
+        return (
+            activationState: root.appendingPathComponent("activation_state.json", isDirectory: false),
+            refresh: root.appendingPathComponent("refresh_state.json", isDirectory: false),
+            history: root.appendingPathComponent("activation_history.json", isDirectory: false)
         )
     }
 }

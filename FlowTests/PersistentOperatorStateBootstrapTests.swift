@@ -154,6 +154,69 @@ struct PersistentOperatorStateBootstrapTests {
     }
 
     @Test
+    func bootstrapRemainsStableWhenActivationStateFileIsMissing() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.03",
+            datasetVersion: "2026.03",
+            indexedAt: "2026-03-15T03:30:00Z"
+        )
+
+        let files = makeBootstrapFileURLs(testName: #function)
+        let refreshStore = PersistentDatasetRefreshStateStore(fileURL: files.refresh)
+        await refreshStore.record(
+            DatasetRefreshResult(
+                source: .seoulCapitalSnapshot,
+                trigger: .manual,
+                status: .succeeded,
+                startedAt: "2026-03-15T03:30:00Z",
+                finishedAt: "2026-03-15T03:31:00Z",
+                storedSnapshotID: "seoul-2026.03",
+                storedDatasetVersion: "2026.03",
+                compatibilityClassification: .compatible,
+                eligibleForActivation: true,
+                didStoreCandidate: true,
+                error: nil
+            )
+        )
+
+        let historyStore = PersistentSnapshotActivationHistoryStore(fileURL: files.history)
+        await historyStore.append(
+            makeRequestedEvent(
+                eventID: "evt-requested-missing-state",
+                source: .seoulCapitalSnapshot,
+                snapshotID: "seoul-2026.03",
+                timestamp: "2026-03-15T03:32:00Z"
+            )
+        )
+
+        let bootstrap = PersistentOperatorStateBootstrap(
+            versionStore: versionStore,
+            activationStateFileURL: files.activationState,
+            refreshStateFileURL: files.refresh,
+            activationHistoryFileURL: files.history
+        ).bootstrap()
+
+        #expect(bootstrap.status.activationState == .empty)
+        #expect(bootstrap.status.refreshState == .current)
+        #expect(bootstrap.status.activationHistory == .current)
+        #expect(bootstrap.status.isDegraded == false)
+
+        let restoredState = await bootstrap.activationPolicy.currentState(for: .seoulCapitalSnapshot)
+        let restoredRefresh = await bootstrap.refreshStateStore.state(for: .seoulCapitalSnapshot)
+        let restoredHistory = await bootstrap.activationHistoryStore.latestEvent(for: .seoulCapitalSnapshot)
+        let bundledState = await bootstrap.activationPolicy.currentState(for: .bundledSample)
+
+        #expect(restoredState.activeSnapshotID == nil)
+        #expect(restoredState.lastKnownGoodSnapshotID == nil)
+        #expect(restoredRefresh?.latestCandidateSnapshotID == "seoul-2026.03")
+        #expect(restoredHistory?.eventID == "evt-requested-missing-state")
+        #expect(bundledState.activeSnapshotID == nil)
+    }
+
+    @Test
     func bootstrapRecoversWhenActivationHistoryIsCorruptButOtherStoresRemainValid() async throws {
         let versionStore = InMemoryDatasetVersionStore()
         await seedVersion(
@@ -218,6 +281,83 @@ struct PersistentOperatorStateBootstrapTests {
         #expect(restoredHistory.isEmpty)
         #expect(projected.activeSnapshotID == "national-2026.05")
         #expect(projected.hasActivationHistory == false)
+    }
+
+    @Test
+    func bootstrapRecoversWhenRefreshStateIsCorruptWithoutContaminatingActivationOrHistory() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        await seedVersion(
+            store: versionStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.04",
+            datasetVersion: "2026.04",
+            indexedAt: "2026-03-15T04:30:00Z"
+        )
+
+        let files = makeBootstrapFileURLs(testName: #function)
+        let activationStateStore = PersistentSnapshotActivationStateStore(fileURL: files.activationState)
+        let policy = DefaultSnapshotActivationPolicy(
+            versionStore: versionStore,
+            stateStore: activationStateStore,
+            nowProvider: { "2026-03-15T04:35:00Z" }
+        )
+        _ = try await policy.activate(source: .seoulCapitalSnapshot, requestedSnapshotID: "seoul-2026.04")
+
+        let historyStore = PersistentSnapshotActivationHistoryStore(fileURL: files.history)
+        await historyStore.append(
+            SnapshotActivationHistoryEvent(
+                eventID: "evt-refresh-corrupt-promote",
+                type: .promoteSucceeded,
+                timestamp: "2026-03-15T04:36:00Z",
+                metadata: SnapshotActivationEventMetadata(
+                    source: .seoulCapitalSnapshot,
+                    snapshotID: "seoul-2026.04",
+                    datasetVersion: "2026.04",
+                    commandID: "cmd-refresh-corrupt",
+                    commandAction: .promote,
+                    trigger: .operatorConfirmed,
+                    requestedBy: nil,
+                    note: nil,
+                    validation: nil,
+                    guardDecision: nil,
+                    execution: nil
+                ),
+                result: SnapshotActivationEventResult(
+                    status: .succeeded,
+                    reasonCode: nil,
+                    message: nil
+                )
+            )
+        )
+
+        try FileManager.default.createDirectory(
+            at: files.refresh.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("broken-refresh".utf8).write(to: files.refresh)
+
+        let bootstrap = PersistentOperatorStateBootstrap(
+            versionStore: versionStore,
+            activationStateFileURL: files.activationState,
+            refreshStateFileURL: files.refresh,
+            activationHistoryFileURL: files.history
+        ).bootstrap()
+
+        #expect(bootstrap.status.activationState == .current)
+        #expect(bootstrap.status.refreshState == .resetCorrupted)
+        #expect(bootstrap.status.activationHistory == .current)
+        #expect(bootstrap.status.isDegraded == true)
+
+        let restoredState = await bootstrap.activationPolicy.currentState(for: .seoulCapitalSnapshot)
+        let restoredRefresh = await bootstrap.refreshStateStore.state(for: .seoulCapitalSnapshot)
+        let restoredHistory = await bootstrap.activationHistoryStore.latestEvent(for: .seoulCapitalSnapshot)
+        let projected = await bootstrap.activationStateProjector.project(for: .seoulCapitalSnapshot)
+
+        #expect(restoredState.activeSnapshotID == "seoul-2026.04")
+        #expect(restoredRefresh == nil)
+        #expect(restoredHistory?.eventID == "evt-refresh-corrupt-promote")
+        #expect(projected.activeSnapshotID == "seoul-2026.04")
+        #expect(projected.hasActivationHistory == true)
     }
 
     @Test
