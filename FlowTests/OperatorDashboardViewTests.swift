@@ -57,7 +57,9 @@ struct OperatorDashboardViewTests {
 
         #expect(card.title == "Seoul Capital Area")
         #expect(card.capabilityLabel == "Live-capable")
-        #expect(card.statusSummary == "Active, rollback ready")
+        #expect(card.healthBadge == OperatorDashboardHealthBadgeModel(title: "Healthy", tone: .good))
+        #expect(card.statusSummary == "Rollback ready")
+        #expect(card.reasonSummary == "Rollback ready • Candidate ready")
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Active Snapshot", value: "seoul-2026.03")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Last Known Good", value: "seoul-2026.02")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Latest Candidate", value: "seoul-2026.04")))
@@ -85,11 +87,80 @@ struct OperatorDashboardViewTests {
         )
 
         #expect(card.capabilityLabel == "Static")
+        #expect(card.healthBadge == OperatorDashboardHealthBadgeModel(title: "Static", tone: .neutral))
         #expect(card.statusSummary == "Packaged baseline dataset")
+        #expect(card.reasonSummary == nil)
         #expect(card.rows == [
             OperatorDashboardCardRow(label: "Refresh", value: "Not supported"),
             OperatorDashboardCardRow(label: "Activation", value: "Not applicable")
         ])
+    }
+
+    @Test
+    func buildsBlockedAndRecoveryNeededHealthIndicators() throws {
+        let blocked = OperatorDashboardPresentation.cardModel(
+            from: OperatorSourceSummary(
+                source: .koreaNational,
+                displayName: "Korea National",
+                isLiveCapable: true,
+                liveSummary: OperatorSourceLiveSummary(
+                    activeSnapshotID: nil,
+                    lastKnownGoodSnapshotID: nil,
+                    latestCandidateSnapshotID: "national-2026.05",
+                    latestCandidateCompatibility: .incompatible,
+                    latestCandidateEligibleForActivation: false,
+                    lastRefreshOutcome: .failed,
+                    lastRefreshAt: "2026-03-16T02:00:00Z",
+                    rollbackAvailable: false,
+                    operatorActivationStatus: .attentionRequired,
+                    readiness: .blocked,
+                    syncState: .degraded,
+                    metrics: .empty
+                ),
+                healthSummary: OperatorSourceHealthSummary(
+                    state: .blocked,
+                    operationalStatus: .blocked,
+                    reasons: [.candidateIncompatible, .readinessBlocked, .refreshFailed],
+                    latestObservedAt: "2026-03-16T02:00:00Z"
+                )
+            )
+        )
+
+        let recovery = OperatorDashboardPresentation.cardModel(
+            from: OperatorSourceSummary(
+                source: .seoulCapitalSnapshot,
+                displayName: "Seoul Capital Area",
+                isLiveCapable: true,
+                liveSummary: OperatorSourceLiveSummary(
+                    activeSnapshotID: "seoul-2026.04",
+                    lastKnownGoodSnapshotID: "seoul-2026.03",
+                    latestCandidateSnapshotID: "seoul-2026.05",
+                    latestCandidateCompatibility: .compatible,
+                    latestCandidateEligibleForActivation: true,
+                    lastRefreshOutcome: .success,
+                    lastRefreshAt: "2026-03-16T03:00:00Z",
+                    rollbackAvailable: true,
+                    operatorActivationStatus: .activeRollbackReady,
+                    readiness: .ready,
+                    syncState: .ready,
+                    metrics: .empty
+                ),
+                healthSummary: OperatorSourceHealthSummary(
+                    state: .recoveryNeeded,
+                    operationalStatus: .recoveryNeeded,
+                    reasons: [.bootstrapDegraded],
+                    latestObservedAt: "2026-03-16T03:00:00Z"
+                )
+            )
+        )
+
+        #expect(blocked.healthBadge == OperatorDashboardHealthBadgeModel(title: "Blocked", tone: .critical))
+        #expect(blocked.statusSummary == "Candidate blocked")
+        #expect(blocked.reasonSummary == "Candidate incompatible • Readiness blocked")
+
+        #expect(recovery.healthBadge == OperatorDashboardHealthBadgeModel(title: "Recovery Needed", tone: .warning))
+        #expect(recovery.statusSummary == "Recovered state needs review")
+        #expect(recovery.reasonSummary == "Startup recovery degraded")
     }
 
     @Test

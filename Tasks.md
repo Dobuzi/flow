@@ -596,7 +596,7 @@ Risk mitigation rules:
 
 ## 6.4 Phase 5 Status Sync (2026-03-16)
 - Source of truth: `Phase5Tasks.md`
-- Status: `P5-001` through `P5-011`, `P5-019`, and `P5-020` completed
+- Status: `P5-001` through `P5-012`, `P5-019`, and `P5-020` completed
 - Completed capability set:
   - persistent activation history storage with local durability, migration, and fallback resilience
   - durable activation history browsing/filter query semantics for future operator audit surfaces
@@ -604,6 +604,8 @@ Risk mitigation rules:
   - persistent activation state storage across launches for active snapshot and last-known-good continuity
   - persistent operator-state bootstrap/recovery ordering across activation state, refresh state, and activation history
   - operator dashboard summary/view-model foundation over source-scoped persisted activation and refresh metadata
+  - telemetry-backed source health aggregation over activation, refresh, compatibility, and bootstrap signals
+  - compact operator dashboard health badges and concise reason summaries for static and live-capable sources
   - minimal operator dashboard UI in Settings with per-source source-status and candidate-readiness cards
   - dedicated activation audit/history browser with source/action/status filters and deterministic newest-first paging
   - local activation and refresh metrics primitives derived from persisted history/state for source-scoped operational summaries

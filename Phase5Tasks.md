@@ -204,6 +204,8 @@ Design constraints:
 - Dependency: P5-008, P5-011
 - Description: Show concise health indicators, degraded-state warnings, and operational hints in the operator dashboard and source metadata surfaces.
 - Short goal: Give operators earlier warning of unhealthy refresh/activation conditions.
+- Status: Completed (2026-03-16)
+- Notes: Extended operator dashboard source cards with source-scoped health badges, concise operational status labels, and compact reason summaries derived from `OperatorSourceHealthSummary`. Static sources retain a truthful baseline presentation, while live-capable sources surface degraded, blocked, unavailable, and recovery-needed cues without changing navigation, runtime behavior, or activation semantics.
 
 ### M5-5 Approval and Staged Rollout Semantics
 

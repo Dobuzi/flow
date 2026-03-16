@@ -11,11 +11,25 @@ struct OperatorDashboardCardRow: Hashable {
     let value: String
 }
 
+enum OperatorDashboardHealthTone: Hashable {
+    case neutral
+    case good
+    case warning
+    case critical
+}
+
+struct OperatorDashboardHealthBadgeModel: Hashable {
+    let title: String
+    let tone: OperatorDashboardHealthTone
+}
+
 struct OperatorSourceSummaryCardModel: Identifiable, Hashable {
     let source: FlowDatasetSource
     let title: String
     let capabilityLabel: String
+    let healthBadge: OperatorDashboardHealthBadgeModel
     let statusSummary: String
+    let reasonSummary: String?
     let rows: [OperatorDashboardCardRow]
 
     var id: FlowDatasetSource {
@@ -50,7 +64,9 @@ enum OperatorDashboardPresentation {
                 source: source.source,
                 title: source.displayName,
                 capabilityLabel: "Static",
+                healthBadge: .init(title: "Static", tone: .neutral),
                 statusSummary: "Packaged baseline dataset",
+                reasonSummary: nil,
                 rows: [
                     OperatorDashboardCardRow(label: "Refresh", value: "Not supported"),
                     OperatorDashboardCardRow(label: "Activation", value: "Not applicable")
@@ -75,25 +91,104 @@ enum OperatorDashboardPresentation {
             source: source.source,
             title: source.displayName,
             capabilityLabel: "Live-capable",
-            statusSummary: activationStatusTitle(live.operatorActivationStatus),
+            healthBadge: healthBadge(from: source.healthSummary),
+            statusSummary: operationalStatusTitle(source.healthSummary.operationalStatus),
+            reasonSummary: reasonSummary(from: source.healthSummary),
             rows: rows
         )
     }
 
-    private static func activationStatusTitle(_ status: DatasetOperatorActivationStatus) -> String {
+    private static func healthBadge(from summary: OperatorSourceHealthSummary) -> OperatorDashboardHealthBadgeModel {
+        switch summary.state {
+        case .static:
+            return .init(title: "Static", tone: .neutral)
+        case .healthy:
+            return .init(title: "Healthy", tone: .good)
+        case .degraded:
+            return .init(title: "Degraded", tone: .warning)
+        case .blocked:
+            return .init(title: "Blocked", tone: .critical)
+        case .unavailable:
+            return .init(title: "Unavailable", tone: .critical)
+        case .recoveryNeeded:
+            return .init(title: "Recovery Needed", tone: .warning)
+        }
+    }
+
+    private static func operationalStatusTitle(_ status: OperatorOperationalStatus) -> String {
         switch status {
-        case .noHistory:
-            return "No activation history"
-        case .inactive:
-            return "Inactive"
-        case .inactiveCandidateReady:
-            return "Inactive, candidate ready"
+        case .staticBaseline:
+            return "Packaged baseline dataset"
         case .active:
             return "Active"
-        case .activeRollbackReady:
-            return "Active, rollback ready"
-        case .attentionRequired:
-            return "Attention required"
+        case .candidateReady:
+            return "Candidate ready"
+        case .rollbackReady:
+            return "Rollback ready"
+        case .inactive:
+            return "Inactive"
+        case .blocked:
+            return "Candidate blocked"
+        case .degraded:
+            return "Attention needed"
+        case .unavailable:
+            return "Unavailable"
+        case .recoveryNeeded:
+            return "Recovered state needs review"
+        }
+    }
+
+    private static func reasonSummary(from summary: OperatorSourceHealthSummary) -> String? {
+        let filteredReasons = summary.reasons.filter {
+            switch $0 {
+            case .active, .inactive, .staticSource:
+                return false
+            case .bootstrapDegraded,
+                 .syncFailed,
+                 .syncDegraded,
+                 .refreshFailed,
+                 .candidateIncompatible,
+                 .candidateIneligible,
+                 .readinessBlocked,
+                 .pendingValidation,
+                 .rollbackReady,
+                 .candidateReady:
+                return true
+            }
+        }
+
+        guard !filteredReasons.isEmpty else { return nil }
+        return filteredReasons.prefix(2).map(reasonTitle).joined(separator: " • ")
+    }
+
+    private static func reasonTitle(_ reason: OperatorSourceHealthReason) -> String {
+        switch reason {
+        case .staticSource:
+            return "Static source"
+        case .bootstrapDegraded:
+            return "Startup recovery degraded"
+        case .syncFailed:
+            return "Sync failed"
+        case .syncDegraded:
+            return "Sync degraded"
+        case .refreshFailed:
+            return "Refresh failed"
+        case .candidateIncompatible:
+            return "Candidate incompatible"
+        case .candidateIneligible:
+            return "Candidate not eligible"
+        case .readinessBlocked:
+            return "Readiness blocked"
+        case .pendingValidation:
+            return "Pending validation"
+        case .rollbackReady:
+            return "Rollback ready"
+        case .candidateReady:
+            return "Candidate ready"
+        case .active:
+            return "Active"
+        case .inactive:
+            return "Inactive"
         }
     }
 
@@ -270,15 +365,30 @@ struct OperatorSourceSummaryCard: View {
                     Text(model.statusSummary)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    if let reasonSummary = model.reasonSummary {
+                        Text(reasonSummary)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
-                Text(model.capabilityLabel)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(.thinMaterial)
-                    .clipShape(Capsule())
+                VStack(alignment: .trailing, spacing: 6) {
+                    Text(model.healthBadge.title)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(foregroundStyle(for: model.healthBadge.tone))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(backgroundStyle(for: model.healthBadge.tone))
+                        .clipShape(Capsule())
+
+                    Text(model.capabilityLabel)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.thinMaterial)
+                        .clipShape(Capsule())
+                }
             }
 
             ForEach(model.rows, id: \.label) { row in
@@ -287,5 +397,31 @@ struct OperatorSourceSummaryCard: View {
             }
         }
         .padding(.vertical, 6)
+    }
+
+    private func foregroundStyle(for tone: OperatorDashboardHealthTone) -> Color {
+        switch tone {
+        case .neutral:
+            return .secondary
+        case .good:
+            return .green
+        case .warning:
+            return .orange
+        case .critical:
+            return .red
+        }
+    }
+
+    private func backgroundStyle(for tone: OperatorDashboardHealthTone) -> some ShapeStyle {
+        switch tone {
+        case .neutral:
+            return Color.gray.opacity(0.12)
+        case .good:
+            return Color.green.opacity(0.14)
+        case .warning:
+            return Color.orange.opacity(0.14)
+        case .critical:
+            return Color.red.opacity(0.14)
+        }
     }
 }
