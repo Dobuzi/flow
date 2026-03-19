@@ -205,7 +205,7 @@ struct RolloutProposalStoreTests {
         id: String,
         source: FlowDatasetSource,
         targetSnapshotID: String? = nil,
-        lifecycleState: RolloutLifecycleState = .draft,
+        lifecycleState: RolloutProposalLifecycleState = .draft,
         approvalState: ActivationApprovalState = .proposed,
         createdAt: String,
         updatedAt: String

@@ -7,7 +7,7 @@ struct RolloutProposal: Codable, Hashable {
     let targetSnapshotID: String?
     let targetDatasetVersion: String?
     let rolloutMode: StagedRolloutMode
-    let lifecycleState: RolloutLifecycleState
+    let lifecycleState: RolloutProposalLifecycleState
     let approvalState: ActivationApprovalState
     let stages: [RolloutStage]
     let createdAt: String
@@ -25,7 +25,7 @@ struct RolloutProposal: Codable, Hashable {
         targetSnapshotID: String?,
         targetDatasetVersion: String?,
         rolloutMode: StagedRolloutMode,
-        lifecycleState: RolloutLifecycleState,
+        lifecycleState: RolloutProposalLifecycleState,
         approvalState: ActivationApprovalState,
         stages: [RolloutStage],
         createdAt: String,
@@ -56,7 +56,7 @@ struct RolloutProposal: Codable, Hashable {
 
     init(
         rolloutCommand: ActivationRolloutCommand,
-        lifecycleState: RolloutLifecycleState,
+        lifecycleState: RolloutProposalLifecycleState,
         stages: [RolloutStage],
         updatedAt: String? = nil
     ) {
@@ -97,7 +97,7 @@ struct RolloutProposal: Codable, Hashable {
     }
 
     func updating(
-        lifecycleState: RolloutLifecycleState? = nil,
+        lifecycleState: RolloutProposalLifecycleState? = nil,
         approvalState: ActivationApprovalState? = nil,
         updatedAt: String,
         lastDecisionAt: String? = nil,

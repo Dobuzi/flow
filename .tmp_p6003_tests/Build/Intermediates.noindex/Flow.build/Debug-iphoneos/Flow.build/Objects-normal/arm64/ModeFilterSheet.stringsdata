@@ -1,0 +1,48 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/ModeFilter/ModeFilterSheet.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Mode Filters",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "Transport Modes",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 9
+        }
+      },
+      {
+        "comment": "",
+        "key": "Quick Actions",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 21
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select All",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 22
+        }
+      },
+      {
+        "comment": "",
+        "key": "Clear All",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 25
+        }
+      }
+    ]
+  },
+  "version": 1
+}

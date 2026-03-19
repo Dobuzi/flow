@@ -1,0 +1,4 @@
+{"id":"f-001","originNodeID":"KR-11","destinationNodeID":"KR-26","transportMode":"rail","timeBucketID":"M:2025-01","volume":128000.0,"unitType":"passengers","metadata":{"corridorName":"Gyeongbu"}}
+{"id":"f-002","originNodeID":"KR-11","destinationNodeID":"KR-27","transportMode":"road","timeBucketID":"M:2025-01","volume":98000.0,"unitType":"vehicles","metadata":{"dataSourceTag":"mock"}}
+{"id":"f-003","originNodeID":"KR-26","destinationNodeID":"KR-11","transportMode":"air","timeBucketID":"M:2025-01","volume":32000.0,"unitType":"passengers","metadata":{"confidenceScore":0.92}}
+{"id":"f-004","originNodeID":"KR-26","destinationNodeID":"KR-27","transportMode":"maritime","timeBucketID":"M:2025-01","volume":4100.0,"unitType":"tons","metadata":{"isFreightFlow":true}}

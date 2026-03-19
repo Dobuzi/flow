@@ -1,0 +1,79 @@
+{
+  "version": "1.0.0",
+  "default_source": "bundled_sample",
+  "datasets": [
+    {
+      "id": "bundled-sample",
+      "dataset_id": "sample-korea-mobility-2025-q1",
+      "source": "bundled_sample",
+      "provider_id": "flow_internal",
+      "display_name": "Bundled Sample",
+      "version": "1.0.0",
+      "schema_version": "1.0.0",
+      "updated_at": "2026-03-01T00:00:00Z",
+      "available_modes": ["road", "rail", "air", "maritime"],
+      "supported_spatial_levels": ["city"],
+      "supported_granularities": ["year", "month", "hour_of_day"],
+      "reliability": "medium",
+      "spatial_precision": "city",
+      "temporal_precision": "hour",
+      "quality_score": 0.7
+    },
+    {
+      "id": "seoul-capital-snapshot",
+      "dataset_id": "seoul-capital-living-mobility",
+      "source": "seoul_capital_snapshot",
+      "provider_id": "seoul_open_data_plaza",
+      "display_name": "Seoul Capital Mobility",
+      "version": "2025.01",
+      "schema_version": "1.0.0",
+      "updated_at": "2025-02-15T00:00:00Z",
+      "available_modes": ["road", "rail", "air"],
+      "supported_spatial_levels": ["city"],
+      "supported_granularities": ["hour_of_day"],
+      "reliability": "high",
+      "spatial_precision": "district",
+      "temporal_precision": "hour",
+      "quality_score": 0.92,
+      "live_metadata": {
+        "supports_live_refresh": true,
+        "latest_known_dataset_version": null,
+        "latest_known_snapshot_id": null,
+        "last_refresh_attempt_at": null,
+        "last_successful_refresh_at": null,
+        "active_snapshot_id": null,
+        "last_known_good_snapshot_id": null,
+        "readiness": "pending_validation",
+        "sync_state": "idle"
+      }
+    },
+    {
+      "id": "korea-national-baseline",
+      "dataset_id": "korea-national-baseline-2025",
+      "source": "korea_national",
+      "provider_id": "korea_transport_institute",
+      "display_name": "Korea National Baseline",
+      "version": "2025.1",
+      "schema_version": "1.0.0",
+      "updated_at": "2025-12-31T00:00:00Z",
+      "available_modes": ["road", "rail", "air", "maritime"],
+      "supported_spatial_levels": ["national", "province", "city"],
+      "supported_granularities": ["year", "month", "hour_of_day"],
+      "reliability": "medium",
+      "spatial_precision": "province",
+      "temporal_precision": "month",
+      "quality_score": 0.8,
+      "live_metadata": {
+        "supports_live_refresh": true,
+        "latest_known_dataset_version": null,
+        "latest_known_snapshot_id": null,
+        "last_refresh_attempt_at": null,
+        "last_successful_refresh_at": null,
+        "active_snapshot_id": null,
+        "last_known_good_snapshot_id": null,
+        "readiness": "pending_validation",
+        "sync_state": "idle"
+      }
+    }
+  ]
+}

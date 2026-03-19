@@ -1,0 +1,10 @@
+{
+  "datasetID": "kr-mobility-sample",
+  "version": "2025.01",
+  "source": "Mock Sample",
+  "createdAt": "2025-01-01T00:00:00+09:00",
+  "spatialLevel": "national",
+  "timeCoverage": "2025-01",
+  "recordsCount": 4,
+  "schemaVersion": "1.0.0"
+}

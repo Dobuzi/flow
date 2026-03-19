@@ -1,0 +1,104 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/OperatorHistory/OperatorHistoryBrowserView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Activation Audit",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 302
+        }
+      },
+      {
+        "comment": "",
+        "key": "Filters",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 247
+        }
+      },
+      {
+        "comment": "",
+        "key": "Audit History",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 279
+        }
+      },
+      {
+        "comment": "",
+        "key": "Source",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 248
+        }
+      },
+      {
+        "comment": "",
+        "key": "Event",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 258
+        }
+      },
+      {
+        "comment": "",
+        "key": "Status",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 268
+        }
+      },
+      {
+        "comment": "",
+        "key": "No activation history matches the current filters.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 283
+        }
+      },
+      {
+        "comment": "",
+        "key": "Showing %lld events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 286
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load More",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 295
+        }
+      },
+      {
+        "comment": "",
+        "key": "Snapshot",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 332
+        }
+      },
+      {
+        "comment": "",
+        "key": "Command",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 336
+        }
+      },
+      {
+        "comment": "",
+        "key": "Timestamp",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 338
+        }
+      }
+    ]
+  },
+  "version": 1
+}

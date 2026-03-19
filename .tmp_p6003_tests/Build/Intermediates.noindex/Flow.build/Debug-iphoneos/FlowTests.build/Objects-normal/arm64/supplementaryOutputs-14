@@ -1,0 +1,44 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/MaterializedSnapshotContractTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MaterializedSnapshotContractTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MaterializedSnapshotContractTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MaterializedSnapshotContractTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MaterializedSnapshotContractTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MaterializedSnapshotContractTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityCatalogLiveMetadataEnrichmentTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogLiveMetadataEnrichmentTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogLiveMetadataEnrichmentTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogLiveMetadataEnrichmentTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogLiveMetadataEnrichmentTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogLiveMetadataEnrichmentTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityCatalogRepositoryIntegrationTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogRepositoryIntegrationTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogRepositoryIntegrationTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogRepositoryIntegrationTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogRepositoryIntegrationTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityCatalogRepositoryIntegrationTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityDatasetCatalogBootstrapTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityDatasetCatalogBootstrapTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityQueryAdapterTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryAdapterTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/MobilityQueryResultTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6003_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/MobilityQueryResultTests.swiftdeps"
+  }
+}

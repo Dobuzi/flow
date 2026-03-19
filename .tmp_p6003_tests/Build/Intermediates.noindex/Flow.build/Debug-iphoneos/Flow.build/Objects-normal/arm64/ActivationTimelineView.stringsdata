@@ -1,0 +1,88 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/Settings/ActivationTimelineView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Activation Timeline",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 208
+        }
+      },
+      {
+        "comment": "",
+        "key": "Source",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 141
+        }
+      },
+      {
+        "comment": "",
+        "key": "Filters",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 145
+        }
+      },
+      {
+        "comment": "",
+        "key": "Timeline",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 161
+        }
+      },
+      {
+        "comment": "",
+        "key": "Action",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 146
+        }
+      },
+      {
+        "comment": "",
+        "key": "Status",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 153
+        }
+      },
+      {
+        "comment": "",
+        "key": "Showing %lld of %lld events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 166
+        }
+      },
+      {
+        "comment": "",
+        "key": "No matching activation events.",
+        "location": {
+          "startingColumn": 72,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "No activation events yet.",
+        "location": {
+          "startingColumn": 107,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load More",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 201
+        }
+      }
+    ]
+  },
+  "version": 1
+}

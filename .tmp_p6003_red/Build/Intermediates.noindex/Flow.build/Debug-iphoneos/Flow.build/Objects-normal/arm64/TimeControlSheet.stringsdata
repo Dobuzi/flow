@@ -1,0 +1,96 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/TimeControls/TimeControlSheet.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Time Controls",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "Year",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 9
+        }
+      },
+      {
+        "comment": "",
+        "key": "Month",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 18
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hour of Day",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 27
+        }
+      },
+      {
+        "comment": "",
+        "key": "Playback",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 41
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 14
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 23
+        }
+      },
+      {
+        "comment": "",
+        "key": "Playback",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 42
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stopped",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "Playing",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "Paused",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 48
+        }
+      }
+    ]
+  },
+  "version": 1
+}
