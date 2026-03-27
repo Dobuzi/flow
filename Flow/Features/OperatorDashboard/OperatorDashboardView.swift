@@ -75,6 +75,7 @@ enum OperatorDashboardPresentation {
         }
 
         let rows: [OperatorDashboardCardRow] = [
+            OperatorDashboardCardRow(label: "Proposal", value: proposalStateTitle(source.proposalSummary)),
             OperatorDashboardCardRow(label: "Active Snapshot", value: live.activeSnapshotID ?? "None"),
             OperatorDashboardCardRow(label: "Last Known Good", value: live.lastKnownGoodSnapshotID ?? "None"),
             OperatorDashboardCardRow(label: "Latest Candidate", value: live.latestCandidateSnapshotID ?? "None"),
@@ -240,6 +241,24 @@ enum OperatorDashboardPresentation {
             return "Execution Blocked"
         case .executionFailed:
             return "Execution Failed"
+        }
+    }
+
+    private static func proposalStateTitle(_ summary: OperatorProposalSummary?) -> String {
+        guard let summary else { return "None" }
+        switch summary.lifecycleState {
+        case .draft:
+            return "Draft"
+        case .proposed:
+            return "Proposed"
+        case .approved:
+            return "Approved"
+        case .rejected:
+            return "Rejected"
+        case .cancelled:
+            return "Cancelled"
+        case .readyForExecution:
+            return "Ready For Execution"
         }
     }
 

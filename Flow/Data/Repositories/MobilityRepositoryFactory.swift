@@ -11,6 +11,7 @@ enum MobilityRepositoryFactory {
     static let sharedRefreshStateStore: DatasetRefreshStateStoring = sharedOperatorStateBootstrap.refreshStateStore
     static let sharedActivationStateProjector: SnapshotActivationStateProjecting = sharedOperatorStateBootstrap.activationStateProjector
     static let sharedOperatorStateBootstrapStatus: PersistentOperatorStateBootstrapStatus = sharedOperatorStateBootstrap.status
+    static let sharedRolloutProposalStore: RolloutProposalStoring = PersistentRolloutProposalStore()
 
     static func bootstrapPersistentOperatorState() {
         _ = sharedOperatorStateBootstrapStatus

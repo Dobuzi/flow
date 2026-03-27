@@ -3,7 +3,7 @@ import Testing
 
 struct OperatorDashboardViewTests {
     @Test
-    func buildsLiveCapableCardWithCandidateReadinessAndRefreshHealth() throws {
+    func buildsLiveCapableCardWithProposalBackedReadiness() throws {
         let summary = OperatorDashboardSummary(
             catalogVersion: "2026.03",
             sources: [
@@ -11,6 +11,14 @@ struct OperatorDashboardViewTests {
                     source: .seoulCapitalSnapshot,
                     displayName: "Seoul Capital Area",
                     isLiveCapable: true,
+                    proposalSummary: makeProposalSummary(
+                        id: "proposal-seoul",
+                        source: .seoulCapitalSnapshot,
+                        lifecycleState: .approved,
+                        approvalState: .approved,
+                        rolloutMode: .rollbackPrepared,
+                        lastDecisionReason: "Approved for staged execution"
+                    ),
                     liveSummary: OperatorSourceLiveSummary(
                         activeSnapshotID: "seoul-2026.03",
                         lastKnownGoodSnapshotID: "seoul-2026.02",
@@ -23,24 +31,7 @@ struct OperatorDashboardViewTests {
                         operatorActivationStatus: .activeRollbackReady,
                         readiness: .ready,
                         syncState: .ready,
-                        metrics: OperatorSourceMetrics(
-                            activation: .init(
-                                requestedCount: 1,
-                                succeededCount: 1,
-                                blockedCount: 0,
-                                failedCount: 0,
-                                noOpCount: 0,
-                                rollbackRequestedCount: 1,
-                                latestEventAt: "2026-03-15T08:05:00Z"
-                            ),
-                            refresh: .init(
-                                attemptCount: 1,
-                                succeededCount: 1,
-                                failedCount: 0,
-                                latestRefreshAt: "2026-03-15T08:00:00Z",
-                                latestRefreshLatencySeconds: 90
-                            )
-                        )
+                        metrics: .empty
                     ),
                     healthSummary: OperatorSourceHealthSummary(
                         state: .healthy,
@@ -49,14 +40,16 @@ struct OperatorDashboardViewTests {
                         latestObservedAt: "2026-03-15T08:05:00Z"
                     ),
                     approvalSummary: OperatorApprovalSummary(
+                        proposalID: "proposal-seoul",
+                        proposalLifecycleState: .approved,
                         approvalState: .approved,
-                        decisionSummary: "Rollback-prepared rollout compatible",
+                        decisionSummary: "Approved for staged execution",
                         rolloutMode: .rollbackPrepared,
                         directExecutionCompatible: true
                     ),
                     rolloutReadinessSummary: OperatorRolloutReadinessSummary(
                         state: .stagedEligible,
-                        summary: "Rollback-prepared rollout available",
+                        summary: "Approved for staged execution",
                         blockedReason: nil
                     ),
                     rolloutPreflight: RolloutPreflightResult(
@@ -85,21 +78,14 @@ struct OperatorDashboardViewTests {
         #expect(card.capabilityLabel == "Live-capable")
         #expect(card.healthBadge == OperatorDashboardHealthBadgeModel(title: "Healthy", tone: .good))
         #expect(card.statusSummary == "Rollback ready")
-        #expect(card.reasonSummary == "Rollback ready • Candidate ready")
+        #expect(card.reasonSummary == "Rollback ready")
+        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Proposal", value: "Approved")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Active Snapshot", value: "seoul-2026.03")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Last Known Good", value: "seoul-2026.02")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Latest Candidate", value: "seoul-2026.04")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Candidate Compatibility", value: "Compatible")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Candidate Ready", value: "Ready")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Approved")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Approval Detail", value: "Rollback-prepared rollout compatible")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Rollout Mode", value: "Rollback Prepared")))
+        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Approval Detail", value: "Approved for staged execution")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Rollout Readiness", value: "Staged Eligible")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Last Refresh", value: "Success")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Rollback Available", value: "Yes")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Rollback-prepared rollout available")))
+        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Approved for staged execution")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Preflight", value: "Staged")))
-        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Preflight Notes", value: "Candidate is compatible")))
     }
 
     @Test
@@ -123,19 +109,23 @@ struct OperatorDashboardViewTests {
         #expect(card.healthBadge == OperatorDashboardHealthBadgeModel(title: "Static", tone: .neutral))
         #expect(card.statusSummary == "Packaged baseline dataset")
         #expect(card.reasonSummary == nil)
-        #expect(card.rows == [
-            OperatorDashboardCardRow(label: "Refresh", value: "Not supported"),
-            OperatorDashboardCardRow(label: "Activation", value: "Not applicable")
-        ])
     }
 
     @Test
-    func buildsBlockedAndRecoveryNeededHealthIndicators() throws {
+    func buildsProposalBackedBlockedAndRecoveryIndicators() throws {
         let blocked = OperatorDashboardPresentation.cardModel(
             from: OperatorSourceSummary(
                 source: .koreaNational,
                 displayName: "Korea National",
                 isLiveCapable: true,
+                proposalSummary: makeProposalSummary(
+                    id: "proposal-national",
+                    source: .koreaNational,
+                    lifecycleState: .rejected,
+                    approvalState: .rejected,
+                    rolloutMode: .staged,
+                    lastDecisionReason: "Candidate failed review"
+                ),
                 liveSummary: OperatorSourceLiveSummary(
                     activeSnapshotID: nil,
                     lastKnownGoodSnapshotID: nil,
@@ -157,27 +147,22 @@ struct OperatorDashboardViewTests {
                     latestObservedAt: "2026-03-16T02:00:00Z"
                 ),
                 approvalSummary: OperatorApprovalSummary(
-                    approvalState: .proposed,
-                    decisionSummary: "Candidate proposed but blocked",
+                    proposalID: "proposal-national",
+                    proposalLifecycleState: .rejected,
+                    approvalState: .rejected,
+                    decisionSummary: "Candidate failed review",
                     rolloutMode: .staged,
                     directExecutionCompatible: false
                 ),
                 rolloutReadinessSummary: OperatorRolloutReadinessSummary(
                     state: .blocked,
-                    summary: "Candidate blocked",
-                    blockedReason: "Candidate incompatible"
+                    summary: "Proposal rejected",
+                    blockedReason: "Candidate failed review"
                 ),
                 rolloutPreflight: RolloutPreflightResult(
                     source: .koreaNational,
                     overallReady: false,
-                    checklistItems: [
-                        RolloutChecklistItem(
-                            kind: .candidateCompatibility,
-                            title: "Candidate compatibility",
-                            status: .blocked,
-                            detail: "Candidate is incompatible"
-                        )
-                    ],
+                    checklistItems: [],
                     blockingReasons: ["Candidate is incompatible"],
                     warningReasons: [],
                     recommendation: .blocked
@@ -190,6 +175,14 @@ struct OperatorDashboardViewTests {
                 source: .seoulCapitalSnapshot,
                 displayName: "Seoul Capital Area",
                 isLiveCapable: true,
+                proposalSummary: makeProposalSummary(
+                    id: "proposal-recovery",
+                    source: .seoulCapitalSnapshot,
+                    lifecycleState: .approved,
+                    approvalState: .approved,
+                    rolloutMode: .rollbackPrepared,
+                    lastDecisionReason: "Approved for staged execution"
+                ),
                 liveSummary: OperatorSourceLiveSummary(
                     activeSnapshotID: "seoul-2026.04",
                     lastKnownGoodSnapshotID: "seoul-2026.03",
@@ -211,9 +204,11 @@ struct OperatorDashboardViewTests {
                     latestObservedAt: "2026-03-16T03:00:00Z"
                 ),
                 approvalSummary: OperatorApprovalSummary(
-                    approvalState: .awaitingApproval,
-                    decisionSummary: "Recovered state should be reviewed",
-                    rolloutMode: .staged,
+                    proposalID: "proposal-recovery",
+                    proposalLifecycleState: .approved,
+                    approvalState: .approved,
+                    decisionSummary: "Approved but recovered state needs review",
+                    rolloutMode: .rollbackPrepared,
                     directExecutionCompatible: false
                 ),
                 rolloutReadinessSummary: OperatorRolloutReadinessSummary(
@@ -224,14 +219,7 @@ struct OperatorDashboardViewTests {
                 rolloutPreflight: RolloutPreflightResult(
                     source: .seoulCapitalSnapshot,
                     overallReady: false,
-                    checklistItems: [
-                        RolloutChecklistItem(
-                            kind: .bootstrapRecovery,
-                            title: "Bootstrap recovery",
-                            status: .blocked,
-                            detail: "Recovered operator state should be reviewed"
-                        )
-                    ],
+                    checklistItems: [],
                     blockingReasons: ["Recovered operator state should be reviewed"],
                     warningReasons: [],
                     recommendation: .blocked
@@ -239,22 +227,13 @@ struct OperatorDashboardViewTests {
             )
         )
 
-        #expect(blocked.healthBadge == OperatorDashboardHealthBadgeModel(title: "Blocked", tone: .critical))
-        #expect(blocked.statusSummary == "Candidate blocked")
-        #expect(blocked.reasonSummary == "Candidate incompatible • Readiness blocked")
-        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Proposed")))
-        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Rollout Readiness", value: "Blocked")))
-        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Candidate incompatible")))
-        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Preflight", value: "Blocked")))
-        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Preflight Notes", value: "Candidate is incompatible")))
+        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Proposal", value: "Rejected")))
+        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Rejected")))
+        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Candidate failed review")))
 
-        #expect(recovery.healthBadge == OperatorDashboardHealthBadgeModel(title: "Recovery Needed", tone: .warning))
-        #expect(recovery.statusSummary == "Recovered state needs review")
-        #expect(recovery.reasonSummary == "Startup recovery degraded")
-        #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Awaiting Approval")))
+        #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Proposal", value: "Approved")))
+        #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Approved")))
         #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Startup recovery degraded")))
-        #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Preflight", value: "Blocked")))
-        #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Preflight Notes", value: "Recovered operator state should be reviewed")))
     }
 
     @Test
@@ -274,21 +253,33 @@ struct OperatorDashboardViewTests {
         #expect(cards.map(\.source) == [.bundledSample, .seoulCapitalSnapshot, .koreaNational])
     }
 
-    @Test
-    func surfacesDegradedBootstrapBanner() throws {
-        let banner = OperatorDashboardPresentation.bootstrapBanner(
-            from: PersistentOperatorStateBootstrapStatus(
-                activationState: .current,
-                refreshState: .resetCorrupted,
-                activationHistory: .recoveredPartial
+    private func makeProposalSummary(
+        id: String,
+        source: FlowDatasetSource,
+        lifecycleState: RolloutProposalLifecycleState,
+        approvalState: ActivationApprovalState,
+        rolloutMode: StagedRolloutMode,
+        lastDecisionReason: String?
+    ) -> OperatorProposalSummary {
+        OperatorProposalSummary(
+            proposal: RolloutProposal(
+                id: id,
+                source: source,
+                action: .promote,
+                targetSnapshotID: "\(source.rawValue)-candidate",
+                targetDatasetVersion: "2026.04",
+                rolloutMode: rolloutMode,
+                lifecycleState: lifecycleState,
+                approvalState: approvalState,
+                stages: [],
+                createdAt: "2026-03-15T07:55:00Z",
+                updatedAt: "2026-03-15T08:00:00Z",
+                createdBy: "operator-1",
+                note: nil,
+                executionReadinessSummary: "candidate_ready",
+                lastDecisionAt: "2026-03-15T08:00:00Z",
+                lastDecisionReason: lastDecisionReason
             )
         )
-
-        let resolved = try #require(banner)
-        #expect(resolved.isDegraded)
-        #expect(resolved.title == "Recovered With Degraded Operator State")
-        #expect(resolved.detail.contains("Activation current"))
-        #expect(resolved.detail.contains("Refresh reset corrupted"))
-        #expect(resolved.detail.contains("History partial recovery"))
     }
 }

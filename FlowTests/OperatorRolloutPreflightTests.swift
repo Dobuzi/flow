@@ -5,41 +5,27 @@ struct OperatorRolloutPreflightTests {
     private let evaluator = RolloutPreflightEvaluator()
 
     @Test
-    func evaluatesHealthyImmediateSourceAsReady() throws {
+    func evaluatesApprovedHealthyImmediateSourceAsReady() throws {
         let result = evaluator.evaluate(
-            OperatorSourceSummary(
+            makeLiveSourceSummary(
                 source: .seoulCapitalSnapshot,
-                displayName: "Seoul Capital Area",
-                isLiveCapable: true,
-                liveSummary: OperatorSourceLiveSummary(
-                    activeSnapshotID: "seoul-2026.03",
-                    lastKnownGoodSnapshotID: "seoul-2026.02",
-                    latestCandidateSnapshotID: "seoul-2026.04",
-                    latestCandidateCompatibility: .compatible,
-                    latestCandidateEligibleForActivation: true,
-                    lastRefreshOutcome: .success,
-                    lastRefreshAt: "2026-03-16T08:00:00Z",
-                    rollbackAvailable: false,
-                    operatorActivationStatus: .active,
-                    readiness: .ready,
-                    syncState: .ready,
-                    metrics: .empty
-                ),
-                healthSummary: OperatorSourceHealthSummary(
-                    state: .healthy,
-                    operationalStatus: .active,
-                    reasons: [.active],
-                    latestObservedAt: "2026-03-16T08:00:00Z"
+                proposal: makeProposalSummary(
+                    source: .seoulCapitalSnapshot,
+                    lifecycleState: .approved,
+                    approvalState: .approved,
+                    rolloutMode: .immediate
                 ),
                 approvalSummary: OperatorApprovalSummary(
+                    proposalID: "proposal-seoul",
+                    proposalLifecycleState: .approved,
                     approvalState: .approved,
-                    decisionSummary: "Direct execution compatible",
+                    decisionSummary: "Approved for immediate execution",
                     rolloutMode: .immediate,
                     directExecutionCompatible: true
                 ),
                 rolloutReadinessSummary: OperatorRolloutReadinessSummary(
                     state: .immediateReady,
-                    summary: "Ready for immediate execution",
+                    summary: "Approved for immediate execution",
                     blockedReason: nil
                 )
             )
@@ -53,65 +39,39 @@ struct OperatorRolloutPreflightTests {
     }
 
     @Test
-    func warnsWhenRefreshHealthIsDegradedButNotBlocked() throws {
+    func blocksWhenNoProposalExists() throws {
         let result = evaluator.evaluate(
-            OperatorSourceSummary(
+            makeLiveSourceSummary(
                 source: .koreaNational,
-                displayName: "Korea National",
-                isLiveCapable: true,
-                liveSummary: OperatorSourceLiveSummary(
-                    activeSnapshotID: "national-2026.03",
-                    lastKnownGoodSnapshotID: "national-2026.02",
-                    latestCandidateSnapshotID: "national-2026.04",
-                    latestCandidateCompatibility: .compatible,
-                    latestCandidateEligibleForActivation: true,
-                    lastRefreshOutcome: .failed,
-                    lastRefreshAt: "2026-03-16T08:00:00Z",
-                    rollbackAvailable: false,
-                    operatorActivationStatus: .attentionRequired,
-                    readiness: .pendingValidation,
-                    syncState: .degraded,
-                    metrics: .empty
-                ),
-                healthSummary: OperatorSourceHealthSummary(
-                    state: .degraded,
-                    operationalStatus: .degraded,
-                    reasons: [.refreshFailed],
-                    latestObservedAt: "2026-03-16T08:00:00Z"
-                ),
-                approvalSummary: OperatorApprovalSummary(
-                    approvalState: .awaitingApproval,
-                    decisionSummary: "Awaiting candidate readiness review",
-                    rolloutMode: .staged,
-                    directExecutionCompatible: false
-                ),
+                proposal: nil,
+                approvalSummary: nil,
                 rolloutReadinessSummary: OperatorRolloutReadinessSummary(
                     state: .notReady,
-                    summary: "Pending validation",
+                    summary: "No rollout proposal",
                     blockedReason: nil
                 )
             )
         )
 
-        let refreshItem = try #require(result.checklistItems.first(where: { $0.kind == .refreshHealth }))
-        let readinessItem = try #require(result.checklistItems.first(where: { $0.kind == .rolloutReadiness }))
-
+        let approvalItem = try #require(result.checklistItems.first(where: { $0.kind == .approvalCompatibility }))
         #expect(result.overallReady == false)
         #expect(result.recommendation == .blocked)
-        #expect(refreshItem.status == .warning)
-        #expect(readinessItem.status == .warning)
-        #expect(result.warningReasons.contains("Refresh health is degraded"))
-        #expect(result.warningReasons.contains("Pending validation"))
-        #expect(result.blockingReasons.isEmpty)
+        #expect(approvalItem.status == .blocked)
+        #expect(result.blockingReasons.contains("No rollout proposal submitted"))
     }
 
     @Test
-    func blocksIncompatibleOrIneligibleCandidates() throws {
+    func blocksIncompatibleApprovedProposalAndKeepsReasonsAligned() throws {
         let result = evaluator.evaluate(
-            OperatorSourceSummary(
+            makeLiveSourceSummary(
                 source: .koreaNational,
-                displayName: "Korea National",
-                isLiveCapable: true,
+                proposal: makeProposalSummary(
+                    source: .koreaNational,
+                    lifecycleState: .approved,
+                    approvalState: .approved,
+                    rolloutMode: .staged,
+                    lastDecisionReason: "Approved after review"
+                ),
                 liveSummary: OperatorSourceLiveSummary(
                     activeSnapshotID: nil,
                     lastKnownGoodSnapshotID: nil,
@@ -133,8 +93,10 @@ struct OperatorRolloutPreflightTests {
                     latestObservedAt: "2026-03-16T09:00:00Z"
                 ),
                 approvalSummary: OperatorApprovalSummary(
-                    approvalState: .proposed,
-                    decisionSummary: "Candidate proposed but blocked",
+                    proposalID: "proposal-national",
+                    proposalLifecycleState: .approved,
+                    approvalState: .approved,
+                    decisionSummary: "Approved but blocked by rollout checks",
                     rolloutMode: .staged,
                     directExecutionCompatible: false
                 ),
@@ -147,12 +109,12 @@ struct OperatorRolloutPreflightTests {
         )
 
         let compatibilityItem = try #require(result.checklistItems.first(where: { $0.kind == .candidateCompatibility }))
-        let eligibilityItem = try #require(result.checklistItems.first(where: { $0.kind == .candidateEligibility }))
+        let approvalItem = try #require(result.checklistItems.first(where: { $0.kind == .approvalCompatibility }))
 
         #expect(result.recommendation == .blocked)
         #expect(result.overallReady == false)
         #expect(compatibilityItem.status == .blocked)
-        #expect(eligibilityItem.status == .blocked)
+        #expect(approvalItem.status == .passed)
         #expect(result.blockingReasons.contains("Candidate is incompatible"))
         #expect(result.blockingReasons.contains("Candidate is not eligible for activation"))
         #expect(result.blockingReasons.contains("Candidate incompatible"))
@@ -180,36 +142,19 @@ struct OperatorRolloutPreflightTests {
         #expect(result.overallReady == false)
         #expect(result.blockingReasons.isEmpty)
         #expect(result.warningReasons.isEmpty)
-        #expect(result.checklistItems == [
-            RolloutChecklistItem(
-                kind: .liveRolloutSupport,
-                title: "Live rollout support",
-                status: .notApplicable,
-                detail: "Static baseline dataset"
-            )
-        ])
     }
 
     @Test
-    func keepsRecoveryDegradedPreflightAlignedWithApprovalAndReadiness() throws {
+    func keepsRecoveryDegradedPreflightAlignedWithApprovedProposal() throws {
         let result = evaluator.evaluate(
-            OperatorSourceSummary(
+            makeLiveSourceSummary(
                 source: .seoulCapitalSnapshot,
-                displayName: "Seoul Capital Area",
-                isLiveCapable: true,
-                liveSummary: OperatorSourceLiveSummary(
-                    activeSnapshotID: "seoul-2026.03",
-                    lastKnownGoodSnapshotID: "seoul-2026.02",
-                    latestCandidateSnapshotID: "seoul-2026.04",
-                    latestCandidateCompatibility: .compatible,
-                    latestCandidateEligibleForActivation: true,
-                    lastRefreshOutcome: .success,
-                    lastRefreshAt: "2026-03-16T09:30:00Z",
-                    rollbackAvailable: true,
-                    operatorActivationStatus: .activeRollbackReady,
-                    readiness: .ready,
-                    syncState: .ready,
-                    metrics: .empty
+                proposal: makeProposalSummary(
+                    source: .seoulCapitalSnapshot,
+                    lifecycleState: .approved,
+                    approvalState: .approved,
+                    rolloutMode: .rollbackPrepared,
+                    lastDecisionReason: "Approved for staged execution"
                 ),
                 healthSummary: OperatorSourceHealthSummary(
                     state: .recoveryNeeded,
@@ -218,9 +163,11 @@ struct OperatorRolloutPreflightTests {
                     latestObservedAt: "2026-03-16T09:30:00Z"
                 ),
                 approvalSummary: OperatorApprovalSummary(
-                    approvalState: .awaitingApproval,
-                    decisionSummary: "Recovered state should be reviewed",
-                    rolloutMode: .staged,
+                    proposalID: "proposal-recovery",
+                    proposalLifecycleState: .approved,
+                    approvalState: .approved,
+                    decisionSummary: "Approved but recovered state needs review",
+                    rolloutMode: .rollbackPrepared,
                     directExecutionCompatible: false
                 ),
                 rolloutReadinessSummary: OperatorRolloutReadinessSummary(
@@ -238,10 +185,76 @@ struct OperatorRolloutPreflightTests {
         #expect(result.overallReady == false)
         #expect(result.recommendation == .blocked)
         #expect(bootstrapItem.status == .blocked)
-        #expect(approvalItem.status == .warning)
+        #expect(approvalItem.status == .passed)
         #expect(readinessItem.status == .blocked)
         #expect(result.blockingReasons.contains("Recovered operator state should be reviewed"))
         #expect(result.blockingReasons.contains("Startup recovery degraded"))
-        #expect(result.warningReasons.contains("Recovered state should be reviewed"))
+    }
+
+    private func makeLiveSourceSummary(
+        source: FlowDatasetSource,
+        proposal: OperatorProposalSummary?,
+        liveSummary: OperatorSourceLiveSummary? = nil,
+        healthSummary: OperatorSourceHealthSummary? = nil,
+        approvalSummary: OperatorApprovalSummary?,
+        rolloutReadinessSummary: OperatorRolloutReadinessSummary
+    ) -> OperatorSourceSummary {
+        OperatorSourceSummary(
+            source: source,
+            displayName: source == .seoulCapitalSnapshot ? "Seoul Capital Area" : "Korea National",
+            isLiveCapable: true,
+            proposalSummary: proposal,
+            liveSummary: liveSummary ?? OperatorSourceLiveSummary(
+                activeSnapshotID: "seoul-2026.03",
+                lastKnownGoodSnapshotID: "seoul-2026.02",
+                latestCandidateSnapshotID: "seoul-2026.04",
+                latestCandidateCompatibility: .compatible,
+                latestCandidateEligibleForActivation: true,
+                lastRefreshOutcome: .success,
+                lastRefreshAt: "2026-03-16T08:00:00Z",
+                rollbackAvailable: false,
+                operatorActivationStatus: .active,
+                readiness: .ready,
+                syncState: .ready,
+                metrics: .empty
+            ),
+            healthSummary: healthSummary ?? OperatorSourceHealthSummary(
+                state: .healthy,
+                operationalStatus: .active,
+                reasons: [.active],
+                latestObservedAt: "2026-03-16T08:00:00Z"
+            ),
+            approvalSummary: approvalSummary,
+            rolloutReadinessSummary: rolloutReadinessSummary
+        )
+    }
+
+    private func makeProposalSummary(
+        source: FlowDatasetSource,
+        lifecycleState: RolloutProposalLifecycleState,
+        approvalState: ActivationApprovalState,
+        rolloutMode: StagedRolloutMode,
+        lastDecisionReason: String? = nil
+    ) -> OperatorProposalSummary {
+        OperatorProposalSummary(
+            proposal: RolloutProposal(
+                id: "proposal-\(source.rawValue)",
+                source: source,
+                action: .promote,
+                targetSnapshotID: "\(source.rawValue)-2026.04",
+                targetDatasetVersion: "2026.04",
+                rolloutMode: rolloutMode,
+                lifecycleState: lifecycleState,
+                approvalState: approvalState,
+                stages: [],
+                createdAt: "2026-03-16T07:55:00Z",
+                updatedAt: "2026-03-16T08:00:00Z",
+                createdBy: "operator-1",
+                note: nil,
+                executionReadinessSummary: "candidate_ready",
+                lastDecisionAt: "2026-03-16T08:00:00Z",
+                lastDecisionReason: lastDecisionReason
+            )
+        )
     }
 }

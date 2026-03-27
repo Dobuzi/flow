@@ -20,6 +20,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
     let source: FlowDatasetSource
     let displayName: String
     let isLiveCapable: Bool
+    let proposalSummary: OperatorProposalSummary?
     let liveSummary: OperatorSourceLiveSummary?
     let healthSummary: OperatorSourceHealthSummary
     let approvalSummary: OperatorApprovalSummary?
@@ -30,6 +31,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
         source: FlowDatasetSource,
         displayName: String,
         isLiveCapable: Bool,
+        proposalSummary: OperatorProposalSummary? = nil,
         liveSummary: OperatorSourceLiveSummary?,
         healthSummary: OperatorSourceHealthSummary,
         approvalSummary: OperatorApprovalSummary? = nil,
@@ -39,6 +41,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
         self.source = source
         self.displayName = displayName
         self.isLiveCapable = isLiveCapable
+        self.proposalSummary = proposalSummary
         self.liveSummary = liveSummary
         self.healthSummary = healthSummary
         self.approvalSummary = approvalSummary
@@ -72,6 +75,7 @@ final class OperatorDashboardViewModel: ObservableObject {
 
     private let catalogRepository: MobilityCatalogRepository
     private let bootstrapStatus: PersistentOperatorStateBootstrapStatus?
+    private let proposalStore: RolloutProposalStoring?
     private let metricsCollector: OperatorMetricsCollector
     private let healthAggregator: OperatorHealthAggregator
     private let approvalReadinessResolver = OperatorApprovalReadinessResolver()
@@ -80,11 +84,13 @@ final class OperatorDashboardViewModel: ObservableObject {
     init(
         catalogRepository: MobilityCatalogRepository = MobilityRepositoryFactory.liveAwareCatalogRepository(),
         bootstrapStatus: PersistentOperatorStateBootstrapStatus? = MobilityRepositoryFactory.sharedOperatorStateBootstrapStatus,
+        proposalStore: RolloutProposalStoring? = MobilityRepositoryFactory.sharedRolloutProposalStore,
         activationHistoryStore: SnapshotActivationHistoryStoring? = MobilityRepositoryFactory.sharedActivationHistoryStore,
         refreshStateStore: DatasetRefreshStateStoring? = MobilityRepositoryFactory.sharedRefreshStateStore
     ) {
         self.catalogRepository = catalogRepository
         self.bootstrapStatus = bootstrapStatus
+        self.proposalStore = proposalStore
         self.metricsCollector = OperatorMetricsCollector(
             activationHistoryStore: activationHistoryStore,
             refreshStateStore: refreshStateStore
@@ -95,6 +101,7 @@ final class OperatorDashboardViewModel: ObservableObject {
     func load() async {
         do {
             let catalog = try await catalogRepository.fetchCatalog()
+            let proposalSummariesBySource = await latestProposalSummariesBySource()
             var sources: [OperatorSourceSummary] = []
             sources.reserveCapacity(catalog.datasets.count)
 
@@ -103,7 +110,13 @@ final class OperatorDashboardViewModel: ObservableObject {
                     for: descriptor.source,
                     isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true
                 )
-                sources.append(makeSourceSummary(from: descriptor, metrics: metrics))
+                sources.append(
+                    makeSourceSummary(
+                        from: descriptor,
+                        proposalSummary: proposalSummariesBySource[descriptor.source],
+                        metrics: metrics
+                    )
+                )
             }
 
             dashboard = OperatorDashboardSummary(
@@ -124,6 +137,7 @@ final class OperatorDashboardViewModel: ObservableObject {
 
     private func makeSourceSummary(
         from descriptor: MobilityDatasetDescriptor,
+        proposalSummary: OperatorProposalSummary?,
         metrics: OperatorSourceMetrics?
     ) -> OperatorSourceSummary {
         let liveSummary: OperatorSourceLiveSummary?
@@ -154,18 +168,21 @@ final class OperatorDashboardViewModel: ObservableObject {
         let approvalSummary = approvalReadinessResolver.approvalSummary(
             isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
             liveSummary: liveSummary,
-            healthSummary: healthSummary
+            healthSummary: healthSummary,
+            proposalSummary: proposalSummary
         )
         let rolloutReadinessSummary = approvalReadinessResolver.rolloutReadinessSummary(
             isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
             liveSummary: liveSummary,
-            healthSummary: healthSummary
+            healthSummary: healthSummary,
+            proposalSummary: proposalSummary
         )
 
         let summary = OperatorSourceSummary(
             source: descriptor.source,
             displayName: descriptor.displayName,
             isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
+            proposalSummary: proposalSummary,
             liveSummary: liveSummary,
             healthSummary: healthSummary,
             approvalSummary: approvalSummary,
@@ -176,12 +193,25 @@ final class OperatorDashboardViewModel: ObservableObject {
             source: summary.source,
             displayName: summary.displayName,
             isLiveCapable: summary.isLiveCapable,
+            proposalSummary: summary.proposalSummary,
             liveSummary: summary.liveSummary,
             healthSummary: summary.healthSummary,
             approvalSummary: summary.approvalSummary,
             rolloutReadinessSummary: summary.rolloutReadinessSummary,
             rolloutPreflight: rolloutPreflightEvaluator.evaluate(summary)
         )
+    }
+
+    private func latestProposalSummariesBySource() async -> [FlowDatasetSource: OperatorProposalSummary] {
+        guard let proposalStore else { return [:] }
+
+        var latestBySource: [FlowDatasetSource: OperatorProposalSummary] = [:]
+        for proposal in await proposalStore.allProposals() {
+            if latestBySource[proposal.source] == nil {
+                latestBySource[proposal.source] = OperatorProposalSummary(proposal: proposal)
+            }
+        }
+        return latestBySource
     }
 
     private func resolvedLastRefreshTimestamp(from live: DatasetLiveMetadata) -> String? {

@@ -45,7 +45,6 @@ struct RolloutPreflightEvaluator {
     func evaluate(_ source: OperatorSourceSummary) -> RolloutPreflightResult {
         guard source.isLiveCapable,
               let live = source.liveSummary,
-              let approval = source.approvalSummary,
               let readiness = source.rolloutReadinessSummary else {
             return RolloutPreflightResult(
                 source: source.source,
@@ -71,7 +70,10 @@ struct RolloutPreflightEvaluator {
             candidateEligibilityItem(for: live),
             refreshHealthItem(for: live, healthSummary: source.healthSummary),
             rollbackSafetyItem(for: live),
-            approvalCompatibilityItem(for: approval),
+            approvalCompatibilityItem(
+                proposalSummary: source.proposalSummary,
+                approval: source.approvalSummary
+            ),
             rolloutReadinessItem(for: readiness)
         ]
 
@@ -89,7 +91,7 @@ struct RolloutPreflightEvaluator {
             blockingReasons: blockingReasons,
             warningReasons: warningReasons,
             recommendation: recommendation(
-                approval: approval,
+                approval: source.approvalSummary,
                 readiness: readiness,
                 blockingReasons: blockingReasons
             )
@@ -243,7 +245,28 @@ struct RolloutPreflightEvaluator {
         )
     }
 
-    private func approvalCompatibilityItem(for approval: OperatorApprovalSummary) -> RolloutChecklistItem {
+    private func approvalCompatibilityItem(
+        proposalSummary: OperatorProposalSummary?,
+        approval: OperatorApprovalSummary?
+    ) -> RolloutChecklistItem {
+        guard let proposalSummary else {
+            return RolloutChecklistItem(
+                kind: .approvalCompatibility,
+                title: "Approval compatibility",
+                status: .blocked,
+                detail: "No rollout proposal submitted"
+            )
+        }
+
+        guard let approval else {
+            return RolloutChecklistItem(
+                kind: .approvalCompatibility,
+                title: "Approval compatibility",
+                status: .blocked,
+                detail: "Proposal state could not be resolved"
+            )
+        }
+
         switch approval.approvalState {
         case .approved, .executed:
             return RolloutChecklistItem(
@@ -256,7 +279,7 @@ struct RolloutPreflightEvaluator {
             return RolloutChecklistItem(
                 kind: .approvalCompatibility,
                 title: "Approval compatibility",
-                status: .warning,
+                status: proposalSummary.lifecycleState == .draft ? .warning : .blocked,
                 detail: approval.decisionSummary
             )
         case .rejected, .cancelled, .executionBlocked, .executionFailed:
@@ -303,7 +326,7 @@ struct RolloutPreflightEvaluator {
     }
 
     private func recommendation(
-        approval: OperatorApprovalSummary,
+        approval: OperatorApprovalSummary?,
         readiness: OperatorRolloutReadinessSummary,
         blockingReasons: [String]
     ) -> RolloutPreflightRecommendation {
@@ -312,7 +335,7 @@ struct RolloutPreflightEvaluator {
         switch readiness.state {
         case .stagedEligible:
             return .staged
-        case .immediateReady where approval.directExecutionCompatible:
+        case .immediateReady where approval?.directExecutionCompatible == true:
             return .immediate
         case .notReady, .blocked:
             return .blocked

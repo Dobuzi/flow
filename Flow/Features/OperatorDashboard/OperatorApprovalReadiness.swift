@@ -1,5 +1,29 @@
 import Foundation
 
+struct OperatorProposalSummary: Hashable {
+    let proposalID: String
+    let lifecycleState: RolloutProposalLifecycleState
+    let approvalState: ActivationApprovalState
+    let rolloutMode: StagedRolloutMode
+    let targetSnapshotID: String?
+    let targetDatasetVersion: String?
+    let updatedAt: String
+    let lastDecisionAt: String?
+    let lastDecisionReason: String?
+
+    init(proposal: RolloutProposal) {
+        self.proposalID = proposal.id
+        self.lifecycleState = proposal.lifecycleState
+        self.approvalState = proposal.approvalState
+        self.rolloutMode = proposal.rolloutMode
+        self.targetSnapshotID = proposal.targetSnapshotID
+        self.targetDatasetVersion = proposal.targetDatasetVersion
+        self.updatedAt = proposal.updatedAt
+        self.lastDecisionAt = proposal.lastDecisionAt
+        self.lastDecisionReason = proposal.lastDecisionReason
+    }
+}
+
 enum OperatorRolloutReadinessState: Hashable {
     case staticBaseline
     case immediateReady
@@ -9,6 +33,8 @@ enum OperatorRolloutReadinessState: Hashable {
 }
 
 struct OperatorApprovalSummary: Hashable {
+    let proposalID: String
+    let proposalLifecycleState: RolloutProposalLifecycleState
     let approvalState: ActivationApprovalState
     let decisionSummary: String
     let rolloutMode: StagedRolloutMode
@@ -25,67 +51,37 @@ struct OperatorApprovalReadinessResolver {
     func approvalSummary(
         isLiveCapable: Bool,
         liveSummary: OperatorSourceLiveSummary?,
-        healthSummary: OperatorSourceHealthSummary
+        healthSummary: OperatorSourceHealthSummary,
+        proposalSummary: OperatorProposalSummary?
     ) -> OperatorApprovalSummary? {
-        guard isLiveCapable, let liveSummary else { return nil }
+        guard isLiveCapable, let liveSummary, let proposalSummary else { return nil }
 
         let readiness = rolloutReadinessSummary(
             isLiveCapable: isLiveCapable,
             liveSummary: liveSummary,
-            healthSummary: healthSummary
+            healthSummary: healthSummary,
+            proposalSummary: proposalSummary
         )
 
-        if healthSummary.state == .recoveryNeeded {
-            return OperatorApprovalSummary(
-                approvalState: .awaitingApproval,
-                decisionSummary: "Recovered state should be reviewed",
-                rolloutMode: .staged,
-                directExecutionCompatible: false
-            )
-        }
-
-        switch readiness.state {
-        case .immediateReady:
-            return OperatorApprovalSummary(
-                approvalState: .approved,
-                decisionSummary: "Direct execution compatible",
-                rolloutMode: .immediate,
-                directExecutionCompatible: true
-            )
-
-        case .stagedEligible:
-            return OperatorApprovalSummary(
-                approvalState: .approved,
-                decisionSummary: "Rollback-prepared rollout compatible",
-                rolloutMode: .rollbackPrepared,
-                directExecutionCompatible: true
-            )
-
-        case .blocked:
-            return OperatorApprovalSummary(
-                approvalState: .proposed,
-                decisionSummary: "Candidate proposed but blocked",
-                rolloutMode: .staged,
-                directExecutionCompatible: false
-            )
-
-        case .notReady:
-            return OperatorApprovalSummary(
-                approvalState: .awaitingApproval,
-                decisionSummary: "Awaiting candidate readiness review",
-                rolloutMode: .staged,
-                directExecutionCompatible: false
-            )
-
-        case .staticBaseline:
-            return nil
-        }
+        return OperatorApprovalSummary(
+            proposalID: proposalSummary.proposalID,
+            proposalLifecycleState: proposalSummary.lifecycleState,
+            approvalState: proposalSummary.approvalState,
+            decisionSummary: approvalDecisionSummary(
+                proposalSummary: proposalSummary,
+                readiness: readiness,
+                healthSummary: healthSummary
+            ),
+            rolloutMode: proposalSummary.rolloutMode,
+            directExecutionCompatible: readiness.state == .immediateReady || readiness.state == .stagedEligible
+        )
     }
 
     func rolloutReadinessSummary(
         isLiveCapable: Bool,
         liveSummary: OperatorSourceLiveSummary?,
-        healthSummary: OperatorSourceHealthSummary
+        healthSummary: OperatorSourceHealthSummary,
+        proposalSummary: OperatorProposalSummary?
     ) -> OperatorRolloutReadinessSummary {
         guard isLiveCapable, let liveSummary else {
             return OperatorRolloutReadinessSummary(
@@ -93,6 +89,43 @@ struct OperatorApprovalReadinessResolver {
                 summary: "Static baseline dataset",
                 blockedReason: nil
             )
+        }
+
+        guard let proposalSummary else {
+            return OperatorRolloutReadinessSummary(
+                state: .notReady,
+                summary: "No rollout proposal",
+                blockedReason: nil
+            )
+        }
+
+        switch proposalSummary.lifecycleState {
+        case .draft:
+            return OperatorRolloutReadinessSummary(
+                state: .notReady,
+                summary: "Draft proposal not submitted",
+                blockedReason: nil
+            )
+        case .proposed:
+            return OperatorRolloutReadinessSummary(
+                state: .notReady,
+                summary: "Awaiting approval",
+                blockedReason: nil
+            )
+        case .rejected:
+            return OperatorRolloutReadinessSummary(
+                state: .blocked,
+                summary: "Proposal rejected",
+                blockedReason: proposalSummary.lastDecisionReason ?? "Proposal rejected"
+            )
+        case .cancelled:
+            return OperatorRolloutReadinessSummary(
+                state: .blocked,
+                summary: "Proposal cancelled",
+                blockedReason: proposalSummary.lastDecisionReason ?? "Proposal cancelled"
+            )
+        case .approved, .readyForExecution:
+            break
         }
 
         if healthSummary.state == .recoveryNeeded {
@@ -155,18 +188,68 @@ struct OperatorApprovalReadinessResolver {
                 blockedReason: nil
             )
         case .ready:
-            if liveSummary.rollbackAvailable && liveSummary.activeSnapshotID != nil {
+            switch proposalSummary.rolloutMode {
+            case .immediate:
                 return OperatorRolloutReadinessSummary(
-                    state: .stagedEligible,
-                    summary: "Rollback-prepared rollout available",
+                    state: .immediateReady,
+                    summary: "Approved for immediate execution",
+                    blockedReason: nil
+                )
+            case .staged, .rollbackPrepared:
+                if liveSummary.rollbackAvailable && liveSummary.activeSnapshotID != nil {
+                    return OperatorRolloutReadinessSummary(
+                        state: .stagedEligible,
+                        summary: "Approved for staged execution",
+                        blockedReason: nil
+                    )
+                }
+                return OperatorRolloutReadinessSummary(
+                    state: .notReady,
+                    summary: "Rollback preparation required",
+                    blockedReason: nil
+                )
+            case .dryRun:
+                return OperatorRolloutReadinessSummary(
+                    state: .notReady,
+                    summary: "Dry-run proposal is not executable",
                     blockedReason: nil
                 )
             }
-            return OperatorRolloutReadinessSummary(
-                state: .immediateReady,
-                summary: "Ready for immediate execution",
-                blockedReason: nil
-            )
+        }
+    }
+
+    private func approvalDecisionSummary(
+        proposalSummary: OperatorProposalSummary,
+        readiness: OperatorRolloutReadinessSummary,
+        healthSummary: OperatorSourceHealthSummary
+    ) -> String {
+        switch proposalSummary.lifecycleState {
+        case .draft:
+            return "Draft proposal not submitted"
+        case .proposed:
+            return proposalSummary.lastDecisionReason ?? "Awaiting approval"
+        case .approved:
+            if healthSummary.state == .recoveryNeeded {
+                return "Approved but recovered state needs review"
+            }
+            switch readiness.state {
+            case .immediateReady:
+                return "Approved for immediate execution"
+            case .stagedEligible:
+                return "Approved for staged execution"
+            case .blocked:
+                return proposalSummary.lastDecisionReason ?? "Approved but blocked by rollout checks"
+            case .notReady:
+                return proposalSummary.lastDecisionReason ?? "Approved but not ready for execution"
+            case .staticBaseline:
+                return proposalSummary.lastDecisionReason ?? "Approved"
+            }
+        case .rejected:
+            return proposalSummary.lastDecisionReason ?? "Proposal rejected"
+        case .cancelled:
+            return proposalSummary.lastDecisionReason ?? "Proposal cancelled"
+        case .readyForExecution:
+            return "Ready for execution"
         }
     }
 }
