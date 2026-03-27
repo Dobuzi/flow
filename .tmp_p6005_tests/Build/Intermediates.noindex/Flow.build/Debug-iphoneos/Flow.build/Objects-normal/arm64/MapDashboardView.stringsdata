@@ -1,0 +1,24 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/MapDashboard/MapDashboardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Time",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "Modes",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 49
+        }
+      }
+    ]
+  },
+  "version": 1
+}

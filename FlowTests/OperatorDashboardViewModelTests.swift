@@ -242,6 +242,7 @@ struct OperatorDashboardViewModelTests {
         #expect(bundled.rolloutPreflight?.recommendation == .notApplicable)
     }
 
+    @MainActor
     private func makeViewModel(
         versionStore: InMemoryDatasetVersionStore,
         refreshStateStore: InMemoryDatasetRefreshStateStore,

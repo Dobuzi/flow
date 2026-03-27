@@ -1,0 +1,96 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/Settings/ActivationTimelineView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Activation Timeline",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 219
+        }
+      },
+      {
+        "comment": "",
+        "key": "Source",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 146
+        }
+      },
+      {
+        "comment": "",
+        "key": "Filters",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 150
+        }
+      },
+      {
+        "comment": "",
+        "key": "Timeline",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 166
+        }
+      },
+      {
+        "comment": "",
+        "key": "Action",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 151
+        }
+      },
+      {
+        "comment": "",
+        "key": "Status",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 158
+        }
+      },
+      {
+        "comment": "",
+        "key": "Showing %lld of %lld events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 171
+        }
+      },
+      {
+        "comment": "",
+        "key": "No matching operator events.",
+        "location": {
+          "startingColumn": 72,
+          "startingLine": 168
+        }
+      },
+      {
+        "comment": "",
+        "key": "No operator events yet.",
+        "location": {
+          "startingColumn": 105,
+          "startingLine": 168
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load More",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 212
+        }
+      },
+      {
+        "comment": "",
+        "key": "Proposal %@",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 193
+        }
+      }
+    ]
+  },
+  "version": 1
+}

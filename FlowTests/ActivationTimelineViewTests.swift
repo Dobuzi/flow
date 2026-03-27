@@ -6,10 +6,10 @@ struct ActivationTimelineViewTests {
     @Test
     func actionFilterKeepsNewestFirstOrdering() {
         let entries = [
-            makeEntry(id: "rollback-blocked", action: .rollback, status: .blocked, timestamp: "2026-03-10T05:00:00Z"),
-            makeEntry(id: "demote-failed", action: .demote, status: .failed, timestamp: "2026-03-10T04:00:00Z"),
-            makeEntry(id: "promote-succeeded", action: .promote, status: .succeeded, timestamp: "2026-03-10T03:00:00Z"),
-            makeEntry(id: "promote-requested", action: .promote, status: .requested, timestamp: "2026-03-10T02:00:00Z")
+            makeActivationEntry(id: "rollback-blocked", action: .rollback, status: .blocked, timestamp: "2026-03-10T05:00:00Z"),
+            makeActivationEntry(id: "demote-failed", action: .demote, status: .failed, timestamp: "2026-03-10T04:00:00Z"),
+            makeActivationEntry(id: "promote-succeeded", action: .promote, status: .succeeded, timestamp: "2026-03-10T03:00:00Z"),
+            makeActivationEntry(id: "promote-requested", action: .promote, status: .requested, timestamp: "2026-03-10T02:00:00Z")
         ]
 
         let browser = ActivationTimelineBrowserState(
@@ -26,10 +26,10 @@ struct ActivationTimelineViewTests {
     @Test
     func statusFilterKeepsBlockedFailedAndNoOpVisibleWithoutChangingOrder() {
         let entries = [
-            makeEntry(id: "demote-noop", action: .demote, status: .noOp, timestamp: "2026-03-10T06:00:00Z"),
-            makeEntry(id: "rollback-failed", action: .rollback, status: .failed, timestamp: "2026-03-10T05:00:00Z"),
-            makeEntry(id: "promote-blocked", action: .promote, status: .blocked, timestamp: "2026-03-10T04:00:00Z"),
-            makeEntry(id: "promote-succeeded", action: .promote, status: .succeeded, timestamp: "2026-03-10T03:00:00Z")
+            makeActivationEntry(id: "demote-noop", action: .demote, status: .noOp, timestamp: "2026-03-10T06:00:00Z"),
+            makeActivationEntry(id: "rollback-failed", action: .rollback, status: .failed, timestamp: "2026-03-10T05:00:00Z"),
+            makeActivationEntry(id: "promote-blocked", action: .promote, status: .blocked, timestamp: "2026-03-10T04:00:00Z"),
+            makeActivationEntry(id: "promote-succeeded", action: .promote, status: .succeeded, timestamp: "2026-03-10T03:00:00Z")
         ]
 
         let blockedBrowser = ActivationTimelineBrowserState(
@@ -56,12 +56,12 @@ struct ActivationTimelineViewTests {
     @Test
     func loadMoreIsDeterministicWithinFilteredResults() {
         let entries = [
-            makeEntry(id: "evt-6", action: .promote, status: .succeeded, timestamp: "2026-03-10T06:00:00Z"),
-            makeEntry(id: "evt-5", action: .promote, status: .succeeded, timestamp: "2026-03-10T05:00:00Z"),
-            makeEntry(id: "evt-4", action: .promote, status: .succeeded, timestamp: "2026-03-10T04:00:00Z"),
-            makeEntry(id: "evt-3", action: .promote, status: .succeeded, timestamp: "2026-03-10T03:00:00Z"),
-            makeEntry(id: "evt-2", action: .promote, status: .succeeded, timestamp: "2026-03-10T02:00:00Z"),
-            makeEntry(id: "evt-1", action: .promote, status: .succeeded, timestamp: "2026-03-10T01:00:00Z")
+            makeActivationEntry(id: "evt-6", action: .promote, status: .succeeded, timestamp: "2026-03-10T06:00:00Z"),
+            makeActivationEntry(id: "evt-5", action: .promote, status: .succeeded, timestamp: "2026-03-10T05:00:00Z"),
+            makeActivationEntry(id: "evt-4", action: .promote, status: .succeeded, timestamp: "2026-03-10T04:00:00Z"),
+            makeActivationEntry(id: "evt-3", action: .promote, status: .succeeded, timestamp: "2026-03-10T03:00:00Z"),
+            makeActivationEntry(id: "evt-2", action: .promote, status: .succeeded, timestamp: "2026-03-10T02:00:00Z"),
+            makeActivationEntry(id: "evt-1", action: .promote, status: .succeeded, timestamp: "2026-03-10T01:00:00Z")
         ]
 
         let firstPage = ActivationTimelineBrowserState(
@@ -84,7 +84,7 @@ struct ActivationTimelineViewTests {
     @Test
     func sourceScopedEntriesRemainIntactDuringFiltering() {
         let entries = [
-            makeEntry(
+            makeActivationEntry(
                 id: "seoul-promote",
                 sourceTitle: FlowDatasetSource.seoulCapitalSnapshot.title,
                 action: .promote,
@@ -105,7 +105,43 @@ struct ActivationTimelineViewTests {
         #expect(visible[0].sourceTitle == FlowDatasetSource.seoulCapitalSnapshot.title)
     }
 
-    private func makeEntry(
+    @Test
+    func proposalFilterShowsProposalEntriesWithoutMasqueradingAsActivation() {
+        let entries = [
+            makeProposalEntry(id: "proposal-approved", status: .succeeded, timestamp: "2026-03-10T05:00:00Z"),
+            makeActivationEntry(id: "promote-succeeded", action: .promote, status: .succeeded, timestamp: "2026-03-10T04:00:00Z")
+        ]
+
+        let browser = ActivationTimelineBrowserState(
+            actionFilter: .proposal,
+            statusFilter: .all,
+            visibleLimit: 10
+        )
+
+        let visible = browser.visibleEntries(from: entries)
+
+        #expect(visible.map(\.id) == ["proposal-approved"])
+        #expect(visible.first?.category == .proposal)
+        #expect(visible.first?.proposalID == "proposal-proposal-approved")
+    }
+
+    @Test
+    func proposalEntriesPreserveNewestFirstOrderingAcrossMixedHistory() {
+        let entries = [
+            makeActivationEntry(id: "activation-older", action: .rollback, status: .blocked, timestamp: "2026-03-10T03:00:00Z"),
+            makeProposalEntry(id: "proposal-newest", status: .requested, timestamp: "2026-03-10T04:00:00Z")
+        ]
+
+        let browser = ActivationTimelineBrowserState(
+            actionFilter: .all,
+            statusFilter: .all,
+            visibleLimit: 10
+        )
+
+        #expect(browser.visibleEntries(from: entries).map(\.id) == ["proposal-newest", "activation-older"])
+    }
+
+    private func makeActivationEntry(
         id: String,
         sourceTitle: String = FlowDatasetSource.seoulCapitalSnapshot.title,
         action: SnapshotActivationCommand.Action,
@@ -114,13 +150,41 @@ struct ActivationTimelineViewTests {
     ) -> OperatorTimelineEntry {
         OperatorTimelineEntry(
             id: id,
+            category: .activation,
+            source: .seoulCapitalSnapshot,
             sourceTitle: sourceTitle,
-            eventType: eventType(for: action, status: status),
+            eventType: eventType(for: action, status: status).rawValue,
             commandAction: action,
             resultStatus: status,
             title: id,
             timestamp: timestamp,
             snapshotID: "snapshot-\(id)",
+            proposalID: nil,
+            linkageID: "cmd-\(id)",
+            status: status.rawValue,
+            detail: nil
+        )
+    }
+
+    private func makeProposalEntry(
+        id: String,
+        source: FlowDatasetSource = .seoulCapitalSnapshot,
+        status: SnapshotActivationEventStatus,
+        timestamp: String
+    ) -> OperatorTimelineEntry {
+        OperatorTimelineEntry(
+            id: id,
+            category: .proposal,
+            source: source,
+            sourceTitle: source.title,
+            eventType: RolloutProposalAuditEventType.proposalApproved.rawValue,
+            commandAction: .promote,
+            resultStatus: status,
+            title: id,
+            timestamp: timestamp,
+            snapshotID: "snapshot-\(id)",
+            proposalID: "proposal-\(id)",
+            linkageID: "proposal-\(id)",
             status: status.rawValue,
             detail: nil
         )

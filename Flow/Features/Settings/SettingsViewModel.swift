@@ -87,6 +87,7 @@ final class SettingsViewModel: ObservableObject {
     private let activationPolicy: SnapshotActivationPolicying
     private let activationExecutor: SnapshotActivationExecuting
     private let activationHistoryStore: SnapshotActivationHistoryStoring
+    private let proposalAuditStore: RolloutProposalAuditStoring
     private let userDefaults: UserDefaults
 
     private let preferredSpatialLevelKey = "settings.preferred_spatial_level"
@@ -106,6 +107,7 @@ final class SettingsViewModel: ObservableObject {
             historyStore: MobilityRepositoryFactory.sharedActivationHistoryStore
         ),
         activationHistoryStore: SnapshotActivationHistoryStoring = MobilityRepositoryFactory.sharedActivationHistoryStore,
+        proposalAuditStore: RolloutProposalAuditStoring = MobilityRepositoryFactory.sharedRolloutProposalAuditStore,
         userDefaults: UserDefaults = .standard
     ) {
         self.flowRepositoryBuilder = flowRepositoryBuilder
@@ -115,6 +117,7 @@ final class SettingsViewModel: ObservableObject {
         self.activationPolicy = activationPolicy
         self.activationExecutor = activationExecutor
         self.activationHistoryStore = activationHistoryStore
+        self.proposalAuditStore = proposalAuditStore
         self.userDefaults = userDefaults
 
         preferredSpatialLevelRaw = userDefaults.string(forKey: preferredSpatialLevelKey)
@@ -239,7 +242,10 @@ final class SettingsViewModel: ObservableObject {
                 sortOrder: .newestFirst
             )
         )
-        let mappedTimelineHistory = timelineHistory.map(OperatorHistoryPresentation.timelineEntry(from:))
+        let proposalAuditHistory = await proposalAuditStore.events(for: source)
+        let mappedTimelineHistory = (timelineHistory.map(OperatorHistoryPresentation.timelineEntry(from:))
+            + proposalAuditHistory.map(OperatorHistoryPresentation.timelineEntry(from:)))
+            .sorted(by: sortTimelineEntries)
 
         return OperatorControlsPanelState(
             source: source,
@@ -269,6 +275,13 @@ final class SettingsViewModel: ObservableObject {
             recentHistory: Array(mappedTimelineHistory.prefix(5)),
             timelineHistory: mappedTimelineHistory
         )
+    }
+
+    private func sortTimelineEntries(lhs: OperatorTimelineEntry, rhs: OperatorTimelineEntry) -> Bool {
+        if lhs.timestamp != rhs.timestamp {
+            return lhs.timestamp > rhs.timestamp
+        }
+        return lhs.id < rhs.id
     }
 
     private func command(

@@ -5,6 +5,7 @@ enum ActivationTimelineActionFilter: String, CaseIterable, Hashable, Identifiabl
     case promote
     case demote
     case rollback
+    case proposal
 
     var id: String { rawValue }
 
@@ -18,13 +19,17 @@ enum ActivationTimelineActionFilter: String, CaseIterable, Hashable, Identifiabl
             return "Demote"
         case .rollback:
             return "Rollback"
+        case .proposal:
+            return "Proposal"
         }
     }
 
-    fileprivate func matches(_ action: SnapshotActivationCommand.Action) -> Bool {
+    fileprivate func matches(_ action: SnapshotActivationCommand.Action, category: OperatorHistoryEntryCategory) -> Bool {
         switch self {
         case .all:
             return true
+        case .proposal:
+            return category == .proposal
         case .promote:
             return action == .promote
         case .demote:
@@ -97,7 +102,7 @@ struct ActivationTimelineBrowserState: Hashable {
 
     func filteredEntries(from entries: [OperatorTimelineEntry]) -> [OperatorTimelineEntry] {
         entries.filter { entry in
-            actionFilter.matches(entry.commandAction) && statusFilter.matches(entry.resultStatus)
+            actionFilter.matches(entry.commandAction, category: entry.category) && statusFilter.matches(entry.resultStatus)
         }
     }
 
@@ -160,7 +165,7 @@ struct ActivationTimelineView: View {
 
             Section("Timeline") {
                 if visibleEntries.isEmpty {
-                    Text(filteredEntries.isEmpty && !entries.isEmpty ? "No matching activation events." : "No activation events yet.")
+                    Text(filteredEntries.isEmpty && !entries.isEmpty ? "No matching operator events." : "No operator events yet.")
                         .foregroundStyle(.secondary)
                 } else {
                     Text("Showing \(visibleEntries.count) of \(filteredEntries.count) events")
@@ -182,6 +187,12 @@ struct ActivationTimelineView: View {
                                 Text(snapshotID)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
+                            }
+
+                            if let proposalID = entry.proposalID {
+                                Text("Proposal \(proposalID)")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
                             }
 
                             Text(entry.timestamp)

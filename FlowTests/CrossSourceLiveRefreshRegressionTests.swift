@@ -211,6 +211,7 @@ struct CrossSourceLiveRefreshRegressionTests {
     func mixedSourceSettingsStateKeepsOperatorHistoryAndControlsScoped() async throws {
         let store = InMemoryDatasetVersionStore()
         let historyStore = InMemorySnapshotActivationHistoryStore()
+        let proposalAuditStore = InMemoryRolloutProposalAuditStore()
         let refreshStateStore = InMemoryDatasetRefreshStateStore()
         let policy = DefaultSnapshotActivationPolicy(versionStore: store)
         let projector = DefaultSnapshotActivationStateProjector(
@@ -273,6 +274,21 @@ struct CrossSourceLiveRefreshRegressionTests {
             )
         )
 
+        await proposalAuditStore.append(
+            RolloutProposalAuditEvent(
+                id: "seoul-proposal-approved",
+                proposalID: "proposal-seoul-2026.03",
+                source: .seoulCapitalSnapshot,
+                targetSnapshotID: "seoul-2026.03",
+                targetDatasetVersion: "2026.03",
+                action: .promote,
+                type: .proposalApproved,
+                timestamp: "2026-03-12T02:00:00Z",
+                actor: "operator",
+                reason: "Ready for rollout"
+            )
+        )
+
         let bundledViewModel = SettingsViewModel(
             flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .bundledSample)) },
             catalogRepository: catalogRepository,
@@ -280,6 +296,7 @@ struct CrossSourceLiveRefreshRegressionTests {
             activationPolicy: policy,
             activationExecutor: executor,
             activationHistoryStore: historyStore,
+            proposalAuditStore: proposalAuditStore,
             userDefaults: UserDefaults(suiteName: "CrossSourceLiveRefreshRegressionTests.settings.bundled.\(UUID().uuidString)")!
         )
         await bundledViewModel.load(source: .bundledSample)
@@ -292,6 +309,7 @@ struct CrossSourceLiveRefreshRegressionTests {
             activationPolicy: policy,
             activationExecutor: executor,
             activationHistoryStore: historyStore,
+            proposalAuditStore: proposalAuditStore,
             userDefaults: UserDefaults(suiteName: "CrossSourceLiveRefreshRegressionTests.settings.national.\(UUID().uuidString)")!
         )
         await nationalViewModel.load(source: .koreaNational)
@@ -301,6 +319,7 @@ struct CrossSourceLiveRefreshRegressionTests {
         #expect(nationalControls.latestCandidateSnapshotID == "national-2026.03")
         #expect(nationalControls.recentHistory.isEmpty)
         #expect(nationalControls.latestActivationEventSummary == nil)
+        #expect(nationalControls.timelineHistory.isEmpty)
 
         let seoulViewModel = SettingsViewModel(
             flowRepositoryBuilder: { _ in StubFlowRepository(dataset: makeDataset(source: .seoulCapitalSnapshot)) },
@@ -309,15 +328,18 @@ struct CrossSourceLiveRefreshRegressionTests {
             activationPolicy: policy,
             activationExecutor: executor,
             activationHistoryStore: historyStore,
+            proposalAuditStore: proposalAuditStore,
             userDefaults: UserDefaults(suiteName: "CrossSourceLiveRefreshRegressionTests.settings.seoul.\(UUID().uuidString)")!
         )
         await seoulViewModel.load(source: .seoulCapitalSnapshot)
 
         let seoulControls = try #require(seoulViewModel.operatorControls)
         #expect(seoulControls.activeSnapshotID == "seoul-2026.03")
-        #expect(seoulControls.recentHistory.count == 1)
-        #expect(seoulControls.recentHistory.first?.snapshotID == "seoul-2026.03")
-        #expect(seoulControls.recentHistory.first?.title == "Promote Succeeded")
+        #expect(seoulControls.recentHistory.count == 2)
+        #expect(seoulControls.recentHistory.first?.proposalID == "proposal-seoul-2026.03")
+        #expect(seoulControls.recentHistory.first?.title == "Proposal Approved")
+        #expect(seoulControls.recentHistory.last?.snapshotID == "seoul-2026.03")
+        #expect(seoulControls.recentHistory.last?.title == "Promote Succeeded")
     }
 
     @Test

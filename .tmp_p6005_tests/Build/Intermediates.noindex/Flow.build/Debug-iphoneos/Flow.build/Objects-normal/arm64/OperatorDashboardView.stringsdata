@@ -1,0 +1,80 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/OperatorDashboard/OperatorDashboardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Operator Dashboard",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 366
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open Operator Dashboard",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 372
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld live • %lld static",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 373
+        }
+      },
+      {
+        "comment": "",
+        "key": "Operator Dashboard",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 447
+        }
+      },
+      {
+        "comment": "",
+        "key": "Audit",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 405
+        }
+      },
+      {
+        "comment": "",
+        "key": "Startup Recovery",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 419
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sources",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 432
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open Activation Audit",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 410
+        }
+      },
+      {
+        "comment": "",
+        "key": "Browse source-scoped activation history",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 411
+        }
+      }
+    ]
+  },
+  "version": 1
+}

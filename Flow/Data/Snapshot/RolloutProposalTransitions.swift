@@ -79,6 +79,175 @@ actor InMemoryRolloutProposalAuditStore: RolloutProposalAuditStoring {
     }
 }
 
+actor PersistentRolloutProposalAuditStore: RolloutProposalAuditStoring {
+    private let fileURL: URL
+    private var storedEvents: [RolloutProposalAuditEvent]
+    nonisolated let restorationDisposition: PersistentStoreRestoreDisposition
+
+    init(fileURL: URL? = nil) {
+        self.fileURL = fileURL ?? Self.defaultFileURL(fileManager: .default)
+        let loadResult = Self.loadEvents(from: self.fileURL)
+        self.storedEvents = loadResult.events.sorted(by: Self.sortComparator)
+        self.restorationDisposition = loadResult.disposition
+        if loadResult.shouldRewrite {
+            Self.persist(self.storedEvents, to: self.fileURL)
+        }
+    }
+
+    func append(_ event: RolloutProposalAuditEvent) async {
+        storedEvents.append(event)
+        storedEvents.sort(by: Self.sortComparator)
+        Self.persist(storedEvents, to: fileURL)
+    }
+
+    func events() async -> [RolloutProposalAuditEvent] {
+        storedEvents
+    }
+
+    func events(for source: FlowDatasetSource) async -> [RolloutProposalAuditEvent] {
+        storedEvents.filter { $0.source == source }
+    }
+
+    func events(proposalID: String) async -> [RolloutProposalAuditEvent] {
+        storedEvents.filter { $0.proposalID == proposalID }
+    }
+
+    nonisolated private static func defaultFileURL(fileManager: FileManager) -> URL {
+        let root = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+        return root
+            .appendingPathComponent("Flow", isDirectory: true)
+            .appendingPathComponent("RolloutProposals", isDirectory: true)
+            .appendingPathComponent("rollout_proposal_audit.json", isDirectory: false)
+    }
+
+    nonisolated private static func loadEvents(from fileURL: URL) -> AuditLoadResult {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return AuditLoadResult(events: [], shouldRewrite: false, disposition: .empty)
+        }
+
+        do {
+            let data = try Data(contentsOf: fileURL)
+            if let envelope = try? JSONDecoder.rolloutProposalAuditStoreDecoder.decode(
+                RolloutProposalAuditPersistenceEnvelope.self,
+                from: data
+            ) {
+                return AuditLoadResult(
+                    events: envelope.events,
+                    shouldRewrite: envelope.formatVersion != RolloutProposalAuditPersistenceEnvelope.currentFormatVersion,
+                    disposition: envelope.formatVersion == RolloutProposalAuditPersistenceEnvelope.currentFormatVersion ? .current : .migrated
+                )
+            }
+
+            if let legacyEvents = try? JSONDecoder.rolloutProposalAuditStoreDecoder.decode(
+                [RolloutProposalAuditEvent].self,
+                from: data
+            ) {
+                return AuditLoadResult(
+                    events: legacyEvents,
+                    shouldRewrite: true,
+                    disposition: .migrated
+                )
+            }
+
+            backupCorruptedFile(at: fileURL)
+            return AuditLoadResult(events: [], shouldRewrite: true, disposition: .resetCorrupted)
+        } catch {
+            return AuditLoadResult(events: [], shouldRewrite: false, disposition: .resetCorrupted)
+        }
+    }
+
+    nonisolated private static func persist(_ events: [RolloutProposalAuditEvent], to fileURL: URL) {
+        do {
+            let parent = fileURL.deletingLastPathComponent()
+            try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
+            let envelope = RolloutProposalAuditPersistenceEnvelope(
+                formatVersion: RolloutProposalAuditPersistenceEnvelope.currentFormatVersion,
+                events: events
+            )
+            let data = try JSONEncoder.rolloutProposalAuditStoreEncoder.encode(envelope)
+            try data.write(to: fileURL, options: [.atomic])
+        } catch {
+            FlowLogger.log(
+                level: .error,
+                message: "Failed to persist rollout proposal audit store.",
+                metadata: [
+                    "path": fileURL.path,
+                    "error": String(describing: error)
+                ]
+            )
+        }
+    }
+
+    nonisolated private static func backupCorruptedFile(at fileURL: URL) {
+        let backupURL = fileURL
+            .deletingPathExtension()
+            .appendingPathExtension("corrupted.\(safeBackupTimestamp()).json")
+        do {
+            if FileManager.default.fileExists(atPath: backupURL.path) {
+                try FileManager.default.removeItem(at: backupURL)
+            }
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                try FileManager.default.moveItem(at: fileURL, to: backupURL)
+            }
+        } catch {
+            FlowLogger.log(
+                level: .warning,
+                message: "Failed to back up corrupted rollout proposal audit file.",
+                metadata: [
+                    "path": fileURL.path,
+                    "backup_path": backupURL.path,
+                    "error": String(describing: error)
+                ]
+            )
+        }
+    }
+
+    nonisolated private static func safeBackupTimestamp(now: Date = Date()) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyyMMddHHmmss"
+        return formatter.string(from: now)
+    }
+
+    private static func sortComparator(
+        lhs: RolloutProposalAuditEvent,
+        rhs: RolloutProposalAuditEvent
+    ) -> Bool {
+        if lhs.timestamp != rhs.timestamp {
+            return lhs.timestamp > rhs.timestamp
+        }
+        return lhs.id < rhs.id
+    }
+}
+
+private struct RolloutProposalAuditPersistenceEnvelope: Codable, Hashable {
+    static let currentFormatVersion = 1
+
+    let formatVersion: Int
+    let events: [RolloutProposalAuditEvent]
+}
+
+private struct AuditLoadResult {
+    let events: [RolloutProposalAuditEvent]
+    let shouldRewrite: Bool
+    let disposition: PersistentStoreRestoreDisposition
+}
+
+private extension JSONEncoder {
+    static let rolloutProposalAuditStoreEncoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
+        return encoder
+    }()
+}
+
+private extension JSONDecoder {
+    static let rolloutProposalAuditStoreDecoder = JSONDecoder()
+}
+
 protocol RolloutProposalTransitioning {
     func submitProposal(
         id: String,

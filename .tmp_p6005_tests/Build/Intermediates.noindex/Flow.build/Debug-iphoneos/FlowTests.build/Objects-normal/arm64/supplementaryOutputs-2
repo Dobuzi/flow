@@ -1,0 +1,30 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/ComputeInsightsUseCaseTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/CrossSourceLiveRefreshRegressionTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetCompatibilityCheckerTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetRefreshSchedulerTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6005_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.swiftdeps"
+  }
+}

@@ -27,6 +27,7 @@ enum OperatorHistoryActionFilter: String, CaseIterable, Hashable, Identifiable {
     case promote
     case demote
     case rollback
+    case proposal
 
     var id: String { rawValue }
 
@@ -40,19 +41,8 @@ enum OperatorHistoryActionFilter: String, CaseIterable, Hashable, Identifiable {
             return "Demote"
         case .rollback:
             return "Rollback"
-        }
-    }
-
-    var commandAction: SnapshotActivationCommand.Action? {
-        switch self {
-        case .all:
-            return nil
-        case .promote:
-            return .promote
-        case .demote:
-            return .demote
-        case .rollback:
-            return .rollback
+        case .proposal:
+            return "Proposal"
         }
     }
 }
@@ -102,37 +92,50 @@ enum OperatorHistoryStatusFilter: String, CaseIterable, Hashable, Identifiable {
     }
 }
 
+enum OperatorHistoryCategoryFilter: String, CaseIterable, Hashable, Identifiable {
+    case all
+    case activation
+    case proposal
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all:
+            return "All Categories"
+        case .activation:
+            return "Activation"
+        case .proposal:
+            return "Proposal"
+        }
+    }
+}
+
 struct OperatorHistoryBrowserState: Hashable {
     let sourceFilter: OperatorHistorySourceFilter
+    let categoryFilter: OperatorHistoryCategoryFilter
     let actionFilter: OperatorHistoryActionFilter
     let statusFilter: OperatorHistoryStatusFilter
     let visibleLimit: Int
 
     init(
         sourceFilter: OperatorHistorySourceFilter = .all,
+        categoryFilter: OperatorHistoryCategoryFilter = .all,
         actionFilter: OperatorHistoryActionFilter = .all,
         statusFilter: OperatorHistoryStatusFilter = .all,
         visibleLimit: Int = 25
     ) {
         self.sourceFilter = sourceFilter
+        self.categoryFilter = categoryFilter
         self.actionFilter = actionFilter
         self.statusFilter = statusFilter
         self.visibleLimit = max(1, visibleLimit)
     }
 
-    func query(limitOverride: Int? = nil) -> SnapshotActivationHistoryQuery {
-        SnapshotActivationHistoryQuery(
-            source: sourceFilter.source,
-            commandAction: actionFilter.commandAction,
-            resultStatus: statusFilter.resultStatus,
-            limit: limitOverride ?? visibleLimit,
-            sortOrder: .newestFirst
-        )
-    }
-
     func expanding(by pageSize: Int) -> OperatorHistoryBrowserState {
         OperatorHistoryBrowserState(
             sourceFilter: sourceFilter,
+            categoryFilter: categoryFilter,
             actionFilter: actionFilter,
             statusFilter: statusFilter,
             visibleLimit: visibleLimit + max(1, pageSize)
@@ -142,6 +145,17 @@ struct OperatorHistoryBrowserState: Hashable {
     func withSourceFilter(_ sourceFilter: OperatorHistorySourceFilter) -> OperatorHistoryBrowserState {
         OperatorHistoryBrowserState(
             sourceFilter: sourceFilter,
+            categoryFilter: categoryFilter,
+            actionFilter: actionFilter,
+            statusFilter: statusFilter,
+            visibleLimit: visibleLimit
+        )
+    }
+
+    func withCategoryFilter(_ categoryFilter: OperatorHistoryCategoryFilter) -> OperatorHistoryBrowserState {
+        OperatorHistoryBrowserState(
+            sourceFilter: sourceFilter,
+            categoryFilter: categoryFilter,
             actionFilter: actionFilter,
             statusFilter: statusFilter,
             visibleLimit: visibleLimit
@@ -151,6 +165,7 @@ struct OperatorHistoryBrowserState: Hashable {
     func withActionFilter(_ actionFilter: OperatorHistoryActionFilter) -> OperatorHistoryBrowserState {
         OperatorHistoryBrowserState(
             sourceFilter: sourceFilter,
+            categoryFilter: categoryFilter,
             actionFilter: actionFilter,
             statusFilter: statusFilter,
             visibleLimit: visibleLimit
@@ -160,10 +175,62 @@ struct OperatorHistoryBrowserState: Hashable {
     func withStatusFilter(_ statusFilter: OperatorHistoryStatusFilter) -> OperatorHistoryBrowserState {
         OperatorHistoryBrowserState(
             sourceFilter: sourceFilter,
+            categoryFilter: categoryFilter,
             actionFilter: actionFilter,
             statusFilter: statusFilter,
             visibleLimit: visibleLimit
         )
+    }
+
+    func filteredEntries(from entries: [OperatorHistoryEntry]) -> [OperatorHistoryEntry] {
+        entries.filter { entry in
+            sourceMatches(entry.source)
+                && categoryMatches(entry.category)
+                && actionMatches(entry)
+                && statusMatches(entry.resultStatus)
+        }
+    }
+
+    func visibleEntries(from entries: [OperatorHistoryEntry]) -> [OperatorHistoryEntry] {
+        Array(filteredEntries(from: entries).prefix(visibleLimit))
+    }
+
+    func canLoadMore(from entries: [OperatorHistoryEntry]) -> Bool {
+        filteredEntries(from: entries).count > visibleEntries(from: entries).count
+    }
+
+    private func sourceMatches(_ source: FlowDatasetSource) -> Bool {
+        sourceFilter.source == nil || sourceFilter.source == source
+    }
+
+    private func categoryMatches(_ category: OperatorHistoryEntryCategory) -> Bool {
+        switch categoryFilter {
+        case .all:
+            return true
+        case .activation:
+            return category == .activation
+        case .proposal:
+            return category == .proposal
+        }
+    }
+
+    private func actionMatches(_ entry: OperatorHistoryEntry) -> Bool {
+        switch actionFilter {
+        case .all:
+            return true
+        case .proposal:
+            return entry.category == .proposal
+        case .promote:
+            return entry.commandAction == .promote
+        case .demote:
+            return entry.commandAction == .demote
+        case .rollback:
+            return entry.commandAction == .rollback
+        }
+    }
+
+    private func statusMatches(_ status: SnapshotActivationEventStatus) -> Bool {
+        statusFilter.resultStatus == nil || statusFilter.resultStatus == status
     }
 }
 
@@ -177,13 +244,16 @@ final class OperatorHistoryBrowserViewModel: ObservableObject {
     let pageSize: Int
 
     private let historyStore: SnapshotActivationHistoryStoring
+    private let proposalAuditStore: RolloutProposalAuditStoring
 
     init(
         historyStore: SnapshotActivationHistoryStoring = MobilityRepositoryFactory.sharedActivationHistoryStore,
+        proposalAuditStore: RolloutProposalAuditStoring = MobilityRepositoryFactory.sharedRolloutProposalAuditStore,
         initialState: OperatorHistoryBrowserState = OperatorHistoryBrowserState(),
         pageSize: Int = 25
     ) {
         self.historyStore = historyStore
+        self.proposalAuditStore = proposalAuditStore
         self.browserState = initialState
         self.pageSize = max(1, pageSize)
     }
@@ -194,6 +264,11 @@ final class OperatorHistoryBrowserViewModel: ObservableObject {
 
     func updateSourceFilter(_ sourceFilter: OperatorHistorySourceFilter) async {
         browserState = resetVisibleLimit(for: browserState.withSourceFilter(sourceFilter))
+        await fetch(using: browserState)
+    }
+
+    func updateCategoryFilter(_ categoryFilter: OperatorHistoryCategoryFilter) async {
+        browserState = resetVisibleLimit(for: browserState.withCategoryFilter(categoryFilter))
         await fetch(using: browserState)
     }
 
@@ -214,19 +289,46 @@ final class OperatorHistoryBrowserViewModel: ObservableObject {
     }
 
     private func fetch(using state: OperatorHistoryBrowserState) async {
-        let results = await historyStore.query(state.query(limitOverride: state.visibleLimit + 1))
-        canLoadMore = results.count > state.visibleLimit
-        entries = Array(results.prefix(state.visibleLimit)).map(OperatorHistoryPresentation.historyEntry(from:))
+        let activationEntries = await historyStore.query(
+            SnapshotActivationHistoryQuery(
+                source: state.sourceFilter.source,
+                limit: 500,
+                sortOrder: .newestFirst
+            )
+        ).map(OperatorHistoryPresentation.historyEntry(from:))
+
+        let proposalEntries = await proposalAuditEvents(for: state.sourceFilter.source)
+            .map(OperatorHistoryPresentation.historyEntry(from:))
+
+        let mergedEntries = (activationEntries + proposalEntries)
+            .sorted(by: Self.sortEntries)
+        entries = state.visibleEntries(from: mergedEntries)
+        canLoadMore = state.canLoadMore(from: mergedEntries)
         loadError = nil
     }
 
     private func resetVisibleLimit(for state: OperatorHistoryBrowserState) -> OperatorHistoryBrowserState {
         OperatorHistoryBrowserState(
             sourceFilter: state.sourceFilter,
+            categoryFilter: state.categoryFilter,
             actionFilter: state.actionFilter,
             statusFilter: state.statusFilter,
             visibleLimit: pageSize
         )
+    }
+
+    private func proposalAuditEvents(for source: FlowDatasetSource?) async -> [RolloutProposalAuditEvent] {
+        if let source {
+            return await proposalAuditStore.events(for: source)
+        }
+        return await proposalAuditStore.events()
+    }
+
+    private static func sortEntries(lhs: OperatorHistoryEntry, rhs: OperatorHistoryEntry) -> Bool {
+        if lhs.timestamp != rhs.timestamp {
+            return lhs.timestamp > rhs.timestamp
+        }
+        return lhs.id < rhs.id
     }
 }
 
@@ -265,6 +367,16 @@ struct OperatorHistoryBrowserView: View {
                 }
                 .pickerStyle(.menu)
 
+                Picker("Category", selection: Binding(
+                    get: { viewModel.browserState.categoryFilter },
+                    set: { filter in Task { await viewModel.updateCategoryFilter(filter) } }
+                )) {
+                    ForEach(OperatorHistoryCategoryFilter.allCases) { filter in
+                        Text(filter.title).tag(filter)
+                    }
+                }
+                .pickerStyle(.menu)
+
                 Picker("Status", selection: Binding(
                     get: { viewModel.browserState.statusFilter },
                     set: { filter in Task { await viewModel.updateStatusFilter(filter) } }
@@ -280,7 +392,7 @@ struct OperatorHistoryBrowserView: View {
                 if let error = viewModel.loadError {
                     NonBlockingErrorBanner(error: error)
                 } else if viewModel.entries.isEmpty {
-                    Text("No activation history matches the current filters.")
+                    Text("No operator history matches the current filters.")
                         .foregroundStyle(.secondary)
                 } else {
                     Text("Showing \(viewModel.entries.count) events")
@@ -333,7 +445,7 @@ struct OperatorHistoryRow: View {
                     .font(.caption)
             }
 
-            LabeledContent("Command", value: entry.commandID)
+            LabeledContent(entry.category == .proposal ? "Proposal" : "Command", value: entry.linkageID)
                 .font(.caption)
             LabeledContent("Timestamp", value: entry.timestamp)
                 .font(.caption)
