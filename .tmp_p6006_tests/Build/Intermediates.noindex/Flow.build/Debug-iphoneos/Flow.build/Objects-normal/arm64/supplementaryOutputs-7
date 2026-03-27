@@ -1,0 +1,44 @@
+{
+  "/Users/jw/Dev/codex/flow/Flow/Features/ModeFilter/ModeFilterViewModel.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ModeFilterViewModel.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ModeFilterViewModel.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ModeFilterViewModel.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ModeFilterViewModel.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ModeFilterViewModel.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Features/OperatorDashboard/OperatorApprovalReadiness.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorApprovalReadiness.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorApprovalReadiness.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorApprovalReadiness.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorApprovalReadiness.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorApprovalReadiness.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Features/OperatorDashboard/OperatorDashboardView.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardView.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardView.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardView.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardView.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardView.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Features/OperatorDashboard/OperatorDashboardViewModel.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardViewModel.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardViewModel.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardViewModel.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardViewModel.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorDashboardViewModel.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Features/OperatorDashboard/OperatorHealth.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorHealth.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorHealth.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorHealth.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorHealth.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorHealth.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Features/OperatorDashboard/OperatorMetrics.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorMetrics.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorMetrics.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorMetrics.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorMetrics.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/OperatorMetrics.swiftdeps"
+  }
+}

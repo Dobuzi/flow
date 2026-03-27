@@ -1,0 +1,120 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/OperatorHistory/OperatorHistoryBrowserView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Operator Audit",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 517
+        }
+      },
+      {
+        "comment": "",
+        "key": "Filters",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 452
+        }
+      },
+      {
+        "comment": "",
+        "key": "Audit History",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 494
+        }
+      },
+      {
+        "comment": "",
+        "key": "Source",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 453
+        }
+      },
+      {
+        "comment": "",
+        "key": "Event",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 463
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 473
+        }
+      },
+      {
+        "comment": "",
+        "key": "Status",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 483
+        }
+      },
+      {
+        "comment": "",
+        "key": "No operator history matches the current filters.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 498
+        }
+      },
+      {
+        "comment": "",
+        "key": "Showing %lld events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 501
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load More",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 510
+        }
+      },
+      {
+        "comment": "",
+        "key": "Snapshot",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 552
+        }
+      },
+      {
+        "comment": "",
+        "key": "Proposal",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 556
+        }
+      },
+      {
+        "comment": "",
+        "key": "Command",
+        "location": {
+          "startingColumn": 71,
+          "startingLine": 556
+        }
+      },
+      {
+        "comment": "",
+        "key": "Timestamp",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 558
+        }
+      }
+    ]
+  },
+  "version": 1
+}

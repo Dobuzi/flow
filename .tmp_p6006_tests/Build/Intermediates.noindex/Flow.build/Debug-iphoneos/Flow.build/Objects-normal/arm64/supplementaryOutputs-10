@@ -1,0 +1,37 @@
+{
+  "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Visualization/Map/LODPolicy.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/LODPolicy.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/LODPolicy.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/LODPolicy.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/LODPolicy.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/LODPolicy.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Visualization/Map/MapContainerView.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MapContainerView.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MapContainerView.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MapContainerView.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MapContainerView.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MapContainerView.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Visualization/Map/NationalRenderGuardrailPolicy.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalRenderGuardrailPolicy.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalRenderGuardrailPolicy.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalRenderGuardrailPolicy.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalRenderGuardrailPolicy.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalRenderGuardrailPolicy.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Visualization/Styling/FlowScalePolicy.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/FlowScalePolicy.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/FlowScalePolicy.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/FlowScalePolicy.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/FlowScalePolicy.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6006_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/FlowScalePolicy.swiftdeps"
+  }
+}

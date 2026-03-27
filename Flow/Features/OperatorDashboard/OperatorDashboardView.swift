@@ -37,6 +37,13 @@ struct OperatorSourceSummaryCardModel: Identifiable, Hashable {
     }
 }
 
+struct OperatorDashboardAuditLinkModel: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let browserState: OperatorHistoryBrowserState
+}
+
 enum OperatorDashboardPresentation {
     static func bootstrapBanner(from status: PersistentOperatorStateBootstrapStatus?) -> OperatorDashboardBootstrapBannerModel? {
         guard let status else { return nil }
@@ -56,6 +63,36 @@ enum OperatorDashboardPresentation {
 
     static func cardModels(from summary: OperatorDashboardSummary) -> [OperatorSourceSummaryCardModel] {
         summary.sources.map(cardModel(from:))
+    }
+
+    static func auditLinks(from summary: OperatorDashboardSummary) -> [OperatorDashboardAuditLinkModel] {
+        [
+            OperatorDashboardAuditLinkModel(
+                id: "all-history",
+                title: "Open Operator Audit",
+                subtitle: "Browse activation and proposal history across all sources",
+                browserState: OperatorHistoryBrowserState()
+            ),
+            OperatorDashboardAuditLinkModel(
+                id: "proposal-history",
+                title: "Open Proposal Audit",
+                subtitle: "Browse proposal lifecycle events only",
+                browserState: OperatorHistoryBrowserState(
+                    categoryFilter: .proposal
+                )
+            )
+        ]
+    }
+
+    static func sourceAuditLink(for source: OperatorSourceSummaryCardModel) -> OperatorDashboardAuditLinkModel {
+        OperatorDashboardAuditLinkModel(
+            id: "source-history-\(source.source.rawValue)",
+            title: source.title,
+            subtitle: "Browse source-scoped operator history",
+            browserState: OperatorHistoryBrowserState(
+                sourceFilter: OperatorHistorySourceFilter(source: source.source)
+            )
+        )
     }
 
     static func cardModel(from source: OperatorSourceSummary) -> OperatorSourceSummaryCardModel {
@@ -403,14 +440,18 @@ struct OperatorDashboardView: View {
         List {
             if let summary = viewModel.dashboard {
                 Section("Audit") {
-                    NavigationLink {
-                        OperatorHistoryBrowserView()
-                    } label: {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Open Activation Audit")
-                            Text("Browse source-scoped activation history")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                    ForEach(OperatorDashboardPresentation.auditLinks(from: summary)) { auditLink in
+                        NavigationLink {
+                            OperatorHistoryBrowserView(
+                                viewModel: OperatorHistoryBrowserViewModel(initialState: auditLink.browserState)
+                            )
+                        } label: {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(auditLink.title)
+                                Text(auditLink.subtitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
@@ -431,7 +472,14 @@ struct OperatorDashboardView: View {
 
                 Section("Sources") {
                     ForEach(OperatorDashboardPresentation.cardModels(from: summary)) { card in
-                        OperatorSourceSummaryCard(model: card)
+                        let auditLink = OperatorDashboardPresentation.sourceAuditLink(for: card)
+                        NavigationLink {
+                            OperatorHistoryBrowserView(
+                                viewModel: OperatorHistoryBrowserViewModel(initialState: auditLink.browserState)
+                            )
+                        } label: {
+                            OperatorSourceSummaryCard(model: card)
+                        }
                     }
                 }
             } else if let error = viewModel.loadError {

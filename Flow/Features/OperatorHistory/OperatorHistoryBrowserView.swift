@@ -27,7 +27,10 @@ enum OperatorHistoryActionFilter: String, CaseIterable, Hashable, Identifiable {
     case promote
     case demote
     case rollback
-    case proposal
+    case proposalCreated
+    case proposalApproved
+    case proposalRejected
+    case proposalCancelled
 
     var id: String { rawValue }
 
@@ -41,8 +44,62 @@ enum OperatorHistoryActionFilter: String, CaseIterable, Hashable, Identifiable {
             return "Demote"
         case .rollback:
             return "Rollback"
+        case .proposalCreated:
+            return "Proposal Created"
+        case .proposalApproved:
+            return "Proposal Approved"
+        case .proposalRejected:
+            return "Proposal Rejected"
+        case .proposalCancelled:
+            return "Proposal Cancelled"
+        }
+    }
+
+    func isCompatible(with categoryFilter: OperatorHistoryCategoryFilter) -> Bool {
+        switch categoryFilter {
+        case .all:
+            return true
+        case .activation:
+            switch self {
+            case .all, .promote, .demote, .rollback:
+                return true
+            case .proposalCreated, .proposalApproved, .proposalRejected, .proposalCancelled:
+                return false
+            }
         case .proposal:
-            return "Proposal"
+            switch self {
+            case .all:
+                return true
+            case .promote, .demote, .rollback:
+                return false
+            case .proposalCreated, .proposalApproved, .proposalRejected, .proposalCancelled:
+                return true
+            }
+        }
+    }
+
+    func matches(
+        category: OperatorHistoryEntryCategory,
+        commandAction: SnapshotActivationCommand.Action,
+        eventType: String
+    ) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .promote:
+            return category == .activation && commandAction == .promote
+        case .demote:
+            return category == .activation && commandAction == .demote
+        case .rollback:
+            return category == .activation && commandAction == .rollback
+        case .proposalCreated:
+            return category == .proposal && eventType == RolloutProposalAuditEventType.proposalCreated.rawValue
+        case .proposalApproved:
+            return category == .proposal && eventType == RolloutProposalAuditEventType.proposalApproved.rawValue
+        case .proposalRejected:
+            return category == .proposal && eventType == RolloutProposalAuditEventType.proposalRejected.rawValue
+        case .proposalCancelled:
+            return category == .proposal && eventType == RolloutProposalAuditEventType.proposalCancelled.rawValue
         }
     }
 }
@@ -54,6 +111,10 @@ enum OperatorHistoryStatusFilter: String, CaseIterable, Hashable, Identifiable {
     case blocked
     case failed
     case noOp
+    case awaitingApproval
+    case approved
+    case rejected
+    case cancelled
 
     var id: String { rawValue }
 
@@ -71,23 +132,66 @@ enum OperatorHistoryStatusFilter: String, CaseIterable, Hashable, Identifiable {
             return "Failed"
         case .noOp:
             return "No-op"
+        case .awaitingApproval:
+            return "Awaiting Approval"
+        case .approved:
+            return "Approved"
+        case .rejected:
+            return "Rejected"
+        case .cancelled:
+            return "Cancelled"
         }
     }
 
-    var resultStatus: SnapshotActivationEventStatus? {
+    func isCompatible(with categoryFilter: OperatorHistoryCategoryFilter) -> Bool {
+        switch categoryFilter {
+        case .all:
+            return true
+        case .activation:
+            switch self {
+            case .all, .requested, .succeeded, .blocked, .failed, .noOp:
+                return true
+            case .awaitingApproval, .approved, .rejected, .cancelled:
+                return false
+            }
+        case .proposal:
+            switch self {
+            case .all:
+                return true
+            case .requested, .succeeded, .blocked, .failed, .noOp:
+                return false
+            case .awaitingApproval, .approved, .rejected, .cancelled:
+                return true
+            }
+        }
+    }
+
+    func matches(
+        category: OperatorHistoryEntryCategory,
+        resultStatus: SnapshotActivationEventStatus,
+        eventType: String
+    ) -> Bool {
         switch self {
         case .all:
-            return nil
+            return true
         case .requested:
-            return .requested
+            return category == .activation && resultStatus == .requested
         case .succeeded:
-            return .succeeded
+            return category == .activation && resultStatus == .succeeded
         case .blocked:
-            return .blocked
+            return category == .activation && resultStatus == .blocked
         case .failed:
-            return .failed
+            return category == .activation && resultStatus == .failed
         case .noOp:
-            return .noOp
+            return category == .activation && resultStatus == .noOp
+        case .awaitingApproval:
+            return category == .proposal && eventType == RolloutProposalAuditEventType.proposalCreated.rawValue
+        case .approved:
+            return category == .proposal && eventType == RolloutProposalAuditEventType.proposalApproved.rawValue
+        case .rejected:
+            return category == .proposal && eventType == RolloutProposalAuditEventType.proposalRejected.rawValue
+        case .cancelled:
+            return category == .proposal && eventType == RolloutProposalAuditEventType.proposalCancelled.rawValue
         }
     }
 }
@@ -153,11 +257,13 @@ struct OperatorHistoryBrowserState: Hashable {
     }
 
     func withCategoryFilter(_ categoryFilter: OperatorHistoryCategoryFilter) -> OperatorHistoryBrowserState {
-        OperatorHistoryBrowserState(
+        let normalizedActionFilter = actionFilter.isCompatible(with: categoryFilter) ? actionFilter : .all
+        let normalizedStatusFilter = statusFilter.isCompatible(with: categoryFilter) ? statusFilter : .all
+        return OperatorHistoryBrowserState(
             sourceFilter: sourceFilter,
             categoryFilter: categoryFilter,
-            actionFilter: actionFilter,
-            statusFilter: statusFilter,
+            actionFilter: normalizedActionFilter,
+            statusFilter: normalizedStatusFilter,
             visibleLimit: visibleLimit
         )
     }
@@ -187,7 +293,7 @@ struct OperatorHistoryBrowserState: Hashable {
             sourceMatches(entry.source)
                 && categoryMatches(entry.category)
                 && actionMatches(entry)
-                && statusMatches(entry.resultStatus)
+                && statusMatches(entry)
         }
     }
 
@@ -215,22 +321,19 @@ struct OperatorHistoryBrowserState: Hashable {
     }
 
     private func actionMatches(_ entry: OperatorHistoryEntry) -> Bool {
-        switch actionFilter {
-        case .all:
-            return true
-        case .proposal:
-            return entry.category == .proposal
-        case .promote:
-            return entry.commandAction == .promote
-        case .demote:
-            return entry.commandAction == .demote
-        case .rollback:
-            return entry.commandAction == .rollback
-        }
+        actionFilter.matches(
+            category: entry.category,
+            commandAction: entry.commandAction,
+            eventType: entry.eventType
+        )
     }
 
-    private func statusMatches(_ status: SnapshotActivationEventStatus) -> Bool {
-        statusFilter.resultStatus == nil || statusFilter.resultStatus == status
+    private func statusMatches(_ entry: OperatorHistoryEntry) -> Bool {
+        statusFilter.matches(
+            category: entry.category,
+            resultStatus: entry.resultStatus,
+            eventType: entry.eventType
+        )
     }
 }
 
@@ -411,7 +514,7 @@ struct OperatorHistoryBrowserView: View {
                 }
             }
         }
-        .navigationTitle("Activation Audit")
+        .navigationTitle("Operator Audit")
         .refreshable {
             await viewModel.load()
         }
@@ -427,12 +530,17 @@ struct OperatorHistoryRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(entry.title)
                         .font(.subheadline.weight(.semibold))
-                    Text(entry.sourceTitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Text(entry.category.title)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(entry.category == .proposal ? .orange : .secondary)
+                        Text(entry.sourceTitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer()
                 Text(entry.status)

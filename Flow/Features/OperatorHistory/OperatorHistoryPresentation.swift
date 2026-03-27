@@ -3,6 +3,15 @@ import Foundation
 enum OperatorHistoryEntryCategory: String, Hashable {
     case activation
     case proposal
+
+    var title: String {
+        switch self {
+        case .activation:
+            return "Activation"
+        case .proposal:
+            return "Proposal"
+        }
+    }
 }
 
 struct OperatorTimelineEntry: Identifiable, Hashable {
@@ -92,7 +101,7 @@ enum OperatorHistoryPresentation {
             snapshotID: event.targetSnapshotID,
             proposalID: event.proposalID,
             linkageID: event.proposalID,
-            status: humanizedEventStatus(status(for: event.type)),
+            status: proposalStatusTitle(for: event.type),
             detail: event.reason ?? proposalDetail(for: event)
         )
     }
@@ -111,7 +120,7 @@ enum OperatorHistoryPresentation {
             timestamp: event.timestamp,
             snapshotID: event.targetSnapshotID,
             proposalID: event.proposalID,
-            status: humanizedEventStatus(status(for: event.type)),
+            status: proposalStatusTitle(for: event.type),
             detail: event.reason ?? proposalDetail(for: event)
         )
     }
@@ -152,6 +161,19 @@ enum OperatorHistoryPresentation {
             return "Proposal Rejected"
         case .proposalCancelled:
             return "Proposal Cancelled"
+        }
+    }
+
+    static func proposalStatusTitle(for type: RolloutProposalAuditEventType) -> String {
+        switch type {
+        case .proposalCreated:
+            return "Awaiting Approval"
+        case .proposalApproved:
+            return "Approved"
+        case .proposalRejected:
+            return "Rejected"
+        case .proposalCancelled:
+            return "Cancelled"
         }
     }
 

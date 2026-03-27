@@ -78,7 +78,7 @@ struct OperatorHistoryBrowserViewTests {
         await viewModel.load()
         await viewModel.updateSourceFilter(OperatorHistorySourceFilter(source: .seoulCapitalSnapshot))
         await viewModel.updateCategoryFilter(.proposal)
-        await viewModel.updateStatusFilter(.blocked)
+        await viewModel.updateStatusFilter(.rejected)
 
         #expect(viewModel.entries.map(\.id) == ["seoul-proposal-rejected"])
         #expect(viewModel.entries.allSatisfy { $0.source == .seoulCapitalSnapshot })
@@ -157,20 +157,59 @@ struct OperatorHistoryBrowserViewTests {
     @Test
     func browserStateFiltersProposalCategoryAndSourceDeterministically() {
         let entries = [
-            makeHistoryEntry(id: "proposal-seoul", source: .seoulCapitalSnapshot, category: .proposal, action: .promote, status: .blocked, timestamp: "2026-03-15T03:00:00Z"),
+            makeHistoryEntry(id: "proposal-seoul", source: .seoulCapitalSnapshot, category: .proposal, eventType: RolloutProposalAuditEventType.proposalApproved.rawValue, action: .promote, status: .succeeded, timestamp: "2026-03-15T03:00:00Z"),
             makeHistoryEntry(id: "activation-national", source: .koreaNational, category: .activation, action: .rollback, status: .blocked, timestamp: "2026-03-15T02:00:00Z")
         ]
 
         let state = OperatorHistoryBrowserState(
             sourceFilter: OperatorHistorySourceFilter(source: .seoulCapitalSnapshot),
             categoryFilter: .proposal,
-            actionFilter: .proposal,
-            statusFilter: .blocked,
+            actionFilter: .proposalApproved,
+            statusFilter: .approved,
             visibleLimit: 30
         )
 
         #expect(state.visibleEntries(from: entries).map(\.id) == ["proposal-seoul"])
         #expect(state.canLoadMore(from: entries) == false)
+    }
+
+    @Test
+    func proposalActionFiltersDifferentiateLifecycleEvents() {
+        let entries = [
+            makeHistoryEntry(id: "proposal-created", source: .seoulCapitalSnapshot, category: .proposal, eventType: RolloutProposalAuditEventType.proposalCreated.rawValue, action: .promote, status: .requested, timestamp: "2026-03-15T04:00:00Z"),
+            makeHistoryEntry(id: "proposal-approved", source: .seoulCapitalSnapshot, category: .proposal, eventType: RolloutProposalAuditEventType.proposalApproved.rawValue, action: .promote, status: .succeeded, timestamp: "2026-03-15T03:00:00Z"),
+            makeHistoryEntry(id: "proposal-rejected", source: .seoulCapitalSnapshot, category: .proposal, eventType: RolloutProposalAuditEventType.proposalRejected.rawValue, action: .promote, status: .blocked, timestamp: "2026-03-15T02:00:00Z")
+        ]
+
+        let approvedState = OperatorHistoryBrowserState(
+            categoryFilter: .proposal,
+            actionFilter: .proposalApproved,
+            statusFilter: .approved,
+            visibleLimit: 30
+        )
+        let awaitingState = OperatorHistoryBrowserState(
+            categoryFilter: .proposal,
+            actionFilter: .proposalCreated,
+            statusFilter: .awaitingApproval,
+            visibleLimit: 30
+        )
+
+        #expect(approvedState.visibleEntries(from: entries).map(\.id) == ["proposal-approved"])
+        #expect(awaitingState.visibleEntries(from: entries).map(\.id) == ["proposal-created"])
+    }
+
+    @Test
+    func categoryFilterResetsIncompatibleActionAndStatusSelections() {
+        let state = OperatorHistoryBrowserState(
+            categoryFilter: .all,
+            actionFilter: .proposalRejected,
+            statusFilter: .rejected,
+            visibleLimit: 30
+        ).withCategoryFilter(.activation)
+
+        #expect(state.categoryFilter == .activation)
+        #expect(state.actionFilter == .all)
+        #expect(state.statusFilter == .all)
     }
 
     @Test
@@ -190,7 +229,7 @@ struct OperatorHistoryBrowserViewTests {
         #expect(entry.linkageID == "proposal-001")
         #expect(entry.proposalID == "proposal-001")
         #expect(entry.snapshotID == "seoulCapitalSnapshot-candidate")
-        #expect(entry.status == "Blocked")
+        #expect(entry.status == "Rejected")
         #expect(entry.detail == "Candidate failed review")
     }
 
@@ -198,6 +237,7 @@ struct OperatorHistoryBrowserViewTests {
         id: String,
         source: FlowDatasetSource,
         category: OperatorHistoryEntryCategory,
+        eventType: String? = nil,
         action: SnapshotActivationCommand.Action,
         status: SnapshotActivationEventStatus,
         timestamp: String
@@ -208,7 +248,7 @@ struct OperatorHistoryBrowserViewTests {
             linkageID: category == .proposal ? "proposal-\(id)" : "cmd-\(id)",
             source: source,
             sourceTitle: source.title,
-            eventType: category == .proposal ? RolloutProposalAuditEventType.proposalCreated.rawValue : SnapshotActivationEventType.promoteRequested.rawValue,
+            eventType: eventType ?? (category == .proposal ? RolloutProposalAuditEventType.proposalCreated.rawValue : SnapshotActivationEventType.promoteRequested.rawValue),
             commandAction: action,
             resultStatus: status,
             title: id,

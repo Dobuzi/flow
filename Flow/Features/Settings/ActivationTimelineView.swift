@@ -1,100 +1,22 @@
 import SwiftUI
 
-enum ActivationTimelineActionFilter: String, CaseIterable, Hashable, Identifiable {
-    case all
-    case promote
-    case demote
-    case rollback
-    case proposal
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .all:
-            return "All Actions"
-        case .promote:
-            return "Promote"
-        case .demote:
-            return "Demote"
-        case .rollback:
-            return "Rollback"
-        case .proposal:
-            return "Proposal"
-        }
-    }
-
-    fileprivate func matches(_ action: SnapshotActivationCommand.Action, category: OperatorHistoryEntryCategory) -> Bool {
-        switch self {
-        case .all:
-            return true
-        case .proposal:
-            return category == .proposal
-        case .promote:
-            return action == .promote
-        case .demote:
-            return action == .demote
-        case .rollback:
-            return action == .rollback
-        }
-    }
-}
-
-enum ActivationTimelineStatusFilter: String, CaseIterable, Hashable, Identifiable {
-    case all
-    case requested
-    case succeeded
-    case blocked
-    case failed
-    case noOp
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .all:
-            return "All Statuses"
-        case .requested:
-            return "Requested"
-        case .succeeded:
-            return "Succeeded"
-        case .blocked:
-            return "Blocked"
-        case .failed:
-            return "Failed"
-        case .noOp:
-            return "No-op"
-        }
-    }
-
-    fileprivate func matches(_ status: SnapshotActivationEventStatus) -> Bool {
-        switch self {
-        case .all:
-            return true
-        case .requested:
-            return status == .requested
-        case .succeeded:
-            return status == .succeeded
-        case .blocked:
-            return status == .blocked
-        case .failed:
-            return status == .failed
-        case .noOp:
-            return status == .noOp
-        }
-    }
-}
+typealias ActivationTimelineCategoryFilter = OperatorHistoryCategoryFilter
+typealias ActivationTimelineActionFilter = OperatorHistoryActionFilter
+typealias ActivationTimelineStatusFilter = OperatorHistoryStatusFilter
 
 struct ActivationTimelineBrowserState: Hashable {
+    let categoryFilter: ActivationTimelineCategoryFilter
     let actionFilter: ActivationTimelineActionFilter
     let statusFilter: ActivationTimelineStatusFilter
     let visibleLimit: Int
 
     init(
+        categoryFilter: ActivationTimelineCategoryFilter = .all,
         actionFilter: ActivationTimelineActionFilter = .all,
         statusFilter: ActivationTimelineStatusFilter = .all,
         visibleLimit: Int = 20
     ) {
+        self.categoryFilter = categoryFilter
         self.actionFilter = actionFilter
         self.statusFilter = statusFilter
         self.visibleLimit = max(1, visibleLimit)
@@ -102,7 +24,17 @@ struct ActivationTimelineBrowserState: Hashable {
 
     func filteredEntries(from entries: [OperatorTimelineEntry]) -> [OperatorTimelineEntry] {
         entries.filter { entry in
-            actionFilter.matches(entry.commandAction, category: entry.category) && statusFilter.matches(entry.resultStatus)
+            categoryMatches(entry.category)
+                && actionFilter.matches(
+                    category: entry.category,
+                    commandAction: entry.commandAction,
+                    eventType: entry.eventType
+                )
+                && statusFilter.matches(
+                    category: entry.category,
+                    resultStatus: entry.resultStatus,
+                    eventType: entry.eventType
+                )
         }
     }
 
@@ -113,12 +45,24 @@ struct ActivationTimelineBrowserState: Hashable {
     func canLoadMore(from entries: [OperatorTimelineEntry]) -> Bool {
         filteredEntries(from: entries).count > visibleEntries(from: entries).count
     }
+
+    private func categoryMatches(_ category: OperatorHistoryEntryCategory) -> Bool {
+        switch categoryFilter {
+        case .all:
+            return true
+        case .activation:
+            return category == .activation
+        case .proposal:
+            return category == .proposal
+        }
+    }
 }
 
 struct ActivationTimelineView: View {
     let sourceTitle: String
     let entries: [OperatorTimelineEntry]
 
+    @State private var categoryFilter: ActivationTimelineCategoryFilter = .all
     @State private var actionFilter: ActivationTimelineActionFilter = .all
     @State private var statusFilter: ActivationTimelineStatusFilter = .all
     @State private var visibleLimit = 20
@@ -127,6 +71,7 @@ struct ActivationTimelineView: View {
 
     private var browserState: ActivationTimelineBrowserState {
         ActivationTimelineBrowserState(
+            categoryFilter: categoryFilter,
             actionFilter: actionFilter,
             statusFilter: statusFilter,
             visibleLimit: visibleLimit
@@ -148,6 +93,13 @@ struct ActivationTimelineView: View {
             }
 
             Section("Filters") {
+                Picker("Category", selection: $categoryFilter) {
+                    ForEach(ActivationTimelineCategoryFilter.allCases) { filter in
+                        Text(filter.title).tag(filter)
+                    }
+                }
+                .pickerStyle(.menu)
+
                 Picker("Action", selection: $actionFilter) {
                     ForEach(ActivationTimelineActionFilter.allCases) { filter in
                         Text(filter.title).tag(filter)
@@ -175,8 +127,13 @@ struct ActivationTimelineView: View {
                     ForEach(visibleEntries) { entry in
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(alignment: .top) {
-                                Text(entry.title)
-                                    .font(.subheadline.weight(.semibold))
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(entry.title)
+                                        .font(.subheadline.weight(.semibold))
+                                    Text(entry.category.title)
+                                        .font(.caption2.weight(.semibold))
+                                        .foregroundStyle(entry.category == .proposal ? .orange : .secondary)
+                                }
                                 Spacer()
                                 Text(entry.status)
                                     .font(.caption)
@@ -216,8 +173,17 @@ struct ActivationTimelineView: View {
                 }
             }
         }
-        .navigationTitle("Activation Timeline")
+        .navigationTitle("Operator Timeline")
         .onChange(of: actionFilter) { _, _ in
+            visibleLimit = pageSize
+        }
+        .onChange(of: categoryFilter) { _, _ in
+            if !actionFilter.isCompatible(with: categoryFilter) {
+                actionFilter = .all
+            }
+            if !statusFilter.isCompatible(with: categoryFilter) {
+                statusFilter = .all
+            }
             visibleLimit = pageSize
         }
         .onChange(of: statusFilter) { _, _ in

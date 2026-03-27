@@ -13,6 +13,7 @@ struct ActivationTimelineViewTests {
         ]
 
         let browser = ActivationTimelineBrowserState(
+            categoryFilter: .activation,
             actionFilter: .promote,
             statusFilter: .all,
             visibleLimit: 10
@@ -33,16 +34,19 @@ struct ActivationTimelineViewTests {
         ]
 
         let blockedBrowser = ActivationTimelineBrowserState(
+            categoryFilter: .activation,
             actionFilter: .all,
             statusFilter: .blocked,
             visibleLimit: 10
         )
         let failedBrowser = ActivationTimelineBrowserState(
+            categoryFilter: .activation,
             actionFilter: .all,
             statusFilter: .failed,
             visibleLimit: 10
         )
         let noOpBrowser = ActivationTimelineBrowserState(
+            categoryFilter: .activation,
             actionFilter: .all,
             statusFilter: .noOp,
             visibleLimit: 10
@@ -65,11 +69,13 @@ struct ActivationTimelineViewTests {
         ]
 
         let firstPage = ActivationTimelineBrowserState(
+            categoryFilter: .activation,
             actionFilter: .promote,
             statusFilter: .succeeded,
             visibleLimit: 2
         )
         let secondPage = ActivationTimelineBrowserState(
+            categoryFilter: .activation,
             actionFilter: .promote,
             statusFilter: .succeeded,
             visibleLimit: 4
@@ -94,6 +100,7 @@ struct ActivationTimelineViewTests {
         ]
 
         let browser = ActivationTimelineBrowserState(
+            categoryFilter: .activation,
             actionFilter: .promote,
             statusFilter: .succeeded,
             visibleLimit: 10
@@ -113,7 +120,8 @@ struct ActivationTimelineViewTests {
         ]
 
         let browser = ActivationTimelineBrowserState(
-            actionFilter: .proposal,
+            categoryFilter: .proposal,
+            actionFilter: .proposalApproved,
             statusFilter: .all,
             visibleLimit: 10
         )
@@ -129,7 +137,7 @@ struct ActivationTimelineViewTests {
     func proposalEntriesPreserveNewestFirstOrderingAcrossMixedHistory() {
         let entries = [
             makeActivationEntry(id: "activation-older", action: .rollback, status: .blocked, timestamp: "2026-03-10T03:00:00Z"),
-            makeProposalEntry(id: "proposal-newest", status: .requested, timestamp: "2026-03-10T04:00:00Z")
+            makeProposalEntry(id: "proposal-newest", type: .proposalCreated, status: .requested, timestamp: "2026-03-10T04:00:00Z")
         ]
 
         let browser = ActivationTimelineBrowserState(
@@ -139,6 +147,48 @@ struct ActivationTimelineViewTests {
         )
 
         #expect(browser.visibleEntries(from: entries).map(\.id) == ["proposal-newest", "activation-older"])
+    }
+
+    @Test
+    func proposalStatusFiltersRemainConsistentWithHistoryBrowserSemantics() {
+        let entries = [
+            makeProposalEntry(id: "proposal-created", type: .proposalCreated, status: .requested, timestamp: "2026-03-10T05:00:00Z"),
+            makeProposalEntry(id: "proposal-rejected", type: .proposalRejected, status: .blocked, timestamp: "2026-03-10T04:00:00Z"),
+            makeActivationEntry(id: "activation-blocked", action: .rollback, status: .blocked, timestamp: "2026-03-10T03:00:00Z")
+        ]
+
+        let awaitingBrowser = ActivationTimelineBrowserState(
+            categoryFilter: .proposal,
+            actionFilter: .proposalCreated,
+            statusFilter: .awaitingApproval,
+            visibleLimit: 10
+        )
+        let rejectedBrowser = ActivationTimelineBrowserState(
+            categoryFilter: .proposal,
+            actionFilter: .proposalRejected,
+            statusFilter: .rejected,
+            visibleLimit: 10
+        )
+
+        #expect(awaitingBrowser.visibleEntries(from: entries).map(\.id) == ["proposal-created"])
+        #expect(rejectedBrowser.visibleEntries(from: entries).map(\.id) == ["proposal-rejected"])
+    }
+
+    @Test
+    func activationCategoryExcludesProposalLifecycleActions() {
+        let entries = [
+            makeProposalEntry(id: "proposal-rejected", type: .proposalRejected, status: .blocked, timestamp: "2026-03-10T05:00:00Z"),
+            makeActivationEntry(id: "activation-blocked", action: .rollback, status: .blocked, timestamp: "2026-03-10T04:00:00Z")
+        ]
+
+        let browser = ActivationTimelineBrowserState(
+            categoryFilter: .activation,
+            actionFilter: .all,
+            statusFilter: .blocked,
+            visibleLimit: 10
+        )
+
+        #expect(browser.visibleEntries(from: entries).map(\.id) == ["activation-blocked"])
     }
 
     private func makeActivationEntry(
@@ -169,6 +219,7 @@ struct ActivationTimelineViewTests {
     private func makeProposalEntry(
         id: String,
         source: FlowDatasetSource = .seoulCapitalSnapshot,
+        type: RolloutProposalAuditEventType = .proposalApproved,
         status: SnapshotActivationEventStatus,
         timestamp: String
     ) -> OperatorTimelineEntry {
@@ -177,7 +228,7 @@ struct ActivationTimelineViewTests {
             category: .proposal,
             source: source,
             sourceTitle: source.title,
-            eventType: RolloutProposalAuditEventType.proposalApproved.rawValue,
+            eventType: type.rawValue,
             commandAction: .promote,
             resultStatus: status,
             title: id,
@@ -185,7 +236,7 @@ struct ActivationTimelineViewTests {
             snapshotID: "snapshot-\(id)",
             proposalID: "proposal-\(id)",
             linkageID: "proposal-\(id)",
-            status: status.rawValue,
+            status: OperatorHistoryPresentation.proposalStatusTitle(for: type),
             detail: nil
         )
     }

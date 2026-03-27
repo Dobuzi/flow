@@ -3,6 +3,39 @@ import Testing
 
 struct OperatorDashboardViewTests {
     @Test
+    func buildsAuditLinksForGlobalAndSourceScopedNavigation() throws {
+        let summary = OperatorDashboardSummary(
+            catalogVersion: "2026.03",
+            sources: [
+                OperatorSourceSummary(
+                    source: .seoulCapitalSnapshot,
+                    displayName: "Seoul Capital Area",
+                    isLiveCapable: true,
+                    liveSummary: nil,
+                    healthSummary: OperatorSourceHealthSummary(
+                        state: .healthy,
+                        operationalStatus: .inactive,
+                        reasons: [.inactive],
+                        latestObservedAt: nil
+                    )
+                )
+            ],
+            bootstrapStatus: nil
+        )
+
+        let globalLinks = OperatorDashboardPresentation.auditLinks(from: summary)
+        #expect(globalLinks.count == 2)
+        #expect(globalLinks[0].browserState.sourceFilter == .all)
+        #expect(globalLinks[0].browserState.categoryFilter == .all)
+        #expect(globalLinks[1].browserState.categoryFilter == .proposal)
+
+        let card = try #require(OperatorDashboardPresentation.cardModels(from: summary).first)
+        let sourceLink = OperatorDashboardPresentation.sourceAuditLink(for: card)
+        #expect(sourceLink.browserState.sourceFilter == OperatorHistorySourceFilter(source: .seoulCapitalSnapshot))
+        #expect(sourceLink.browserState.categoryFilter == .all)
+    }
+
+    @Test
     func buildsLiveCapableCardWithProposalBackedReadiness() throws {
         let summary = OperatorDashboardSummary(
             catalogVersion: "2026.03",
