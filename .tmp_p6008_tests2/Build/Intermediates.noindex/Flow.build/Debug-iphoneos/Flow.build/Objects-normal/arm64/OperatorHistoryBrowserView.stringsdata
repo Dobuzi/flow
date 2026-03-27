@@ -1,0 +1,152 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/OperatorHistory/OperatorHistoryBrowserView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Operator Audit",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 532
+        }
+      },
+      {
+        "comment": "",
+        "key": "Filters",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 455
+        }
+      },
+      {
+        "comment": "",
+        "key": "Proposal Lifecycle",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 498
+        }
+      },
+      {
+        "comment": "",
+        "key": "Audit History",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 509
+        }
+      },
+      {
+        "comment": "",
+        "key": "Source",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 456
+        }
+      },
+      {
+        "comment": "",
+        "key": "Event",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 466
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 476
+        }
+      },
+      {
+        "comment": "",
+        "key": "Status",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 486
+        }
+      },
+      {
+        "comment": "",
+        "key": "Proposal lifecycle summaries stay source-scoped and do not replace raw audit entries.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 499
+        }
+      },
+      {
+        "comment": "",
+        "key": "No operator history matches the current filters.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 513
+        }
+      },
+      {
+        "comment": "",
+        "key": "Showing %lld events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 516
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load More",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 525
+        }
+      },
+      {
+        "comment": "",
+        "key": "Snapshot",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 567
+        }
+      },
+      {
+        "comment": "",
+        "key": "Proposal",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 571
+        }
+      },
+      {
+        "comment": "",
+        "key": "Command",
+        "location": {
+          "startingColumn": 71,
+          "startingLine": 571
+        }
+      },
+      {
+        "comment": "",
+        "key": "Timestamp",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 573
+        }
+      },
+      {
+        "comment": "",
+        "key": "Events %lld • Latest %@",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 621
+        }
+      },
+      {
+        "comment": "",
+        "key": "Proposal %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 593
+        }
+      }
+    ]
+  },
+  "version": 1
+}

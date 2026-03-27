@@ -1,0 +1,40 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/MapDashboard/Components/FlowDetailCard.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Clear",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 20
+        }
+      },
+      {
+        "comment": "",
+        "key": "Flow Detail",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 11
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@ → %@",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 13
+        }
+      },
+      {
+        "comment": "",
+        "key": "Bucket",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 33
+        }
+      }
+    ]
+  },
+  "version": 1
+}

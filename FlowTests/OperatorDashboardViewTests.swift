@@ -52,6 +52,19 @@ struct OperatorDashboardViewTests {
                         rolloutMode: .rollbackPrepared,
                         lastDecisionReason: "Approved for staged execution"
                     ),
+                    proposalRollup: OperatorProposalRollup(
+                        source: .seoulCapitalSnapshot,
+                        latestProposalID: "proposal-seoul",
+                        targetSnapshotID: "seoulCapitalSnapshot-candidate",
+                        targetDatasetVersion: "2026.04",
+                        lifecycleState: .approved,
+                        approvalState: .approved,
+                        lifecycleSummary: "Approved -> Staged Eligible",
+                        latestTimestamp: "2026-03-15T08:00:00Z",
+                        isTerminal: false,
+                        requiresAttention: false,
+                        healthState: .approvedReady
+                    ),
                     liveSummary: OperatorSourceLiveSummary(
                         activeSnapshotID: "seoul-2026.03",
                         lastKnownGoodSnapshotID: "seoul-2026.02",
@@ -110,9 +123,12 @@ struct OperatorDashboardViewTests {
         #expect(card.title == "Seoul Capital Area")
         #expect(card.capabilityLabel == "Live-capable")
         #expect(card.healthBadge == OperatorDashboardHealthBadgeModel(title: "Healthy", tone: .good))
+        #expect(card.proposalHealthBadge == OperatorDashboardHealthBadgeModel(title: "Proposal Ready", tone: .good))
         #expect(card.statusSummary == "Rollback ready")
         #expect(card.reasonSummary == "Rollback ready")
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Proposal", value: "Approved")))
+        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Proposal Health", value: "Approved and ready")))
+        #expect(card.rows.contains(OperatorDashboardCardRow(label: "Proposal Lifecycle", value: "Approved -> Staged Eligible")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Active Snapshot", value: "seoul-2026.03")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Approved")))
         #expect(card.rows.contains(OperatorDashboardCardRow(label: "Approval Detail", value: "Approved for staged execution")))
@@ -158,6 +174,19 @@ struct OperatorDashboardViewTests {
                     approvalState: .rejected,
                     rolloutMode: .staged,
                     lastDecisionReason: "Candidate failed review"
+                ),
+                proposalRollup: OperatorProposalRollup(
+                    source: .koreaNational,
+                    latestProposalID: "proposal-national",
+                    targetSnapshotID: "koreaNational-candidate",
+                    targetDatasetVersion: "2026.04",
+                    lifecycleState: .rejected,
+                    approvalState: .rejected,
+                    lifecycleSummary: "Rejected",
+                    latestTimestamp: "2026-03-15T08:00:00Z",
+                    isTerminal: true,
+                    requiresAttention: true,
+                    healthState: .rejected
                 ),
                 liveSummary: OperatorSourceLiveSummary(
                     activeSnapshotID: nil,
@@ -216,6 +245,19 @@ struct OperatorDashboardViewTests {
                     rolloutMode: .rollbackPrepared,
                     lastDecisionReason: "Approved for staged execution"
                 ),
+                proposalRollup: OperatorProposalRollup(
+                    source: .seoulCapitalSnapshot,
+                    latestProposalID: "proposal-recovery",
+                    targetSnapshotID: "seoulCapitalSnapshot-candidate",
+                    targetDatasetVersion: "2026.04",
+                    lifecycleState: .approved,
+                    approvalState: .approved,
+                    lifecycleSummary: "Approved -> Blocked",
+                    latestTimestamp: "2026-03-15T08:00:00Z",
+                    isTerminal: false,
+                    requiresAttention: true,
+                    healthState: .approvedBlocked
+                ),
                 liveSummary: OperatorSourceLiveSummary(
                     activeSnapshotID: "seoul-2026.04",
                     lastKnownGoodSnapshotID: "seoul-2026.03",
@@ -261,10 +303,14 @@ struct OperatorDashboardViewTests {
         )
 
         #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Proposal", value: "Rejected")))
+        #expect(blocked.proposalHealthBadge == OperatorDashboardHealthBadgeModel(title: "Proposal Rejected", tone: .critical))
+        #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Proposal Health", value: "Rejected")))
         #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Rejected")))
         #expect(blocked.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Candidate failed review")))
 
         #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Proposal", value: "Approved")))
+        #expect(recovery.proposalHealthBadge == OperatorDashboardHealthBadgeModel(title: "Proposal Blocked", tone: .warning))
+        #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Proposal Health", value: "Approved but blocked")))
         #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Approval", value: "Approved")))
         #expect(recovery.rows.contains(OperatorDashboardCardRow(label: "Rollout Reason", value: "Startup recovery degraded")))
     }

@@ -21,6 +21,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
     let displayName: String
     let isLiveCapable: Bool
     let proposalSummary: OperatorProposalSummary?
+    let proposalRollup: OperatorProposalRollup?
     let liveSummary: OperatorSourceLiveSummary?
     let healthSummary: OperatorSourceHealthSummary
     let approvalSummary: OperatorApprovalSummary?
@@ -32,6 +33,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
         displayName: String,
         isLiveCapable: Bool,
         proposalSummary: OperatorProposalSummary? = nil,
+        proposalRollup: OperatorProposalRollup? = nil,
         liveSummary: OperatorSourceLiveSummary?,
         healthSummary: OperatorSourceHealthSummary,
         approvalSummary: OperatorApprovalSummary? = nil,
@@ -42,6 +44,7 @@ struct OperatorSourceSummary: Identifiable, Hashable {
         self.displayName = displayName
         self.isLiveCapable = isLiveCapable
         self.proposalSummary = proposalSummary
+        self.proposalRollup = proposalRollup
         self.liveSummary = liveSummary
         self.healthSummary = healthSummary
         self.approvalSummary = approvalSummary
@@ -79,6 +82,7 @@ final class OperatorDashboardViewModel: ObservableObject {
     private let metricsCollector: OperatorMetricsCollector
     private let healthAggregator: OperatorHealthAggregator
     private let approvalReadinessResolver = OperatorApprovalReadinessResolver()
+    private let proposalRollupResolver = OperatorProposalRollupResolver()
     private let rolloutPreflightEvaluator = RolloutPreflightEvaluator()
 
     init(
@@ -188,17 +192,28 @@ final class OperatorDashboardViewModel: ObservableObject {
             approvalSummary: approvalSummary,
             rolloutReadinessSummary: rolloutReadinessSummary
         )
+        let rolloutPreflight = rolloutPreflightEvaluator.evaluate(summary)
+        let proposalRollup = proposalRollupResolver.rollup(
+            source: descriptor.source,
+            isLiveCapable: descriptor.liveMetadata?.supportsLiveRefresh == true,
+            proposalSummary: proposalSummary,
+            approvalSummary: approvalSummary,
+            rolloutReadinessSummary: rolloutReadinessSummary,
+            rolloutPreflight: rolloutPreflight,
+            healthSummary: healthSummary
+        )
 
         return OperatorSourceSummary(
             source: summary.source,
             displayName: summary.displayName,
             isLiveCapable: summary.isLiveCapable,
             proposalSummary: summary.proposalSummary,
+            proposalRollup: proposalRollup,
             liveSummary: summary.liveSummary,
             healthSummary: summary.healthSummary,
             approvalSummary: summary.approvalSummary,
             rolloutReadinessSummary: summary.rolloutReadinessSummary,
-            rolloutPreflight: rolloutPreflightEvaluator.evaluate(summary)
+            rolloutPreflight: rolloutPreflight
         )
     }
 

@@ -1,0 +1,44 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/ActivatedSnapshotResolverTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivatedSnapshotResolverTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivatedSnapshotResolverTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivatedSnapshotResolverTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivatedSnapshotResolverTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivatedSnapshotResolverTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/ActivationApprovalPrimitivesTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationApprovalPrimitivesTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationApprovalPrimitivesTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationApprovalPrimitivesTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationApprovalPrimitivesTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationApprovalPrimitivesTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/ActivationTimelineViewTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationTimelineViewTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationTimelineViewTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationTimelineViewTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationTimelineViewTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ActivationTimelineViewTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/AppStoreDatasetSourcePersistenceTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/AppStoreDatasetSourcePersistenceTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/AppStoreDatasetSourcePersistenceTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/AppStoreDatasetSourcePersistenceTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/AppStoreDatasetSourcePersistenceTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/AppStoreDatasetSourcePersistenceTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/ComputeInsightsUseCaseTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/ComputeInsightsUseCaseTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/CrossSourceLiveRefreshRegressionTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6008_tests3/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/CrossSourceLiveRefreshRegressionTests.swiftdeps"
+  }
+}

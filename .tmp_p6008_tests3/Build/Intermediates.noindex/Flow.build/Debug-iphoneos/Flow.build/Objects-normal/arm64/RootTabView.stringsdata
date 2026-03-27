@@ -1,0 +1,32 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/App/RootTabView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Map",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 8
+        }
+      },
+      {
+        "comment": "",
+        "key": "Insights",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 13
+        }
+      },
+      {
+        "comment": "",
+        "key": "Settings",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 18
+        }
+      }
+    ]
+  },
+  "version": 1
+}

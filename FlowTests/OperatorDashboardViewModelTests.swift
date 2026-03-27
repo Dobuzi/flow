@@ -33,6 +33,7 @@ struct OperatorDashboardViewModelTests {
         let seoul = try #require(dashboard.sources.first(where: { $0.source == .seoulCapitalSnapshot }))
 
         #expect(seoul.proposalSummary == nil)
+        #expect(seoul.proposalRollup?.healthState == OperatorProposalHealthState.none)
         #expect(seoul.approvalSummary == nil)
         #expect(seoul.rolloutReadinessSummary?.state == .notReady)
         #expect(seoul.rolloutReadinessSummary?.summary == "No rollout proposal")
@@ -82,6 +83,9 @@ struct OperatorDashboardViewModelTests {
         let seoul = try #require(dashboard.sources.first(where: { $0.source == .seoulCapitalSnapshot }))
 
         #expect(seoul.proposalSummary?.proposalID == "proposal-seoul-approved")
+        #expect(seoul.proposalRollup?.healthState == .approvedReady)
+        #expect(seoul.proposalRollup?.lifecycleSummary == "Approved -> Immediate Ready")
+        #expect(seoul.proposalRollup?.requiresAttention == false)
         #expect(seoul.approvalSummary?.approvalState == .approved)
         #expect(seoul.approvalSummary?.directExecutionCompatible == true)
         #expect(seoul.approvalSummary?.decisionSummary == "Approved for immediate execution")
@@ -155,10 +159,13 @@ struct OperatorDashboardViewModelTests {
         let national = try #require(dashboard.sources.first(where: { $0.source == .koreaNational }))
 
         #expect(seoul.proposalSummary?.proposalID == "proposal-seoul-approved")
+        #expect(seoul.proposalRollup?.healthState == .approvedReady)
         #expect(seoul.approvalSummary?.approvalState == .approved)
         #expect(seoul.rolloutReadinessSummary?.state == .immediateReady)
 
         #expect(national.proposalSummary?.proposalID == "proposal-national-rejected")
+        #expect(national.proposalRollup?.healthState == .rejected)
+        #expect(national.proposalRollup?.requiresAttention == true)
         #expect(national.approvalSummary?.approvalState == .rejected)
         #expect(national.rolloutReadinessSummary?.state == .blocked)
         #expect(national.rolloutReadinessSummary?.blockedReason == "Candidate failed review")
@@ -204,6 +211,7 @@ struct OperatorDashboardViewModelTests {
         let dashboard = try #require(viewModel.dashboard)
         let seoul = try #require(dashboard.sources.first(where: { $0.source == .seoulCapitalSnapshot }))
         #expect(seoul.proposalSummary?.proposalID == "proposal-new")
+        #expect(seoul.proposalRollup?.latestProposalID == "proposal-new")
         #expect(seoul.proposalSummary?.targetSnapshotID == "seoul-2026.04")
     }
 
@@ -236,10 +244,93 @@ struct OperatorDashboardViewModelTests {
         let bundled = try #require(dashboard.sources.first(where: { $0.source == .bundledSample }))
 
         #expect(bundled.proposalSummary == nil)
+        #expect(bundled.proposalRollup == nil)
         #expect(bundled.liveSummary == nil)
         #expect(bundled.healthSummary.state == .static)
         #expect(bundled.approvalSummary == nil)
         #expect(bundled.rolloutPreflight?.recommendation == .notApplicable)
+    }
+
+    @Test
+    @MainActor
+    func marksApprovedProposalBlockedWhenPreflightIsBlocked() async throws {
+        let versionStore = InMemoryDatasetVersionStore()
+        let refreshStateStore = InMemoryDatasetRefreshStateStore()
+        let historyStore = InMemorySnapshotActivationHistoryStore()
+        let proposalStore = InMemoryRolloutProposalStore()
+
+        await seedBlockedCandidate(
+            versionStore: versionStore,
+            refreshStateStore: refreshStateStore,
+            historyStore: historyStore,
+            source: .seoulCapitalSnapshot,
+            snapshotID: "seoul-2026.07",
+            datasetVersion: "2026.07",
+            indexedAt: "2026-03-27T05:00:00Z"
+        )
+        await proposalStore.save(
+            makeProposal(
+                id: "proposal-seoul-blocked",
+                source: .seoulCapitalSnapshot,
+                targetSnapshotID: "seoul-2026.07",
+                targetDatasetVersion: "2026.07",
+                rolloutMode: .immediate,
+                lifecycleState: .approved,
+                approvalState: .approved,
+                updatedAt: "2026-03-27T05:05:00Z",
+                lastDecisionReason: "Approved pending rollout checks"
+            )
+        )
+
+        let viewModel = makeViewModel(
+            versionStore: versionStore,
+            refreshStateStore: refreshStateStore,
+            historyStore: historyStore,
+            proposalStore: proposalStore
+        )
+        await viewModel.load()
+
+        let dashboard = try #require(viewModel.dashboard)
+        let seoul = try #require(dashboard.sources.first(where: { $0.source == .seoulCapitalSnapshot }))
+
+        #expect(seoul.proposalRollup?.healthState == .approvedBlocked)
+        #expect(seoul.proposalRollup?.requiresAttention == true)
+        #expect(seoul.rolloutReadinessSummary?.state == .blocked)
+        #expect(seoul.rolloutPreflight?.recommendation == .blocked)
+    }
+
+    @Test
+    @MainActor
+    func mapsAwaitingApprovalProposalToActiveRollup() async throws {
+        let proposalStore = InMemoryRolloutProposalStore()
+        await proposalStore.save(
+            makeProposal(
+                id: "proposal-seoul-proposed",
+                source: .seoulCapitalSnapshot,
+                targetSnapshotID: "seoul-2026.08",
+                targetDatasetVersion: "2026.08",
+                rolloutMode: .staged,
+                lifecycleState: .proposed,
+                approvalState: .awaitingApproval,
+                updatedAt: "2026-03-27T06:00:00Z"
+            )
+        )
+
+        let viewModel = OperatorDashboardViewModel(
+            catalogRepository: LocalMobilityCatalogRepository(),
+            bootstrapStatus: nil,
+            proposalStore: proposalStore
+        )
+
+        await viewModel.load()
+
+        let dashboard = try #require(viewModel.dashboard)
+        let seoul = try #require(dashboard.sources.first(where: { $0.source == .seoulCapitalSnapshot }))
+
+        #expect(seoul.proposalRollup?.healthState == .awaitingApproval)
+        #expect(seoul.proposalRollup?.isTerminal == false)
+        #expect(seoul.proposalRollup?.requiresAttention == false)
+        #expect(seoul.rolloutReadinessSummary?.summary == "Awaiting approval")
     }
 
     @MainActor

@@ -28,6 +28,7 @@ struct OperatorSourceSummaryCardModel: Identifiable, Hashable {
     let title: String
     let capabilityLabel: String
     let healthBadge: OperatorDashboardHealthBadgeModel
+    let proposalHealthBadge: OperatorDashboardHealthBadgeModel?
     let statusSummary: String
     let reasonSummary: String?
     let rows: [OperatorDashboardCardRow]
@@ -102,6 +103,7 @@ enum OperatorDashboardPresentation {
                 title: source.displayName,
                 capabilityLabel: "Static",
                 healthBadge: .init(title: "Static", tone: .neutral),
+                proposalHealthBadge: nil,
                 statusSummary: "Packaged baseline dataset",
                 reasonSummary: nil,
                 rows: [
@@ -113,6 +115,8 @@ enum OperatorDashboardPresentation {
 
         let rows: [OperatorDashboardCardRow] = [
             OperatorDashboardCardRow(label: "Proposal", value: proposalStateTitle(source.proposalSummary)),
+            OperatorDashboardCardRow(label: "Proposal Health", value: proposalHealthTitle(source.proposalRollup)),
+            OperatorDashboardCardRow(label: "Proposal Lifecycle", value: source.proposalRollup?.lifecycleSummary ?? "No proposal"),
             OperatorDashboardCardRow(label: "Active Snapshot", value: live.activeSnapshotID ?? "None"),
             OperatorDashboardCardRow(label: "Last Known Good", value: live.lastKnownGoodSnapshotID ?? "None"),
             OperatorDashboardCardRow(label: "Latest Candidate", value: live.latestCandidateSnapshotID ?? "None"),
@@ -137,6 +141,7 @@ enum OperatorDashboardPresentation {
             title: source.displayName,
             capabilityLabel: "Live-capable",
             healthBadge: healthBadge(from: source.healthSummary),
+            proposalHealthBadge: proposalHealthBadge(from: source.proposalRollup),
             statusSummary: operationalStatusTitle(source.healthSummary.operationalStatus),
             reasonSummary: reasonSummary(from: source.healthSummary),
             rows: rows
@@ -296,6 +301,51 @@ enum OperatorDashboardPresentation {
             return "Cancelled"
         case .readyForExecution:
             return "Ready For Execution"
+        }
+    }
+
+    private static func proposalHealthTitle(_ rollup: OperatorProposalRollup?) -> String {
+        guard let rollup else { return "Not applicable" }
+        switch rollup.healthState {
+        case .none:
+            return "No proposal"
+        case .draft:
+            return "Draft"
+        case .awaitingApproval:
+            return "Awaiting approval"
+        case .approvedReady:
+            return "Approved and ready"
+        case .approvedBlocked:
+            return "Approved but blocked"
+        case .rejected:
+            return "Rejected"
+        case .cancelled:
+            return "Cancelled"
+        case .attentionRequired:
+            return "Attention required"
+        }
+    }
+
+    private static func proposalHealthBadge(from rollup: OperatorProposalRollup?) -> OperatorDashboardHealthBadgeModel? {
+        guard let rollup else { return nil }
+
+        switch rollup.healthState {
+        case .none:
+            return nil
+        case .draft:
+            return .init(title: "Proposal Draft", tone: .neutral)
+        case .awaitingApproval:
+            return .init(title: "Awaiting Approval", tone: .warning)
+        case .approvedReady:
+            return .init(title: "Proposal Ready", tone: .good)
+        case .approvedBlocked:
+            return .init(title: "Proposal Blocked", tone: .warning)
+        case .rejected:
+            return .init(title: "Proposal Rejected", tone: .critical)
+        case .cancelled:
+            return .init(title: "Proposal Cancelled", tone: .warning)
+        case .attentionRequired:
+            return .init(title: "Proposal Attention", tone: .warning)
         }
     }
 
@@ -531,6 +581,16 @@ struct OperatorSourceSummaryCard: View {
                         .padding(.vertical, 4)
                         .background(backgroundStyle(for: model.healthBadge.tone))
                         .clipShape(Capsule())
+
+                    if let proposalHealthBadge = model.proposalHealthBadge {
+                        Text(proposalHealthBadge.title)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(foregroundStyle(for: proposalHealthBadge.tone))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(backgroundStyle(for: proposalHealthBadge.tone))
+                            .clipShape(Capsule())
+                    }
 
                     Text(model.capabilityLabel)
                         .font(.caption.weight(.semibold))

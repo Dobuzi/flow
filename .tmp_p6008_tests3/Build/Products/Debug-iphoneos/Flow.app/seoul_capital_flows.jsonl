@@ -1,0 +1,8 @@
+{"date":"2025-01-15","hour":12,"originZoneId":"11110515","destinationZoneId":"11680521","transportMode":"subway","movementCount":18240,"dataSourceTag":"seoul_open_data_plaza","confidenceScore":0.97}
+{"date":"2025-01-15","hour":12,"originZoneId":"11680521","destinationZoneId":"11110515","transportMode":"metro bus","movementCount":12410,"dataSourceTag":"seoul_open_data_plaza","confidenceScore":0.95}
+{"date":"2025-01-15","hour":12,"originZoneId":"41135545","destinationZoneId":"11680521","transportMode":"vehicle","movementCount":21330,"dataSourceTag":"seoul_open_data_plaza","confidenceScore":0.93}
+{"date":"2025-01-15","hour":8,"originZoneId":"41281535","destinationZoneId":"11680521","transportMode":"express bus","movementCount":9910,"dataSourceTag":"seoul_open_data_plaza","confidenceScore":0.92}
+{"date":"2025-01-15","hour":18,"originZoneId":"11680521","destinationZoneId":"41135545","transportMode":"rail/train","movementCount":15020,"dataSourceTag":"seoul_open_data_plaza","confidenceScore":0.96}
+{"date":"2025-01-15","hour":12,"originZoneId":"28237640","destinationZoneId":"11680521","transportMode":"air","movementCount":2110,"dataSourceTag":"seoul_open_data_plaza","confidenceScore":0.9}
+{"date":"2025-01-15","hour":12,"originZoneId":"11680521","destinationZoneId":"28237640","transportMode":"walking","movementCount":3080,"dataSourceTag":"seoul_open_data_plaza","confidenceScore":0.86}
+{"date":"2025-01-15","hour":12,"originZoneId":"11110515","destinationZoneId":"41135545","transportMode":"other","movementCount":2750,"dataSourceTag":"seoul_open_data_plaza","confidenceScore":0.8}
