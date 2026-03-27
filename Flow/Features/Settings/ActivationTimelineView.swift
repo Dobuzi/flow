@@ -86,6 +86,10 @@ struct ActivationTimelineView: View {
         browserState.visibleEntries(from: entries)
     }
 
+    private var proposalSummaries: [OperatorProposalAuditSummary] {
+        OperatorHistoryPresentation.proposalAuditSummaries(from: filteredEntries)
+    }
+
     var body: some View {
         List {
             Section("Source") {
@@ -113,6 +117,14 @@ struct ActivationTimelineView: View {
                     }
                 }
                 .pickerStyle(.menu)
+            }
+
+            if !proposalSummaries.isEmpty {
+                Section("Proposal Lifecycle") {
+                    ForEach(proposalSummaries) { summary in
+                        OperatorProposalAuditSummaryRow(summary: summary)
+                    }
+                }
             }
 
             Section("Timeline") {

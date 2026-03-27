@@ -48,6 +48,24 @@ struct OperatorHistoryEntry: Identifiable, Hashable {
     let detail: String?
 }
 
+struct OperatorProposalAuditSummary: Identifiable, Hashable {
+    let proposalID: String
+    let source: FlowDatasetSource
+    let sourceTitle: String
+    let targetSnapshotID: String?
+    let lifecycleSummary: String
+    let latestPhase: String
+    let latestTimestamp: String
+    let createdAt: String?
+    let approvedAt: String?
+    let rejectedAt: String?
+    let cancelledAt: String?
+    let latestDetail: String?
+    let eventCount: Int
+
+    var id: String { proposalID }
+}
+
 enum OperatorHistoryPresentation {
     static func timelineEntry(from event: SnapshotActivationHistoryEvent) -> OperatorTimelineEntry {
         OperatorTimelineEntry(
@@ -188,6 +206,42 @@ enum OperatorHistoryPresentation {
         }
     }
 
+    static func proposalAuditSummaries(from entries: [OperatorHistoryEntry]) -> [OperatorProposalAuditSummary] {
+        proposalAuditSummaries(
+            from: entries.compactMap { entry in
+                guard entry.category == .proposal, let proposalID = entry.proposalID else { return nil }
+                return ProposalAuditSummarySeed(
+                    proposalID: proposalID,
+                    source: entry.source,
+                    sourceTitle: entry.sourceTitle,
+                    targetSnapshotID: entry.snapshotID,
+                    eventType: entry.eventType,
+                    timestamp: entry.timestamp,
+                    phaseTitle: entry.status,
+                    detail: entry.detail
+                )
+            }
+        )
+    }
+
+    static func proposalAuditSummaries(from entries: [OperatorTimelineEntry]) -> [OperatorProposalAuditSummary] {
+        proposalAuditSummaries(
+            from: entries.compactMap { entry in
+                guard entry.category == .proposal, let proposalID = entry.proposalID else { return nil }
+                return ProposalAuditSummarySeed(
+                    proposalID: proposalID,
+                    source: entry.source,
+                    sourceTitle: entry.sourceTitle,
+                    targetSnapshotID: entry.snapshotID,
+                    eventType: entry.eventType,
+                    timestamp: entry.timestamp,
+                    phaseTitle: entry.status,
+                    detail: entry.detail
+                )
+            }
+        )
+    }
+
     private static func resolvedSnapshotID(from event: SnapshotActivationHistoryEvent) -> String? {
         event.metadata.snapshotID
             ?? event.metadata.guardDecision?.candidateSnapshotID
@@ -200,5 +254,89 @@ enum OperatorHistoryPresentation {
             return "Version \(targetDatasetVersion)"
         }
         return event.actor.map { "Actor \($0)" }
+    }
+
+    private static func proposalAuditSummaries(
+        from seeds: [ProposalAuditSummarySeed]
+    ) -> [OperatorProposalAuditSummary] {
+        Dictionary(grouping: seeds, by: \.proposalID)
+            .compactMap { _, group in
+                guard let first = group.first else { return nil }
+                let ascending = group.sorted(by: sortAscending)
+                guard let latest = ascending.last else { return nil }
+                return OperatorProposalAuditSummary(
+                    proposalID: first.proposalID,
+                    source: first.source,
+                    sourceTitle: first.sourceTitle,
+                    targetSnapshotID: latest.targetSnapshotID ?? first.targetSnapshotID,
+                    lifecycleSummary: ascending.compactMap(lifecycleStepTitle(for:)).removingAdjacentDuplicates().joined(separator: " -> "),
+                    latestPhase: latest.phaseTitle,
+                    latestTimestamp: latest.timestamp,
+                    createdAt: firstTimestamp(in: ascending, eventType: RolloutProposalAuditEventType.proposalCreated.rawValue),
+                    approvedAt: firstTimestamp(in: ascending, eventType: RolloutProposalAuditEventType.proposalApproved.rawValue),
+                    rejectedAt: firstTimestamp(in: ascending, eventType: RolloutProposalAuditEventType.proposalRejected.rawValue),
+                    cancelledAt: firstTimestamp(in: ascending, eventType: RolloutProposalAuditEventType.proposalCancelled.rawValue),
+                    latestDetail: latest.detail,
+                    eventCount: ascending.count
+                )
+            }
+            .sorted(by: sortSummaryDescending)
+    }
+
+    private static func lifecycleStepTitle(for seed: ProposalAuditSummarySeed) -> String? {
+        switch seed.eventType {
+        case RolloutProposalAuditEventType.proposalCreated.rawValue:
+            return "Created"
+        case RolloutProposalAuditEventType.proposalApproved.rawValue:
+            return "Approved"
+        case RolloutProposalAuditEventType.proposalRejected.rawValue:
+            return "Rejected"
+        case RolloutProposalAuditEventType.proposalCancelled.rawValue:
+            return "Cancelled"
+        default:
+            return nil
+        }
+    }
+
+    private static func firstTimestamp(
+        in seeds: [ProposalAuditSummarySeed],
+        eventType: String
+    ) -> String? {
+        seeds.first(where: { $0.eventType == eventType })?.timestamp
+    }
+
+    private static func sortAscending(lhs: ProposalAuditSummarySeed, rhs: ProposalAuditSummarySeed) -> Bool {
+        if lhs.timestamp != rhs.timestamp {
+            return lhs.timestamp < rhs.timestamp
+        }
+        return lhs.proposalID < rhs.proposalID
+    }
+
+    private static func sortSummaryDescending(lhs: OperatorProposalAuditSummary, rhs: OperatorProposalAuditSummary) -> Bool {
+        if lhs.latestTimestamp != rhs.latestTimestamp {
+            return lhs.latestTimestamp > rhs.latestTimestamp
+        }
+        return lhs.proposalID < rhs.proposalID
+    }
+}
+
+private struct ProposalAuditSummarySeed: Hashable {
+    let proposalID: String
+    let source: FlowDatasetSource
+    let sourceTitle: String
+    let targetSnapshotID: String?
+    let eventType: String
+    let timestamp: String
+    let phaseTitle: String
+    let detail: String?
+}
+
+private extension Array where Element == String {
+    func removingAdjacentDuplicates() -> [String] {
+        var result: [String] = []
+        for element in self where result.last != element {
+            result.append(element)
+        }
+        return result
     }
 }

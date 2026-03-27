@@ -175,6 +175,29 @@ struct ActivationTimelineViewTests {
     }
 
     @Test
+    func proposalAuditSummariesRemainDeterministicWithinTimelineFilters() throws {
+        let entries = [
+            makeProposalEntry(id: "proposal-created", proposalID: "proposal-seoul", type: .proposalCreated, status: .requested, timestamp: "2026-03-10T05:00:00Z"),
+            makeProposalEntry(id: "proposal-approved", proposalID: "proposal-seoul", type: .proposalApproved, status: .succeeded, timestamp: "2026-03-10T06:00:00Z"),
+            makeActivationEntry(id: "activation-succeeded", action: .promote, status: .succeeded, timestamp: "2026-03-10T04:00:00Z")
+        ]
+
+        let browser = ActivationTimelineBrowserState(
+            categoryFilter: .proposal,
+            actionFilter: .all,
+            statusFilter: .all,
+            visibleLimit: 10
+        )
+        let summaries = OperatorHistoryPresentation.proposalAuditSummaries(from: browser.filteredEntries(from: entries))
+        let summary = try #require(summaries.first)
+
+        #expect(summaries.count == 1)
+        #expect(summary.proposalID == "proposal-seoul")
+        #expect(summary.lifecycleSummary == "Created -> Approved")
+        #expect(summary.latestPhase == "Approved")
+    }
+
+    @Test
     func activationCategoryExcludesProposalLifecycleActions() {
         let entries = [
             makeProposalEntry(id: "proposal-rejected", type: .proposalRejected, status: .blocked, timestamp: "2026-03-10T05:00:00Z"),
@@ -219,6 +242,7 @@ struct ActivationTimelineViewTests {
     private func makeProposalEntry(
         id: String,
         source: FlowDatasetSource = .seoulCapitalSnapshot,
+        proposalID: String? = nil,
         type: RolloutProposalAuditEventType = .proposalApproved,
         status: SnapshotActivationEventStatus,
         timestamp: String
@@ -234,8 +258,8 @@ struct ActivationTimelineViewTests {
             title: id,
             timestamp: timestamp,
             snapshotID: "snapshot-\(id)",
-            proposalID: "proposal-\(id)",
-            linkageID: "proposal-\(id)",
+            proposalID: proposalID ?? "proposal-\(id)",
+            linkageID: proposalID ?? "proposal-\(id)",
             status: OperatorHistoryPresentation.proposalStatusTitle(for: type),
             detail: nil
         )

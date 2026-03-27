@@ -340,6 +340,7 @@ struct OperatorHistoryBrowserState: Hashable {
 @MainActor
 final class OperatorHistoryBrowserViewModel: ObservableObject {
     @Published private(set) var entries: [OperatorHistoryEntry] = []
+    @Published private(set) var proposalSummaries: [OperatorProposalAuditSummary] = []
     @Published private(set) var loadError: FlowNonFatalError?
     @Published private(set) var canLoadMore = false
     @Published private(set) var browserState: OperatorHistoryBrowserState
@@ -405,8 +406,10 @@ final class OperatorHistoryBrowserViewModel: ObservableObject {
 
         let mergedEntries = (activationEntries + proposalEntries)
             .sorted(by: Self.sortEntries)
-        entries = state.visibleEntries(from: mergedEntries)
-        canLoadMore = state.canLoadMore(from: mergedEntries)
+        let filteredEntries = state.filteredEntries(from: mergedEntries)
+        proposalSummaries = OperatorHistoryPresentation.proposalAuditSummaries(from: filteredEntries)
+        entries = Array(filteredEntries.prefix(state.visibleLimit))
+        canLoadMore = filteredEntries.count > entries.count
         loadError = nil
     }
 
@@ -491,6 +494,18 @@ struct OperatorHistoryBrowserView: View {
                 .pickerStyle(.menu)
             }
 
+            if !viewModel.proposalSummaries.isEmpty {
+                Section("Proposal Lifecycle") {
+                    Text("Proposal lifecycle summaries stay source-scoped and do not replace raw audit entries.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    ForEach(viewModel.proposalSummaries) { summary in
+                        OperatorProposalAuditSummaryRow(summary: summary)
+                    }
+                }
+            }
+
             Section("Audit History") {
                 if let error = viewModel.loadError {
                     NonBlockingErrorBanner(error: error)
@@ -563,6 +578,49 @@ struct OperatorHistoryRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct OperatorProposalAuditSummaryRow: View {
+    let summary: OperatorProposalAuditSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Proposal \(summary.proposalID)")
+                        .font(.subheadline.weight(.semibold))
+                    Text(summary.sourceTitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text(summary.latestPhase)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.orange)
+            }
+
+            if let targetSnapshotID = summary.targetSnapshotID {
+                Text(targetSnapshotID)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text(summary.lifecycleSummary)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if let latestDetail = summary.latestDetail {
+                Text(latestDetail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Events \(summary.eventCount) • Latest \(summary.latestTimestamp)")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
         .padding(.vertical, 4)
     }

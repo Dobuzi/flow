@@ -1,0 +1,37 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/SeoulCapitalDataSourceIntegrationTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalDataSourceIntegrationTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SeoulCapitalExternalDatasetAdapterTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalExternalDatasetAdapterTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SeoulCapitalMobilityMapperTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SeoulCapitalMobilityMapperTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SettingsViewModelTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SettingsViewModelTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/SnapshotActivationCommandPrimitivesTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/SnapshotActivationCommandPrimitivesTests.swiftdeps"
+  }
+}

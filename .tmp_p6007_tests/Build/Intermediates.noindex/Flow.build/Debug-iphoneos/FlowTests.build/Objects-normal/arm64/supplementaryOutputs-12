@@ -1,0 +1,44 @@
+{
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetCompatibilityCheckerTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetCompatibilityCheckerTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetRefreshSchedulerTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshSchedulerTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetRefreshStateStoreTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshStateStoreTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshStateStoreTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshStateStoreTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshStateStoreTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetRefreshStateStoreTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetSchemaValidatorTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetSchemaValidatorTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DatasetVersionStoreTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DatasetVersionStoreTests.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/FlowTests/DefaultSnapshotMaterializerTests.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6007_tests/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/FlowTests.build/Objects-normal/arm64/DefaultSnapshotMaterializerTests.swiftdeps"
+  }
+}

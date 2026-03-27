@@ -37,6 +37,8 @@ struct OperatorHistoryBrowserViewTests {
         #expect(viewModel.entries.map(\.id) == ["proposal-newest", "activation-older"])
         #expect(viewModel.entries.map(\.category) == [.proposal, .activation])
         #expect(viewModel.entries.map(\.linkageID) == ["proposal-seoul", "cmd-activation-older"])
+        #expect(viewModel.proposalSummaries.map(\.proposalID) == ["proposal-seoul"])
+        #expect(viewModel.proposalSummaries.first?.latestPhase == "Approved")
     }
 
     @Test
@@ -83,6 +85,7 @@ struct OperatorHistoryBrowserViewTests {
         #expect(viewModel.entries.map(\.id) == ["seoul-proposal-rejected"])
         #expect(viewModel.entries.allSatisfy { $0.source == .seoulCapitalSnapshot })
         #expect(viewModel.entries.allSatisfy { $0.category == .proposal })
+        #expect(viewModel.proposalSummaries.map(\.source) == [.seoulCapitalSnapshot])
     }
 
     @Test
@@ -199,6 +202,23 @@ struct OperatorHistoryBrowserViewTests {
     }
 
     @Test
+    func proposalAuditSummariesCaptureLifecycleProgressionDeterministically() throws {
+        let entries = [
+            makeHistoryEntry(id: "created", source: .seoulCapitalSnapshot, category: .proposal, eventType: RolloutProposalAuditEventType.proposalCreated.rawValue, proposalID: "proposal-seoul", action: .promote, status: .requested, timestamp: "2026-03-15T01:00:00Z"),
+            makeHistoryEntry(id: "approved", source: .seoulCapitalSnapshot, category: .proposal, eventType: RolloutProposalAuditEventType.proposalApproved.rawValue, proposalID: "proposal-seoul", action: .promote, status: .succeeded, timestamp: "2026-03-15T02:00:00Z")
+        ]
+
+        let summaries = OperatorHistoryPresentation.proposalAuditSummaries(from: entries)
+        let summary = try #require(summaries.first)
+
+        #expect(summary.proposalID == "proposal-seoul")
+        #expect(summary.lifecycleSummary == "Created -> Approved")
+        #expect(summary.latestPhase == "Approved")
+        #expect(summary.createdAt == "2026-03-15T01:00:00Z")
+        #expect(summary.approvedAt == "2026-03-15T02:00:00Z")
+    }
+
+    @Test
     func categoryFilterResetsIncompatibleActionAndStatusSelections() {
         let state = OperatorHistoryBrowserState(
             categoryFilter: .all,
@@ -238,6 +258,7 @@ struct OperatorHistoryBrowserViewTests {
         source: FlowDatasetSource,
         category: OperatorHistoryEntryCategory,
         eventType: String? = nil,
+        proposalID: String? = nil,
         action: SnapshotActivationCommand.Action,
         status: SnapshotActivationEventStatus,
         timestamp: String
@@ -254,7 +275,7 @@ struct OperatorHistoryBrowserViewTests {
             title: id,
             timestamp: timestamp,
             snapshotID: "snapshot-\(id)",
-            proposalID: category == .proposal ? "proposal-\(id)" : nil,
+            proposalID: category == .proposal ? (proposalID ?? "proposal-\(id)") : nil,
             status: status.rawValue,
             detail: nil
         )

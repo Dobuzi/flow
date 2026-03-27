@@ -1,0 +1,16 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/MapDashboard/Components/FlowLegendView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%@, %@, %@",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 17
+        }
+      }
+    ]
+  },
+  "version": 1
+}

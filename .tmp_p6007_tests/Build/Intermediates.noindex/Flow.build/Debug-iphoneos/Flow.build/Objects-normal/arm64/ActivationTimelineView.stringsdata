@@ -1,0 +1,112 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/Settings/ActivationTimelineView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Operator Timeline",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 188
+        }
+      },
+      {
+        "comment": "",
+        "key": "Source",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "Filters",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 99
+        }
+      },
+      {
+        "comment": "",
+        "key": "Proposal Lifecycle",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "Timeline",
+        "location": {
+          "startingColumn": 21,
+          "startingLine": 130
+        }
+      },
+      {
+        "comment": "",
+        "key": "Category",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 100
+        }
+      },
+      {
+        "comment": "",
+        "key": "Action",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 107
+        }
+      },
+      {
+        "comment": "",
+        "key": "Status",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 114
+        }
+      },
+      {
+        "comment": "",
+        "key": "Showing %lld of %lld events",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 135
+        }
+      },
+      {
+        "comment": "",
+        "key": "No matching operator events.",
+        "location": {
+          "startingColumn": 72,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "No operator events yet.",
+        "location": {
+          "startingColumn": 105,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "Load More",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 181
+        }
+      },
+      {
+        "comment": "",
+        "key": "Proposal %@",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 162
+        }
+      }
+    ]
+  },
+  "version": 1
+}
