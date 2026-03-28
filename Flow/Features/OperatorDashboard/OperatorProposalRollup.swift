@@ -4,6 +4,8 @@ enum OperatorProposalHealthState: Hashable {
     case none
     case draft
     case awaitingApproval
+    case paused
+    case halted
     case approvedReady
     case approvedBlocked
     case rejected
@@ -23,6 +25,7 @@ struct OperatorProposalRollup: Hashable {
     let isTerminal: Bool
     let requiresAttention: Bool
     let healthState: OperatorProposalHealthState
+    let rollbackPrepared: Bool
 }
 
 struct OperatorProposalRollupResolver {
@@ -49,7 +52,8 @@ struct OperatorProposalRollupResolver {
                 latestTimestamp: nil,
                 isTerminal: false,
                 requiresAttention: false,
-                healthState: .none
+                healthState: .none,
+                rollbackPrepared: false
             )
         }
 
@@ -75,7 +79,8 @@ struct OperatorProposalRollupResolver {
             latestTimestamp: proposalSummary.lastDecisionAt ?? proposalSummary.updatedAt,
             isTerminal: isTerminal(proposalSummary.lifecycleState),
             requiresAttention: requiresAttention(healthState),
-            healthState: healthState
+            healthState: healthState,
+            rollbackPrepared: proposalSummary.rollbackPreparedAt != nil
         )
     }
 
@@ -96,6 +101,15 @@ struct OperatorProposalRollupResolver {
         case .cancelled:
             return .cancelled
         case .approved, .readyForExecution:
+            break
+        }
+
+        switch proposalSummary.controlState {
+        case .paused:
+            return .paused
+        case .halted:
+            return .halted
+        case .active:
             break
         }
 
@@ -127,6 +141,14 @@ struct OperatorProposalRollupResolver {
         case .proposed:
             return "Proposed -> Awaiting Approval"
         case .approved:
+            switch proposalSummary.controlState {
+            case .paused:
+                return "Approved -> Paused"
+            case .halted:
+                return "Approved -> Halted"
+            case .active:
+                break
+            }
             switch rolloutReadinessSummary?.state {
             case .immediateReady:
                 return "Approved -> Immediate Ready"
@@ -159,7 +181,7 @@ struct OperatorProposalRollupResolver {
 
     private func requiresAttention(_ healthState: OperatorProposalHealthState) -> Bool {
         switch healthState {
-        case .approvedBlocked, .rejected, .cancelled, .attentionRequired:
+        case .paused, .halted, .approvedBlocked, .rejected, .cancelled, .attentionRequired:
             return true
         case .none, .draft, .awaitingApproval, .approvedReady:
             return false

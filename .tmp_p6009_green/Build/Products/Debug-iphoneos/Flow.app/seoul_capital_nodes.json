@@ -1,0 +1,52 @@
+[
+  {
+    "zoneId": "11110515",
+    "zoneNameKo": "청운효자동",
+    "zoneNameEn": "Cheongun Hyoja",
+    "latitude": 37.5866,
+    "longitude": 126.9706,
+    "sidoCode": "11",
+    "regionType": "dong",
+    "importanceRank": 1
+  },
+  {
+    "zoneId": "11680521",
+    "zoneNameKo": "역삼1동",
+    "zoneNameEn": "Yeoksam 1",
+    "latitude": 37.4954,
+    "longitude": 127.0332,
+    "sidoCode": "11",
+    "regionType": "dong",
+    "importanceRank": 1
+  },
+  {
+    "zoneId": "28237640",
+    "zoneNameKo": "송도2동",
+    "zoneNameEn": "Songdo 2",
+    "latitude": 37.3928,
+    "longitude": 126.6430,
+    "sidoCode": "28",
+    "regionType": "dong",
+    "importanceRank": 2
+  },
+  {
+    "zoneId": "41135545",
+    "zoneNameKo": "분당구 정자동",
+    "zoneNameEn": "Jeongja, Bundang",
+    "latitude": 37.3660,
+    "longitude": 127.1080,
+    "sidoCode": "41",
+    "regionType": "dong",
+    "importanceRank": 2
+  },
+  {
+    "zoneId": "41281535",
+    "zoneNameKo": "수원시 광교1동",
+    "zoneNameEn": "Gwanggyo 1, Suwon",
+    "latitude": 37.2912,
+    "longitude": 127.0467,
+    "sidoCode": "41",
+    "regionType": "dong",
+    "importanceRank": 2
+  }
+]

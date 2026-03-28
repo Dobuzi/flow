@@ -1,0 +1,64 @@
+{
+  "source": "/Users/jw/Dev/codex/flow/Flow/Features/OperatorDashboard/OperatorDashboardView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Operator Dashboard",
+        "location": {
+          "startingColumn": 17,
+          "startingLine": 462
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open Operator Dashboard",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 468
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld live • %lld static",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 469
+        }
+      },
+      {
+        "comment": "",
+        "key": "Operator Dashboard",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 554
+        }
+      },
+      {
+        "comment": "",
+        "key": "Audit",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 501
+        }
+      },
+      {
+        "comment": "",
+        "key": "Startup Recovery",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 519
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sources",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 532
+        }
+      }
+    ]
+  },
+  "version": 1
+}

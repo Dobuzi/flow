@@ -63,7 +63,8 @@ struct OperatorDashboardViewTests {
                         latestTimestamp: "2026-03-15T08:00:00Z",
                         isTerminal: false,
                         requiresAttention: false,
-                        healthState: .approvedReady
+                        healthState: .approvedReady,
+                        rollbackPrepared: true
                     ),
                     liveSummary: OperatorSourceLiveSummary(
                         activeSnapshotID: "seoul-2026.03",
@@ -183,11 +184,12 @@ struct OperatorDashboardViewTests {
                     lifecycleState: .rejected,
                     approvalState: .rejected,
                     lifecycleSummary: "Rejected",
-                    latestTimestamp: "2026-03-15T08:00:00Z",
-                    isTerminal: true,
-                    requiresAttention: true,
-                    healthState: .rejected
-                ),
+                        latestTimestamp: "2026-03-15T08:00:00Z",
+                        isTerminal: true,
+                        requiresAttention: true,
+                        healthState: .rejected,
+                        rollbackPrepared: false
+                    ),
                 liveSummary: OperatorSourceLiveSummary(
                     activeSnapshotID: nil,
                     lastKnownGoodSnapshotID: nil,
@@ -253,11 +255,12 @@ struct OperatorDashboardViewTests {
                     lifecycleState: .approved,
                     approvalState: .approved,
                     lifecycleSummary: "Approved -> Blocked",
-                    latestTimestamp: "2026-03-15T08:00:00Z",
-                    isTerminal: false,
-                    requiresAttention: true,
-                    healthState: .approvedBlocked
-                ),
+                        latestTimestamp: "2026-03-15T08:00:00Z",
+                        isTerminal: false,
+                        requiresAttention: true,
+                        healthState: .approvedBlocked,
+                        rollbackPrepared: true
+                    ),
                 liveSummary: OperatorSourceLiveSummary(
                     activeSnapshotID: "seoul-2026.04",
                     lastKnownGoodSnapshotID: "seoul-2026.03",

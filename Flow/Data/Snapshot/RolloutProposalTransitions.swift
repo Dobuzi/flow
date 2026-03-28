@@ -26,6 +26,10 @@ enum RolloutProposalAuditEventType: String, Codable, Hashable {
     case proposalApproved
     case proposalRejected
     case proposalCancelled
+    case rolloutPaused
+    case rolloutResumed
+    case rolloutHalted
+    case rollbackPreparedMarked
 }
 
 struct RolloutProposalAuditEvent: Codable, Hashable, Identifiable {
@@ -277,6 +281,32 @@ protocol RolloutProposalTransitioning {
     ) async throws -> RolloutProposal
 }
 
+enum RolloutProposalControlAction: String, Hashable {
+    case pause
+    case resume
+    case halt
+    case markRollbackPrepared
+}
+
+enum RolloutProposalControlTransitionError: Error, Hashable {
+    case proposalNotFound(id: String)
+    case invalidTransition(
+        lifecycleState: RolloutProposalLifecycleState,
+        controlState: RolloutProposalControlState,
+        action: RolloutProposalControlAction
+    )
+}
+
+protocol RolloutProposalControlling {
+    func apply(
+        _ action: RolloutProposalControlAction,
+        proposalID: String,
+        by actor: String?,
+        at timestamp: String,
+        reason: String?
+    ) async throws -> RolloutProposal
+}
+
 actor DefaultRolloutProposalTransitionService: RolloutProposalTransitioning {
     private let store: RolloutProposalStoring
     private let auditStore: RolloutProposalAuditStoring
@@ -442,6 +472,146 @@ actor DefaultRolloutProposalTransitionService: RolloutProposalTransitioning {
             return .proposalRejected
         case .cancel:
             return .proposalCancelled
+        }
+    }
+}
+
+actor DefaultRolloutProposalControlService: RolloutProposalControlling {
+    private let store: RolloutProposalStoring
+    private let auditStore: RolloutProposalAuditStoring
+
+    init(
+        store: RolloutProposalStoring,
+        auditStore: RolloutProposalAuditStoring
+    ) {
+        self.store = store
+        self.auditStore = auditStore
+    }
+
+    func apply(
+        _ action: RolloutProposalControlAction,
+        proposalID: String,
+        by actor: String?,
+        at timestamp: String,
+        reason: String?
+    ) async throws -> RolloutProposal {
+        guard let proposal = await store.proposal(id: proposalID) else {
+            throw RolloutProposalControlTransitionError.proposalNotFound(id: proposalID)
+        }
+
+        let transitioned = try Self.apply(
+            action,
+            to: proposal,
+            at: timestamp,
+            reason: reason
+        )
+        await store.save(transitioned)
+        await auditStore.append(
+            RolloutProposalAuditEvent(
+                id: "\(proposal.id):\(action.rawValue):\(timestamp)",
+                proposalID: proposal.id,
+                source: proposal.source,
+                targetSnapshotID: proposal.targetSnapshotID,
+                targetDatasetVersion: proposal.targetDatasetVersion,
+                action: proposal.action,
+                type: Self.auditEventType(for: action),
+                timestamp: timestamp,
+                actor: actor,
+                reason: reason
+            )
+        )
+        return transitioned
+    }
+
+    private static func apply(
+        _ action: RolloutProposalControlAction,
+        to proposal: RolloutProposal,
+        at timestamp: String,
+        reason: String?
+    ) throws -> RolloutProposal {
+        switch action {
+        case .pause:
+            guard isControllableLifecycle(proposal.lifecycleState), proposal.controlState == .active else {
+                throw RolloutProposalControlTransitionError.invalidTransition(
+                    lifecycleState: proposal.lifecycleState,
+                    controlState: proposal.controlState,
+                    action: action
+                )
+            }
+            return proposal.updating(
+                controlState: .paused,
+                updatedAt: timestamp,
+                lastDecisionAt: timestamp,
+                lastDecisionReason: reason
+            )
+        case .resume:
+            guard isControllableLifecycle(proposal.lifecycleState), proposal.controlState == .paused else {
+                throw RolloutProposalControlTransitionError.invalidTransition(
+                    lifecycleState: proposal.lifecycleState,
+                    controlState: proposal.controlState,
+                    action: action
+                )
+            }
+            return proposal.updating(
+                controlState: .active,
+                updatedAt: timestamp,
+                lastDecisionAt: timestamp,
+                lastDecisionReason: reason
+            )
+        case .halt:
+            guard isControllableLifecycle(proposal.lifecycleState),
+                  proposal.controlState == .active || proposal.controlState == .paused else {
+                throw RolloutProposalControlTransitionError.invalidTransition(
+                    lifecycleState: proposal.lifecycleState,
+                    controlState: proposal.controlState,
+                    action: action
+                )
+            }
+            return proposal.updating(
+                controlState: .halted,
+                updatedAt: timestamp,
+                lastDecisionAt: timestamp,
+                lastDecisionReason: reason
+            )
+        case .markRollbackPrepared:
+            guard isControllableLifecycle(proposal.lifecycleState),
+                  proposal.controlState == .active || proposal.controlState == .paused else {
+                throw RolloutProposalControlTransitionError.invalidTransition(
+                    lifecycleState: proposal.lifecycleState,
+                    controlState: proposal.controlState,
+                    action: action
+                )
+            }
+            return proposal.updating(
+                rollbackPreparedAt: timestamp,
+                updatedAt: timestamp,
+                lastDecisionAt: timestamp,
+                lastDecisionReason: reason
+            )
+        }
+    }
+
+    private static func isControllableLifecycle(_ lifecycleState: RolloutProposalLifecycleState) -> Bool {
+        switch lifecycleState {
+        case .approved, .readyForExecution:
+            return true
+        case .draft, .proposed, .rejected, .cancelled:
+            return false
+        }
+    }
+
+    private static func auditEventType(
+        for action: RolloutProposalControlAction
+    ) -> RolloutProposalAuditEventType {
+        switch action {
+        case .pause:
+            return .rolloutPaused
+        case .resume:
+            return .rolloutResumed
+        case .halt:
+            return .rolloutHalted
+        case .markRollbackPrepared:
+            return .rollbackPreparedMarked
         }
     }
 }

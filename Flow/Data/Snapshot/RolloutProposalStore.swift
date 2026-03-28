@@ -1,5 +1,11 @@
 import Foundation
 
+enum RolloutProposalControlState: String, Codable, Hashable {
+    case active
+    case paused
+    case halted
+}
+
 struct RolloutProposal: Codable, Hashable {
     let id: String
     let source: FlowDatasetSource
@@ -17,6 +23,8 @@ struct RolloutProposal: Codable, Hashable {
     let executionReadinessSummary: String?
     let lastDecisionAt: String?
     let lastDecisionReason: String?
+    let controlState: RolloutProposalControlState
+    let rollbackPreparedAt: String?
 
     init(
         id: String,
@@ -34,7 +42,9 @@ struct RolloutProposal: Codable, Hashable {
         note: String?,
         executionReadinessSummary: String?,
         lastDecisionAt: String?,
-        lastDecisionReason: String?
+        lastDecisionReason: String?,
+        controlState: RolloutProposalControlState = .active,
+        rollbackPreparedAt: String? = nil
     ) {
         self.id = id
         self.source = source
@@ -52,6 +62,8 @@ struct RolloutProposal: Codable, Hashable {
         self.executionReadinessSummary = executionReadinessSummary
         self.lastDecisionAt = lastDecisionAt
         self.lastDecisionReason = lastDecisionReason
+        self.controlState = controlState
+        self.rollbackPreparedAt = rollbackPreparedAt
     }
 
     init(
@@ -76,7 +88,11 @@ struct RolloutProposal: Codable, Hashable {
             note: rolloutCommand.proposal.note,
             executionReadinessSummary: rolloutCommand.proposal.executionReadinessSummary,
             lastDecisionAt: rolloutCommand.decidedAt,
-            lastDecisionReason: rolloutCommand.decisionReason
+            lastDecisionReason: rolloutCommand.decisionReason,
+            controlState: .active,
+            rollbackPreparedAt: rolloutCommand.rolloutMode == .rollbackPrepared
+                ? (updatedAt ?? rolloutCommand.decidedAt ?? rolloutCommand.proposal.createdAt)
+                : nil
         )
     }
 
@@ -99,6 +115,8 @@ struct RolloutProposal: Codable, Hashable {
     func updating(
         lifecycleState: RolloutProposalLifecycleState? = nil,
         approvalState: ActivationApprovalState? = nil,
+        controlState: RolloutProposalControlState? = nil,
+        rollbackPreparedAt: String? = nil,
         updatedAt: String,
         lastDecisionAt: String? = nil,
         lastDecisionReason: String? = nil
@@ -119,8 +137,75 @@ struct RolloutProposal: Codable, Hashable {
             note: note,
             executionReadinessSummary: executionReadinessSummary,
             lastDecisionAt: lastDecisionAt ?? self.lastDecisionAt,
-            lastDecisionReason: lastDecisionReason ?? self.lastDecisionReason
+            lastDecisionReason: lastDecisionReason ?? self.lastDecisionReason,
+            controlState: controlState ?? self.controlState,
+            rollbackPreparedAt: rollbackPreparedAt ?? self.rollbackPreparedAt
         )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case source
+        case action
+        case targetSnapshotID
+        case targetDatasetVersion
+        case rolloutMode
+        case lifecycleState
+        case approvalState
+        case stages
+        case createdAt
+        case updatedAt
+        case createdBy
+        case note
+        case executionReadinessSummary
+        case lastDecisionAt
+        case lastDecisionReason
+        case controlState
+        case rollbackPreparedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        source = try container.decode(FlowDatasetSource.self, forKey: .source)
+        action = try container.decode(SnapshotActivationCommand.Action.self, forKey: .action)
+        targetSnapshotID = try container.decodeIfPresent(String.self, forKey: .targetSnapshotID)
+        targetDatasetVersion = try container.decodeIfPresent(String.self, forKey: .targetDatasetVersion)
+        rolloutMode = try container.decode(StagedRolloutMode.self, forKey: .rolloutMode)
+        lifecycleState = try container.decode(RolloutProposalLifecycleState.self, forKey: .lifecycleState)
+        approvalState = try container.decode(ActivationApprovalState.self, forKey: .approvalState)
+        stages = try container.decode([RolloutStage].self, forKey: .stages)
+        createdAt = try container.decode(String.self, forKey: .createdAt)
+        updatedAt = try container.decode(String.self, forKey: .updatedAt)
+        createdBy = try container.decodeIfPresent(String.self, forKey: .createdBy)
+        note = try container.decodeIfPresent(String.self, forKey: .note)
+        executionReadinessSummary = try container.decodeIfPresent(String.self, forKey: .executionReadinessSummary)
+        lastDecisionAt = try container.decodeIfPresent(String.self, forKey: .lastDecisionAt)
+        lastDecisionReason = try container.decodeIfPresent(String.self, forKey: .lastDecisionReason)
+        controlState = try container.decodeIfPresent(RolloutProposalControlState.self, forKey: .controlState) ?? .active
+        rollbackPreparedAt = try container.decodeIfPresent(String.self, forKey: .rollbackPreparedAt)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(source, forKey: .source)
+        try container.encode(action, forKey: .action)
+        try container.encodeIfPresent(targetSnapshotID, forKey: .targetSnapshotID)
+        try container.encodeIfPresent(targetDatasetVersion, forKey: .targetDatasetVersion)
+        try container.encode(rolloutMode, forKey: .rolloutMode)
+        try container.encode(lifecycleState, forKey: .lifecycleState)
+        try container.encode(approvalState, forKey: .approvalState)
+        try container.encode(stages, forKey: .stages)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(updatedAt, forKey: .updatedAt)
+        try container.encodeIfPresent(createdBy, forKey: .createdBy)
+        try container.encodeIfPresent(note, forKey: .note)
+        try container.encodeIfPresent(executionReadinessSummary, forKey: .executionReadinessSummary)
+        try container.encodeIfPresent(lastDecisionAt, forKey: .lastDecisionAt)
+        try container.encodeIfPresent(lastDecisionReason, forKey: .lastDecisionReason)
+        try container.encode(controlState, forKey: .controlState)
+        try container.encodeIfPresent(rollbackPreparedAt, forKey: .rollbackPreparedAt)
     }
 }
 

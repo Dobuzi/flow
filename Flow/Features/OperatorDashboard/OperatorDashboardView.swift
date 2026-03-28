@@ -117,6 +117,7 @@ enum OperatorDashboardPresentation {
             OperatorDashboardCardRow(label: "Proposal", value: proposalStateTitle(source.proposalSummary)),
             OperatorDashboardCardRow(label: "Proposal Health", value: proposalHealthTitle(source.proposalRollup)),
             OperatorDashboardCardRow(label: "Proposal Lifecycle", value: source.proposalRollup?.lifecycleSummary ?? "No proposal"),
+            OperatorDashboardCardRow(label: "Rollback Prepared", value: source.proposalRollup?.rollbackPrepared == true ? "Yes" : "No"),
             OperatorDashboardCardRow(label: "Active Snapshot", value: live.activeSnapshotID ?? "None"),
             OperatorDashboardCardRow(label: "Last Known Good", value: live.lastKnownGoodSnapshotID ?? "None"),
             OperatorDashboardCardRow(label: "Latest Candidate", value: live.latestCandidateSnapshotID ?? "None"),
@@ -313,6 +314,10 @@ enum OperatorDashboardPresentation {
             return "Draft"
         case .awaitingApproval:
             return "Awaiting approval"
+        case .paused:
+            return "Paused"
+        case .halted:
+            return "Halted"
         case .approvedReady:
             return "Approved and ready"
         case .approvedBlocked:
@@ -336,6 +341,10 @@ enum OperatorDashboardPresentation {
             return .init(title: "Proposal Draft", tone: .neutral)
         case .awaitingApproval:
             return .init(title: "Awaiting Approval", tone: .warning)
+        case .paused:
+            return .init(title: "Proposal Paused", tone: .warning)
+        case .halted:
+            return .init(title: "Proposal Halted", tone: .critical)
         case .approvedReady:
             return .init(title: "Proposal Ready", tone: .good)
         case .approvedBlocked:

@@ -85,6 +85,34 @@ struct RolloutProposalStoreTests {
     }
 
     @Test
+    func controlSemanticsSurviveReload() async throws {
+        let fileURL = makeFileURL(testName: "control-state")
+        let proposal = makeProposal(
+            id: "proposal-control-001",
+            source: .seoulCapitalSnapshot,
+            lifecycleState: .approved,
+            approvalState: .approved,
+            createdAt: "2026-03-19T03:30:00Z",
+            updatedAt: "2026-03-19T03:30:00Z"
+        ).updating(
+            controlState: .paused,
+            rollbackPreparedAt: "2026-03-19T03:31:00Z",
+            updatedAt: "2026-03-19T03:31:00Z",
+            lastDecisionAt: "2026-03-19T03:31:00Z",
+            lastDecisionReason: "Paused pending review"
+        )
+
+        let store = PersistentRolloutProposalStore(fileURL: fileURL)
+        await store.save(proposal)
+
+        let reloaded = PersistentRolloutProposalStore(fileURL: fileURL)
+        let restored = try #require(await reloaded.proposal(id: proposal.id))
+        #expect(restored.controlState == .paused)
+        #expect(restored.rollbackPreparedAt == "2026-03-19T03:31:00Z")
+        #expect(restored.lastDecisionReason == "Paused pending review")
+    }
+
+    @Test
     func malformedPersistedProposalFileFallsBackSafely() async throws {
         let fileURL = makeFileURL(testName: "corrupt")
         try FileManager.default.createDirectory(

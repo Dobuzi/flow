@@ -333,6 +333,71 @@ struct OperatorDashboardViewModelTests {
         #expect(seoul.rolloutReadinessSummary?.summary == "Awaiting approval")
     }
 
+    @Test
+    @MainActor
+    func pausedAndHaltedProposalControlsStayCoherentInDashboard() async throws {
+        let proposalStore = InMemoryRolloutProposalStore()
+        await proposalStore.save(
+            makeProposal(
+                id: "proposal-seoul-paused",
+                source: .seoulCapitalSnapshot,
+                targetSnapshotID: "seoul-2026.09",
+                targetDatasetVersion: "2026.09",
+                rolloutMode: .staged,
+                lifecycleState: .approved,
+                approvalState: .approved,
+                updatedAt: "2026-03-27T07:00:00Z"
+            ).updating(
+                controlState: .paused,
+                rollbackPreparedAt: "2026-03-27T06:59:00Z",
+                updatedAt: "2026-03-27T07:00:00Z",
+                lastDecisionAt: "2026-03-27T07:00:00Z",
+                lastDecisionReason: "Paused pending review"
+            )
+        )
+        await proposalStore.save(
+            makeProposal(
+                id: "proposal-national-halted",
+                source: .koreaNational,
+                targetSnapshotID: "national-2026.09",
+                targetDatasetVersion: "2026.09",
+                rolloutMode: .staged,
+                lifecycleState: .approved,
+                approvalState: .approved,
+                updatedAt: "2026-03-27T07:05:00Z"
+            ).updating(
+                controlState: .halted,
+                updatedAt: "2026-03-27T07:05:00Z",
+                lastDecisionAt: "2026-03-27T07:05:00Z",
+                lastDecisionReason: "Safety halt"
+            )
+        )
+
+        let viewModel = OperatorDashboardViewModel(
+            catalogRepository: LocalMobilityCatalogRepository(),
+            bootstrapStatus: nil,
+            proposalStore: proposalStore
+        )
+
+        await viewModel.load()
+
+        let dashboard = try #require(viewModel.dashboard)
+        let seoul = try #require(dashboard.sources.first(where: { $0.source == .seoulCapitalSnapshot }))
+        let national = try #require(dashboard.sources.first(where: { $0.source == .koreaNational }))
+        let bundled = try #require(dashboard.sources.first(where: { $0.source == .bundledSample }))
+
+        #expect(seoul.proposalRollup?.healthState == .paused)
+        #expect(seoul.rolloutReadinessSummary?.state == .notReady)
+        #expect(seoul.approvalSummary?.directExecutionCompatible == false)
+        #expect(seoul.proposalRollup?.rollbackPrepared == true)
+
+        #expect(national.proposalRollup?.healthState == .halted)
+        #expect(national.rolloutReadinessSummary?.state == .blocked)
+        #expect(national.proposalRollup?.requiresAttention == true)
+
+        #expect(bundled.proposalRollup == nil)
+    }
+
     @MainActor
     private func makeViewModel(
         versionStore: InMemoryDatasetVersionStore,

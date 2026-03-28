@@ -1,0 +1,86 @@
+{
+  "/Users/jw/Dev/codex/flow/Flow/Data/Repositories/MobilityRepositoryFactory.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MobilityRepositoryFactory.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MobilityRepositoryFactory.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MobilityRepositoryFactory.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MobilityRepositoryFactory.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/MobilityRepositoryFactory.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Repositories/NationalBaselineMobilityFlowRepository.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityFlowRepository.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityFlowRepository.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityFlowRepository.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityFlowRepository.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityFlowRepository.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Repositories/NationalBaselineMobilityLocationRepository.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityLocationRepository.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityLocationRepository.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityLocationRepository.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityLocationRepository.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineMobilityLocationRepository.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Repositories/NationalBaselineRepositoryError.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineRepositoryError.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineRepositoryError.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineRepositoryError.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineRepositoryError.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/NationalBaselineRepositoryError.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Repositories/SeoulCapitalMobilityFlowRepository.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityFlowRepository.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityFlowRepository.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityFlowRepository.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityFlowRepository.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityFlowRepository.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Repositories/SeoulCapitalMobilityLocationRepository.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityLocationRepository.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityLocationRepository.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityLocationRepository.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityLocationRepository.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/SeoulCapitalMobilityLocationRepository.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Snapshot/ActivationApprovalPrimitives.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ActivationApprovalPrimitives.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ActivationApprovalPrimitives.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ActivationApprovalPrimitives.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ActivationApprovalPrimitives.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/ActivationApprovalPrimitives.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Snapshot/DatasetRefreshScheduler.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshScheduler.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshScheduler.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshScheduler.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshScheduler.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshScheduler.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Snapshot/DatasetRefreshStateStore.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshStateStore.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshStateStore.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshStateStore.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshStateStore.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetRefreshStateStore.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Snapshot/DatasetVersionStore.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetVersionStore.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetVersionStore.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetVersionStore.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetVersionStore.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DatasetVersionStore.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Snapshot/DefaultActivatedSnapshotResolver.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultActivatedSnapshotResolver.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultActivatedSnapshotResolver.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultActivatedSnapshotResolver.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultActivatedSnapshotResolver.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultActivatedSnapshotResolver.swiftdeps"
+  },
+  "/Users/jw/Dev/codex/flow/Flow/Data/Snapshot/DefaultSnapshotMaterializer.swift" : {
+    "const-values" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultSnapshotMaterializer.swiftconstvalues",
+    "dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultSnapshotMaterializer.d",
+    "diagnostics" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultSnapshotMaterializer.dia",
+    "object" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultSnapshotMaterializer.o",
+    "swift-dependencies" : "/Users/jw/Dev/codex/flow/.tmp_p6009_red/Build/Intermediates.noindex/Flow.build/Debug-iphoneos/Flow.build/Objects-normal/arm64/DefaultSnapshotMaterializer.swiftdeps"
+  }
+}

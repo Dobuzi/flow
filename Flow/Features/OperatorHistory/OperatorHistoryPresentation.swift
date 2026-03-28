@@ -179,6 +179,14 @@ enum OperatorHistoryPresentation {
             return "Proposal Rejected"
         case .proposalCancelled:
             return "Proposal Cancelled"
+        case .rolloutPaused:
+            return "Rollout Paused"
+        case .rolloutResumed:
+            return "Rollout Resumed"
+        case .rolloutHalted:
+            return "Rollout Halted"
+        case .rollbackPreparedMarked:
+            return "Rollback Prepared"
         }
     }
 
@@ -192,6 +200,14 @@ enum OperatorHistoryPresentation {
             return "Rejected"
         case .proposalCancelled:
             return "Cancelled"
+        case .rolloutPaused:
+            return "Paused"
+        case .rolloutResumed:
+            return "Approved"
+        case .rolloutHalted:
+            return "Halted"
+        case .rollbackPreparedMarked:
+            return "Rollback Prepared"
         }
     }
 
@@ -201,8 +217,12 @@ enum OperatorHistoryPresentation {
             return .requested
         case .proposalApproved:
             return .succeeded
-        case .proposalRejected, .proposalCancelled:
+        case .proposalRejected, .proposalCancelled, .rolloutHalted:
             return .blocked
+        case .rolloutPaused:
+            return .noOp
+        case .rolloutResumed, .rollbackPreparedMarked:
+            return .succeeded
         }
     }
 
@@ -293,6 +313,14 @@ enum OperatorHistoryPresentation {
             return "Rejected"
         case RolloutProposalAuditEventType.proposalCancelled.rawValue:
             return "Cancelled"
+        case RolloutProposalAuditEventType.rolloutPaused.rawValue:
+            return "Paused"
+        case RolloutProposalAuditEventType.rolloutResumed.rawValue:
+            return "Resumed"
+        case RolloutProposalAuditEventType.rolloutHalted.rawValue:
+            return "Halted"
+        case RolloutProposalAuditEventType.rollbackPreparedMarked.rawValue:
+            return "Rollback Prepared"
         default:
             return nil
         }

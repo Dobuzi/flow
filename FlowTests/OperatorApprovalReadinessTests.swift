@@ -179,6 +179,72 @@ struct OperatorApprovalReadinessTests {
     }
 
     @Test
+    func pausedAndHaltedControlsRemainTruthful() throws {
+        let paused = OperatorProposalSummary(
+            proposal: RolloutProposal(
+                id: UUID().uuidString,
+                source: .seoulCapitalSnapshot,
+                action: .promote,
+                targetSnapshotID: "seoul-2026.04",
+                targetDatasetVersion: "2026.04",
+                rolloutMode: .staged,
+                lifecycleState: .approved,
+                approvalState: .approved,
+                stages: [],
+                createdAt: "2026-03-16T03:55:00Z",
+                updatedAt: "2026-03-16T04:00:00Z",
+                createdBy: "operator-1",
+                note: nil,
+                executionReadinessSummary: "candidate_ready",
+                lastDecisionAt: "2026-03-16T04:00:00Z",
+                lastDecisionReason: "Paused pending review",
+                controlState: .paused,
+                rollbackPreparedAt: nil
+            )
+        )
+        let halted = OperatorProposalSummary(
+            proposal: RolloutProposal(
+                id: UUID().uuidString,
+                source: .seoulCapitalSnapshot,
+                action: .promote,
+                targetSnapshotID: "seoul-2026.04",
+                targetDatasetVersion: "2026.04",
+                rolloutMode: .staged,
+                lifecycleState: .approved,
+                approvalState: .approved,
+                stages: [],
+                createdAt: "2026-03-16T03:55:00Z",
+                updatedAt: "2026-03-16T04:05:00Z",
+                createdBy: "operator-1",
+                note: nil,
+                executionReadinessSummary: "candidate_ready",
+                lastDecisionAt: "2026-03-16T04:05:00Z",
+                lastDecisionReason: "Safety halt",
+                controlState: .halted,
+                rollbackPreparedAt: "2026-03-16T04:04:00Z"
+            )
+        )
+
+        let pausedReadiness = resolver.rolloutReadinessSummary(
+            isLiveCapable: true,
+            liveSummary: makeReadyLiveSummary(),
+            healthSummary: makeHealthyHealthSummary(),
+            proposalSummary: paused
+        )
+        let haltedReadiness = resolver.rolloutReadinessSummary(
+            isLiveCapable: true,
+            liveSummary: makeReadyLiveSummary(),
+            healthSummary: makeHealthyHealthSummary(),
+            proposalSummary: halted
+        )
+
+        #expect(pausedReadiness.state == .notReady)
+        #expect(pausedReadiness.summary == "Rollout paused")
+        #expect(haltedReadiness.state == .blocked)
+        #expect(haltedReadiness.blockedReason == "Safety halt")
+    }
+
+    @Test
     func keepsStaticSourcesSafe() throws {
         let approval = resolver.approvalSummary(
             isLiveCapable: false,

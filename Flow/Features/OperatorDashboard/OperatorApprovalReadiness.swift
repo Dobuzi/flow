@@ -4,23 +4,27 @@ struct OperatorProposalSummary: Hashable {
     let proposalID: String
     let lifecycleState: RolloutProposalLifecycleState
     let approvalState: ActivationApprovalState
+    let controlState: RolloutProposalControlState
     let rolloutMode: StagedRolloutMode
     let targetSnapshotID: String?
     let targetDatasetVersion: String?
     let updatedAt: String
     let lastDecisionAt: String?
     let lastDecisionReason: String?
+    let rollbackPreparedAt: String?
 
     init(proposal: RolloutProposal) {
         self.proposalID = proposal.id
         self.lifecycleState = proposal.lifecycleState
         self.approvalState = proposal.approvalState
+        self.controlState = proposal.controlState
         self.rolloutMode = proposal.rolloutMode
         self.targetSnapshotID = proposal.targetSnapshotID
         self.targetDatasetVersion = proposal.targetDatasetVersion
         self.updatedAt = proposal.updatedAt
         self.lastDecisionAt = proposal.lastDecisionAt
         self.lastDecisionReason = proposal.lastDecisionReason
+        self.rollbackPreparedAt = proposal.rollbackPreparedAt
     }
 }
 
@@ -128,6 +132,23 @@ struct OperatorApprovalReadinessResolver {
             break
         }
 
+        switch proposalSummary.controlState {
+        case .paused:
+            return OperatorRolloutReadinessSummary(
+                state: .notReady,
+                summary: "Rollout paused",
+                blockedReason: proposalSummary.lastDecisionReason
+            )
+        case .halted:
+            return OperatorRolloutReadinessSummary(
+                state: .blocked,
+                summary: "Rollout halted",
+                blockedReason: proposalSummary.lastDecisionReason ?? "Rollout halted"
+            )
+        case .active:
+            break
+        }
+
         if healthSummary.state == .recoveryNeeded {
             return OperatorRolloutReadinessSummary(
                 state: .blocked,
@@ -229,6 +250,14 @@ struct OperatorApprovalReadinessResolver {
         case .proposed:
             return proposalSummary.lastDecisionReason ?? "Awaiting approval"
         case .approved:
+            switch proposalSummary.controlState {
+            case .paused:
+                return proposalSummary.lastDecisionReason ?? "Approved rollout is paused"
+            case .halted:
+                return proposalSummary.lastDecisionReason ?? "Approved rollout is halted"
+            case .active:
+                break
+            }
             if healthSummary.state == .recoveryNeeded {
                 return "Approved but recovered state needs review"
             }
@@ -236,6 +265,9 @@ struct OperatorApprovalReadinessResolver {
             case .immediateReady:
                 return "Approved for immediate execution"
             case .stagedEligible:
+                if proposalSummary.rollbackPreparedAt != nil {
+                    return "Approved for staged execution with rollback prepared"
+                }
                 return "Approved for staged execution"
             case .blocked:
                 return proposalSummary.lastDecisionReason ?? "Approved but blocked by rollout checks"
